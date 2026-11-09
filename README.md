@@ -43,7 +43,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 ## Etap 4 (zrealizowany 09.11.2026)
 - Sfinalizowane decyzje z 09.11.2026 (PMR, anafilaksja 6 h, wydruk ZP z antybiotykoterapią) – patrz wyżej.
 - **Nowy moduł „Kalkulatory”** (`calc/kalk.js` – logika, `kalk-ui.js` – interfejs; offline, w pamięci SW): 43 kalkulatory w 12 grupach (≤6 w grupie), wyszukiwarka, dane z paska pacjenta (wiek, płeć, masa, kreatynina, ciąża), wynik + interpretacja + konsekwencja kliniczna + źródło z rokiem, wydruk z danymi pacjenta, linki do istniejących modułów (bez dublowania GBS, sPESI, CHA₂DS₂-VA, NIHSS, GCS, CURB-65/PSI itd.). Własne implementacje z publikacji źródłowych – nie kopiowano treści ani kodu innych serwisów.
-  - Kardiologia: SCORE2/SCORE2-OP (Polska = region wysokiego ryzyka), QTc (Bazett, Fridericia, Framingham, Hodges), ABI, Duke-ISCVID 2023, HAS-BLED.
+  - Kardiologia: SCORE2 40–69 lat (Polska = region wysokiego ryzyka), SCORE2-OP ≥70 lat – **WSTRZYMANY** (patrz niżej), QTc (Bazett, Fridericia, Framingham, Hodges), ABI, Duke-ISCVID 2023, HAS-BLED.
   - Pulmonologia: kryteria Lighta, gradient A–a i PaO₂/FiO₂, ROX.
   - Gastroenterologia: Rockall, AIMS65, Child-Pugh, MELD-Na, BISAP.
   - Nefrologia i elektrolity: eGFR CKD-EPI 2021 + Cockcroft-Gault, FENa/FEUrea, osmolalność i luka osmolalna, luka anionowa (albumina, delta), Na skorygowany i deficyt wody, Ca skorygowany.
@@ -53,7 +53,9 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
   - Konwersje leków: glikokortykosteroidy (Liu 2013), benzodiazepiny (Ashton), opioidy (MME, redukcja 25–50%, plaster fentanylowy zaokrąglany w dół; metadon i buprenorfina wyłączone).
   - Laboratorium: przelicznik jednostek (21 badań), Ca skorygowany, tabela współczynników.
 - Założenie: „skala laweta” z listy lekarza interpretowana jako **kryteria Lighta** (płyn opłucnowy) – do potwierdzenia.
-- Zastrzeżenia: SCORE2-OP – współczynniki z suplementu, przykład z tekstu publikacji nie odtwarza się 1:1 (patrz raport); SCORE2-Diabetes, MELD 3.0 i SOFA-2 nie zaimplementowano.
+- **SCORE2-OP wstrzymany (09.11.2026):** implementacja z publikacji (wiek centrowany na 73, przeżycie wyjściowe, rekalibracja scale1/scale2) nie odtwarza w granicach zaokrąglenia ani tabel SCORE2-OP z wytycznych ESC 2021 (rys. 3, 256 komórek/region), ani przykładu z tekstu publikacji; suplement z dokładnymi parametrami był niedostępny. Kalkulator jest widoczny, pola nieaktywne, czerwony komunikat „Kalkulator wstrzymany – wynik niezweryfikowany” i odesłanie do tabel ESC 2021 (region wysokiego ryzyka – Polska) / HeartScore. SCORE2 dla wieku ≥70 lat nie podaje liczby.
+- **SCORE2 (40–69 lat) zweryfikowany:** przykład z publikacji odtworzony (5,9 / 14,0 / 4,2 / 13,7%); tabele ESC 2021 (dane w `tests/data/esc2021_score2_charts.json`, wyodrębnione z tekstu wektorowego PDF) – region wysokiego ryzyka 384/384 komórek w granicach ≤1,1 pkt % (≥90% identycznych po zaokrągleniu) przy HDL ok. 1,13 (M) / 1,32 (K); tabele podają nie-HDL, a przyjętej w nich wartości HDL publikacja nie podaje.
+- Nie zaimplementowano: SCORE2-Diabetes, MELD 3.0, SOFA-2.
 - Testy: `node tests/etap4-node.test.js`, `tests/e2e-etap4-puppeteer.js`.
 
 ## Testy

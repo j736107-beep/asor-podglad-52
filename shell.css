@@ -106,3 +106,5 @@ table.tb{border-collapse:collapse;width:100%;margin:6px 0;font-size:13px}table.t
 .kk-red{border-color:#c62828;background:#fdecea}.kk-orange{border-color:#ef8f00;background:#fff4e0}.kk-green{border-color:#2e7d32;background:#e8f5e9}.kk-miss{border-color:#999;color:#555}.kk-err{border-color:#c62828;background:#fdecea}
 .kk-rows{border-collapse:collapse;font-size:.88em;margin:.3em 0}.kk-rows td{border-bottom:1px solid #eee;padding:.2em .5em;vertical-align:top}.kk-src{font-size:.8em;color:#555}.kk-act{display:flex;flex-wrap:wrap;gap:.5em;align-items:center}
 body.dark .kk-panel,html.dark .kk-panel{background:inherit}
+.kk-susp-t{color:#c62828;font-weight:700}.kk-susp{border-color:#c62828;background:#fdecea}.kk-chip-susp{border-color:#c62828;color:#c62828;background:#fff}.kk-chip-susp.on{background:#c62828;color:#fff}
+.kk-panel-susp{border-color:#c62828}.kk-panel-susp input:disabled,.kk-panel-susp select:disabled{background:#eee;color:#888;cursor:not-allowed}

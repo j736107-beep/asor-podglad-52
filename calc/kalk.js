@@ -32,23 +32,21 @@ var C={};
 var S2={m:{age:0.3742,smk:0.6012,sbp:0.2777,dm:0.6457,tc:0.1458,hdl:-0.2698,smkA:-0.0755,sbpA:-0.0255,tcA:-0.0281,hdlA:0.0426,dmA:-0.0983,s0:0.9605},
  f:{age:0.4648,smk:0.7744,sbp:0.3131,dm:0.8096,tc:0.1002,hdl:-0.2606,smkA:-0.1088,sbpA:-0.0277,tcA:-0.0226,hdlA:0.0613,dmA:-0.1272,s0:0.9776},
  cal:{low:{m:[-0.5699,0.7476],f:[-0.7380,0.7019]},mod:{m:[-0.1565,0.8009],f:[-0.3143,0.7701]},high:{m:[0.3207,0.9360],f:[0.5710,0.9369]},vhigh:{m:[0.5836,0.8294],f:[0.9412,0.8329]}}};
-var OP={m:{age:0.0634,dm:0.4245,smk:0.3524,sbp:0.0094,tc:0.0850,hdl:-0.3564,dmA:-0.0174,smkA:-0.0247,sbpA:-0.0005,tcA:0.0073,hdlA:0.0091,s0:0.7576,mean:0.0929},
- f:{age:0.0789,dm:0.6010,smk:0.4921,sbp:0.0102,tc:0.0605,hdl:-0.3040,dmA:-0.0107,smkA:-0.0255,sbpA:-0.0004,tcA:-0.0009,hdlA:0.0154,s0:0.8082,mean:0.2290},
- cal:{low:{m:[-0.34,1.19],f:[-0.52,1.01]},mod:{m:[0.01,1.25],f:[-0.10,1.10]},high:{m:[0.08,1.15],f:[0.38,1.09]},vhigh:{m:[0.05,0.70],f:[0.38,0.69]}}};
 function score2(age,sex,smk,sbp,tc,hdl,dm,region){var b=S2[sex],cal=S2.cal[region][sex];var ca=(age-60)/5,cs=(sbp-120)/20,ct=tc-6,ch=(hdl-1.3)/0.5;
  var lp=b.age*ca+b.smk*smk+b.sbp*cs+b.dm*dm+b.tc*ct+b.hdl*ch+b.smkA*ca*smk+b.sbpA*ca*cs+b.tcA*ca*ct+b.hdlA*ca*ch+b.dmA*ca*dm;
  var u=1-Math.pow(b.s0,Math.exp(lp));return 1-Math.exp(-Math.exp(cal[0]+cal[1]*Math.log(-Math.log(1-u))));}
-function score2op(age,sex,smk,sbp,tc,hdl,dm,region){var b=OP[sex],cal=OP.cal[region][sex];var ca=age-73,cs=sbp-150,ct=tc-6,ch=hdl-1.4;
- var lp=b.age*ca+b.dm*dm+b.smk*smk+b.sbp*cs+b.tc*ct+b.hdl*ch+b.dmA*ca*dm+b.smkA*ca*smk+b.sbpA*ca*cs+b.tcA*ca*ct+b.hdlA*ca*ch;
- var u=1-Math.pow(b.s0,Math.exp(lp-b.mean));return 1-Math.exp(-Math.exp(cal[0]+cal[1]*Math.log(-Math.log(1-u))));}
-C.score2={g:'kard',n:'SCORE2 / SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe',d:'Systematic COronary Risk Evaluation 2 (40–69 lat) i SCORE2-Older Persons (70–89 lat): 10-letnie ryzyko zawału serca, udaru lub zgonu sercowo-naczyniowego u osób bez rozpoznanej choroby sercowo-naczyniowej.',
- src:'SCORE2 working group, Eur Heart J 2021;42:2439 (współczynniki: suplement, tab. 1 – 4 miejsca po przecinku); SCORE2-OP working group, Eur Heart J 2021;42:2455 (suplement – średni predyktor liniowy); ESC 2021 – wytyczne Europejskiego Towarzystwa Kardiologicznego dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227) – regiony ryzyka (Polska: region wysokiego ryzyka)',yr:2021,
+// SCORE2-OP (≥70 lat): WSTRZYMANY 09.11.2026 – implementacja wg współczynników publikacji nie odtwarza tabel ESC 2021 (rys. 3) ani przykładu z tekstu
+// publikacji w granicach zaokrąglenia; suplement z dokładnymi parametrami niedostępny do weryfikacji. Kalkulator widoczny, nieaktywny (C.score2op.suspended).
+C.score2={g:'kard',n:'SCORE2 – 10-letnie ryzyko sercowo-naczyniowe (40–69 lat)',d:'Systematic COronary Risk Evaluation 2: 10-letnie ryzyko zawału serca, udaru lub zgonu sercowo-naczyniowego u osób 40–69 lat bez rozpoznanej choroby sercowo-naczyniowej i bez cukrzycy.',
+ src:'SCORE2 working group, Eur Heart J 2021;42:2439 (współczynniki: suplement, tab. 1 – 4 miejsca po przecinku; weryfikacja: przykład z publikacji 5,9/14,0/4,2/13,7% odtworzony; tabele ESC 2021 rys. 3 – region wysokiego ryzyka); ESC 2021 – wytyczne Europejskiego Towarzystwa Kardiologicznego dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227) – regiony ryzyka (Polska: region wysokiego ryzyka)',yr:2021,
  f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg',{min:60,max:260}),N('tc','Cholesterol całkowity',CHOL_U,{min:1,max:20}),N('hdl','Cholesterol HDL (lipoprotein wysokiej gęstości)',CHOL_U,{min:0.2,max:5}),
   S('reg','Region ryzyka (ESC 2021)',[['high','Polska – region WYSOKIEGO ryzyka (ESC 2021)'],['vhigh','region bardzo wysokiego ryzyka'],['mod','region umiarkowanego ryzyka'],['low','region niskiego ryzyka']],{def:'high'})],
  calc:function(v){var m=need(v,['age','sbp','tc','hdl'],['wiek','SBP','cholesterol całkowity','HDL']);if(!v.sex)m.push('płeć');if(m.length)return{miss:m};
-  var a=v.age,reg=v.reg||'high',dm=v.dm===true?1:0,smk=v.smk===true?1:0;if(a<40||a>89)return{err:'Model zwalidowany dla wieku 40–89 lat (SCORE2: 40–69, SCORE2-OP: 70–89).'};
-  if(a<70&&dm)return{err:'SCORE2 nie dotyczy chorych na cukrzycę – w cukrzycy typu 2 ESC 2023 zaleca SCORE2-Diabetes (nie zaimplementowano).'};
-  var op=a>=70,risk=(op?score2op:score2)(a,v.sex,smk,v.sbp,v.tc,v.hdl,dm,reg)*100;
+  var a=v.age,reg=v.reg||'high',dm=v.dm===true?1:0,smk=v.smk===true?1:0;
+  if(a>=70&&a<=89)return{err:'Wiek ≥70 lat: SCORE2-OP – KALKULATOR WSTRZYMANY (wynik niezweryfikowany). Odczytaj ryzyko z tabel SCORE2-OP w wytycznych ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227, rys. 3 – region wysokiego ryzyka: Polska) lub w HeartScore (heartscore.org).'};
+  if(a<40||a>69)return{err:'SCORE2 zwalidowany dla wieku 40–69 lat.'};
+  if(dm)return{err:'SCORE2 nie dotyczy chorych na cukrzycę – w cukrzycy typu 2 ESC 2023 zaleca SCORE2-Diabetes (nie zaimplementowano).'};
+  var op=false,risk=score2(a,v.sex,smk,v.sbp,v.tc,v.hdl,dm,reg)*100;
   var th=a<50?[2.5,7.5]:a<70?[5,10]:[7.5,15],cat=risk<th[0]?0:risk<th[1]?1:2;
   var L=['niskie do umiarkowanego','wysokie','bardzo wysokie'][cat];
   var cons=[op?'Wiek ≥70 lat: decyzję o leczeniu czynników ryzyka uzależnij od kruchości, chorób współistniejących, oczekiwanej długości życia i preferencji pacjenta.':'Leczenie farmakologiczne czynników ryzyka zwykle niezalecane – styl życia.',
@@ -56,7 +54,11 @@ C.score2={g:'kard',n:'SCORE2 / SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe
    op?'Należy rozważyć leczenie czynników ryzyka (ESC 2021) – korzyść zależna od kruchości, wielochorobowości i oczekiwanej długości życia.':'Leczenie czynników ryzyka zalecane (ESC 2021).'][cat];
   return{v:fx(risk,1)+' %',n:risk,lvl:['green','orange','red'][cat],interp:(op?'SCORE2-OP':'SCORE2')+': ryzyko '+L+' (progi dla wieku '+(a<50?'<50 lat: <2,5 / 2,5–<7,5 / ≥7,5 %':a<70?'50–69 lat: <5 / 5–<10 / ≥10 %':'≥70 lat: <7,5 / 7,5–<15 / ≥15 %')+').',
    cons:cons+' Nie stosuj przy rozpoznanej chorobie sercowo-naczyniowej, przewlekłej chorobie nerek, hipercholesterolemii rodzinnej (ryzyko z definicji wysokie/bardzo wysokie). W SOR wynik informacyjny – do przekazania lekarzowi POZ (podstawowej opieki zdrowotnej).',
-   rows:[['Model',op?'SCORE2-OP (≥70 lat)':'SCORE2 (40–69 lat)'],['Region',{high:'wysokiego ryzyka (Polska)',vhigh:'bardzo wysokiego ryzyka',mod:'umiarkowanego ryzyka',low:'niskiego ryzyka'}[reg]],['Cholesterol nie-HDL',fx(v.tc-v.hdl,1)+' mmol/l']]};}};
+   rows:[['Model','SCORE2 (40–69 lat)'],['Region',{high:'wysokiego ryzyka (Polska)',vhigh:'bardzo wysokiego ryzyka',mod:'umiarkowanego ryzyka',low:'niskiego ryzyka'}[reg]],['Cholesterol nie-HDL',fx(v.tc-v.hdl,1)+' mmol/l']]};}};
+C.score2op={g:'kard',suspended:true,n:'SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe (≥70 lat) – WSTRZYMANY',d:'SCORE2-Older Persons (70–89 lat). Kalkulator wstrzymany: implementacja z publikacji nie odtwarza w granicach zaokrąglenia tabel ESC 2021 ani przykładu z publikacji – do czasu weryfikacji ryzyko odczytuj z oficjalnych tabel.',
+ src:'SCORE2-OP working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2455; tabele: ESC 2021 – wytyczne Europejskiego Towarzystwa Kardiologicznego dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227), rys. 3 – region wysokiego ryzyka (Polska); kalkulator online: HeartScore (heartscore.org, Europa – wysokie ryzyko)',yr:2021,
+ f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg'),N('nhdl','Cholesterol nie-HDL',CHOL_U)],
+ calc:function(){return{suspended:true,err:'Kalkulator wstrzymany – wynik niezweryfikowany. Odczytaj 10-letnie ryzyko z tabel SCORE2-OP: ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227), rysunek 3 – „populations at high CVD risk” (Polska = region wysokiego ryzyka), lub w HeartScore (heartscore.org → Europa – wysokie ryzyko). Progi ESC 2021 dla ≥70 lat: <7,5% / 7,5–<15% / ≥15%.'};}};
 C.qtc={g:'kard',n:'QTc – skorygowany odstęp QT (Bazett, Fridericia, Framingham, Hodges)',d:'Korekcja odstępu QT względem częstości rytmu serca czterema wzorami.',
  src:'Bazett, Heart 1920; Fridericia, Acta Med Scand 1920; Sagie i wsp. (Framingham), Am J Cardiol 1992;70:797; Hodges i wsp., J Am Coll Cardiol 1983; progi: AHA/ACCF/HRS 2009 (Rautaharju i wsp., Circulation 2009;119:e241) – Amerykańskie Towarzystwo Kardiologiczne / Amerykańskie Kolegium Kardiologii / Towarzystwo Rytmu Serca',yr:2009,
  f:[N('qt','Odstęp QT (zmierzony)','ms',{min:150,max:800}),N('hr','Częstość rytmu serca (HR)','/min',{min:20,max:250}),SEX],
@@ -437,7 +439,7 @@ C.units={g:'lab',n:'Przelicznik jednostek laboratoryjnych (konwencjonalne ↔ SI
 C.labtab={g:'lab',n:'Tabela współczynników przeliczeniowych',d:'Zestawienie mnożników konwencjonalne → SI dla wszystkich badań przelicznika.',src:C.units.src,yr:2020,f:[],
  calc:function(){return{v:LAB.length+' badań',lvl:'',rows:LAB.map(function(x){return[x[1],'1 '+x[2]+' = '+fmt(x[4],4)+' '+x[3]+(x[6]?' ('+x[6]+')':'')];}),interp:'Mnożenie przez współczynnik: jednostki konwencjonalne → SI; dzielenie: SI → konwencjonalne.',cons:'—'};}};
 // ================= GRUPY =================
-var G=[['kard','Kardiologia',['score2','qtc','abi','duke','hasbled'],[['trop','Ból w klatce / troponina (HEART, EKG)'],['af','Migotanie przedsionków (CHA₂DS₂-VA)'],['ahf','Ostra niewydolność serca']]],
+var G=[['kard','Kardiologia',['score2','score2op','qtc','abi','duke','hasbled'],[['trop','Ból w klatce / troponina (HEART, EKG)'],['af','Migotanie przedsionków (CHA₂DS₂-VA)'],['ahf','Ostra niewydolność serca']]],
  ['pulm','Pulmonologia',['light','aa','rox'],[['cap','Zapalenie płuc (CURB-65, PSI, antybiotyk)']]],
  ['gast','Gastroenterologia / krwawienie z przewodu pokarmowego',['rockall','aims65','childpugh','meldna','bisap'],[['gib','Krwawienie z przewodu pokarmowego (Glasgow-Blatchford)']]],
  ['nef','Nefrologia i elektrolity',['egfr','fena','osm','ag','na','caCorr'],[['el','Elektrolity'],['tox','Zatrucia (luki, EXTRIP)'],['dka','Cukrzycowa kwasica ketonowa / stan hiperglikemiczno-hiperosmolalny']]],
@@ -451,5 +453,5 @@ var G=[['kard','Kardiologia',['score2','qtc','abi','duke','hasbled'],[['trop','B
  ['lab','Laboratorium – jednostki',['units','caCorr','labtab'],[]]];
 Object.keys(C).forEach(function(k){C[k].id=k;});
 function run(id,v){var c=C[id];if(!c)return{err:'Nieznany kalkulator: '+id};try{return c.calc(v||{});}catch(e){return{err:'Błąd obliczenia: '+e.message};}}
-return{C:C,G:G,run:run,num:num,fmt:fmt,fx:fx,score2:score2,score2op:score2op,ckdepi21:ckdepi21,cg:cg,LAB:LAB,OPI:OPI,BZD:BZD,GKS:GKS,PATCH:PATCH};
+return{C:C,G:G,run:run,num:num,fmt:fmt,fx:fx,score2:score2,ckdepi21:ckdepi21,cg:cg,LAB:LAB,OPI:OPI,BZD:BZD,GKS:GKS,PATCH:PATCH};
 });

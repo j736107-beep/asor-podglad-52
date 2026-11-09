@@ -37,6 +37,15 @@ if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollInto
 // wydruk – snapshot
 const sn=await page.evaluate(()=>{SORReport.capture(SKM.list.find(m=>m.id==='kalk'));const s=SORReport.snaps();return s.kalk&&s.kalk.text||'';});
 rec('Wydruk: snapshot kalkulatora z danymi i źródłem',/KALKULATOR: SCORE2/.test(sn)&&/Źródło \(2021\)/.test(sn)&&/Wiek: 50/.test(sn),sn.slice(0,120));
+// SCORE2-OP wstrzymany
+await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2op"]').click();});await sleep(200);
+const sp=await page.evaluate(()=>{const p=document.getElementById('kk-panel');const ins=[...p.querySelectorAll('input,select')];const t=document.getElementById('kk-susp');return {n:ins.length,dis:ins.every(x=>x.disabled),txt:t&&t.textContent,col:t&&getComputedStyle(t).color,out:document.getElementById('kk-out').textContent,vis:!!document.querySelector('.kk-chip[data-c="score2op"]').offsetParent};});
+rec('SCORE2-OP: widoczny, pola nieaktywne, czerwony napis, brak liczby, odesłanie do ESC 2021',sp.vis&&sp.n>0&&sp.dis&&sp.txt==='Kalkulator wstrzymany – wynik niezweryfikowany'&&/rgb\(198, 40, 40\)/.test(sp.col)&&/ESC 2021/.test(sp.out)&&!/\d+,\d %/.test(sp.out),JSON.stringify(sp).slice(0,200));
+if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/kalk-score2op-wstrzymany.png'});}
+await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2"]').click();});await sleep(150);
+await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='75';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(250);
+const s75=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('SCORE2 przy wieku 75 → brak liczby, komunikat WSTRZYMANY',/WSTRZYMANY/.test(s75)&&!/\d+,\d %/.test(s75),s75.slice(0,100));
+await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='50';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(200);
 // opioidy
 await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="opioid"]').click();});await sleep(150);await page.type('#kk-opioid-dose','40');await sleep(150);
 const o=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('Opioidy: oksykodon 40 → morfina 30 mg (ostrożnie, −50%), metadon wyłączony',/^30 mg/.test(o.trim())&&/Metadon/.test(o),o.slice(0,90));
@@ -55,6 +64,6 @@ rec('ZP: wydruk zawiera antybiotykoterapię',/Proponowane|Propozycja/.test(capTx
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
 rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-etap4/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-etap4-b/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();
