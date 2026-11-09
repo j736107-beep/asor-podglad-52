@@ -83,7 +83,7 @@ function csfInterp(i){i=i||{};var cell=num(i.cells),prot=num(i.prot),glu=num(i.g
  if(nz(glu)&&(glu<0||glu>1000))return{ok:false,msg:'Glukoza PMR poza realnym zakresem.'};if(nz(sglu)&&(sglu<20||sglu>2000))return{ok:false,msg:'Glukoza w surowicy poza realnym zakresem.'};
  if(nz(lac)&&(lac<0||lac>40))return{ok:false,msg:'Mleczany poza realnym zakresem.'};if(nz(neutPct)&&(neutPct<0||neutPct>100))return{ok:false,msg:'% neutrofili poza zakresem.'};
  var ratio=nz(glu)&&nz(sglu)?glu/sglu:NaN;var b=[],v=[],tbfu=[];
- if(nz(cell)){if(cell>=1000)b.push('cytoza ≥1000/µl');else if(cell>=100){if(nz(neutPct)&&neutPct<50)v.push('cytoza '+cell+'/µl z przewagą limfocytów (kilkaset – typowo wirusowe; 5.2)');else b.push('cytoza ≥100/µl (zakres „kilkaset” – bakteryjne i wirusowe się nakładają)');}else if(cell>5)v.push('cytoza '+cell+'/µl (kilka–kilkaset: typowo wirusowe)');}
+ if(nz(cell)){if(cell>=1000)b.push('cytoza ≥1000/µl');else if(cell>=100){if(nz(neutPct)&&neutPct<50)v.push('cytoza '+cell+'/µl z przewagą limfocytów (100–999/µl limfocytarna = wzorzec wirusowy; decyzja lekarza zaakceptowana 09.11.2026)');else b.push('cytoza ≥100/µl (zakres „kilkaset” – bakteryjne i wirusowe się nakładają)');}else if(cell>5)v.push('cytoza '+cell+'/µl (kilka–kilkaset: typowo wirusowe)');}
  if(nz(neutPct)&&nz(cell)&&cell>5){if(neutPct>=50)b.push('przewaga neutrofili');else v.push('przewaga limfocytów');}
  if(nz(prot)){if(prot>100)b.push('białko >100 mg/dl');else v.push('białko ≤100 mg/dl (typowo norma lub nieznacznie podwyższone w wirusowych)');}
  if(nz(ratio)){if(ratio<0.4)b.push('współczynnik glukozy <0,4');else if(ratio>=0.6)v.push('współczynnik glukozy ≥0,6');else tbfu.push('współczynnik glukozy 0,4–0,6 (strefa pośrednia: m.in. gruźlica, grzybice, część bakteryjnych)');}

@@ -1,4 +1,4 @@
-# Asystent lekarza SOR – wersja 5.2 (testowa) · etap 3 · 09.11.2026
+# Asystent lekarza SOR – wersja 5.2 (testowa) · etap 4 · 09.11.2026
 
 Narzędzie pomocnicze, **niecertyfikowane**. Każdą dawkę i decyzję weryfikuje lekarz.
 Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w przeglądarce są oddzielone od 5.1
@@ -18,6 +18,9 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Wyzwalacze WSTRZYMAJ WYPIS: Sepsa (podejrzenie sepsy, NEWS2 ≥7, mleczany ≥4, MAP <65, wazopresor), DKA/HHS (rozpoznanie), Stan padaczkowy (każde podanie leku), Troponina (próg hospitalizacji HEART ≥4 / EDACS ≥16).
 - Choroby współistniejące z PSI przekazywane do modułu antybiotykoterapii.
 - Zmiana po akceptacji: alarm Troponiny włącza się dopiero po wpisaniu EKG lub troponiny (nie z samego wieku).
+- PMR: pleocytoza 100–999/µl z przewagą limfocytów = wzorzec wirusowy (etap 4).
+- Anafilaksja: jedna dawka adrenaliny bez autostrzykawki / bez przeszkolenia / bez opieki → 6 h obserwacji (etap 4).
+- Wydruk Zapalenia płuc zawsze zawiera antybiotykoterapię – gdy zakładka nie była otwierana, treść jest wyliczana ze wspólnego silnika `mod/zp/engine.js` (`calc/zp-print.js`), z założeniami „alergia NIEUSTALONA”, „DO DECYZJI LEKARZA” (etap 4).
 
 ## Etap 2 (zrealizowany 09.11.2026)
 - **Stan padaczkowy:** drugi lek II rzutu (po lewetyracetamie → walproinian 40 mg/kg, maks. 3000 mg, 100 mg/ml, 10 min; alternatywy fenytoina / lakozamid), przeciwwskazania walproinianu (wątroba, POLG, cykl mocznikowy, ciąża; PLT – ostrzeżenie; karbapenem – interakcja), licznik czasu od początku napadu, komunikat III rzutu (≥40 min lub pogorszenie oddychania), tiamina.
@@ -37,7 +40,24 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Nie realizowano: pole kodu kompendium, EUCAST / własne kalkulatory (oczekują decyzji). Decyzje otwarte z etapu 2 bez zmian.
 - Testy: `node tests/etap3-node.test.js`, `tests/e2e-etap3-puppeteer.js`.
 
+## Etap 4 (zrealizowany 09.11.2026)
+- Sfinalizowane decyzje z 09.11.2026 (PMR, anafilaksja 6 h, wydruk ZP z antybiotykoterapią) – patrz wyżej.
+- **Nowy moduł „Kalkulatory”** (`calc/kalk.js` – logika, `kalk-ui.js` – interfejs; offline, w pamięci SW): 43 kalkulatory w 12 grupach (≤6 w grupie), wyszukiwarka, dane z paska pacjenta (wiek, płeć, masa, kreatynina, ciąża), wynik + interpretacja + konsekwencja kliniczna + źródło z rokiem, wydruk z danymi pacjenta, linki do istniejących modułów (bez dublowania GBS, sPESI, CHA₂DS₂-VA, NIHSS, GCS, CURB-65/PSI itd.). Własne implementacje z publikacji źródłowych – nie kopiowano treści ani kodu innych serwisów.
+  - Kardiologia: SCORE2/SCORE2-OP (Polska = region wysokiego ryzyka), QTc (Bazett, Fridericia, Framingham, Hodges), ABI, Duke-ISCVID 2023, HAS-BLED.
+  - Pulmonologia: kryteria Lighta, gradient A–a i PaO₂/FiO₂, ROX.
+  - Gastroenterologia: Rockall, AIMS65, Child-Pugh, MELD-Na, BISAP.
+  - Nefrologia i elektrolity: eGFR CKD-EPI 2021 + Cockcroft-Gault, FENa/FEUrea, osmolalność i luka osmolalna, luka anionowa (albumina, delta), Na skorygowany i deficyt wody, Ca skorygowany.
+  - Hematologia: 4T, ISTH DIC, PLASMIC, ANC. Neurologia: Canadian CT Head, Canadian C-Spine, Ottawa SAH.
+  - ŻChZZ i ZP: Wells ZŻG, Wells ZP, genewska (pełna/uproszczona), PERC, YEARS, YEARS w ciąży (2019).
+  - Ostry brzuch: Alvarado, AIR. Endokrynologia: Burch-Wartofsky. Sepsa: SIRS, qSOFA, SOFA.
+  - Konwersje leków: glikokortykosteroidy (Liu 2013), benzodiazepiny (Ashton), opioidy (MME, redukcja 25–50%, plaster fentanylowy zaokrąglany w dół; metadon i buprenorfina wyłączone).
+  - Laboratorium: przelicznik jednostek (21 badań), Ca skorygowany, tabela współczynników.
+- Założenie: „skala laweta” z listy lekarza interpretowana jako **kryteria Lighta** (płyn opłucnowy) – do potwierdzenia.
+- Zastrzeżenia: SCORE2-OP – współczynniki z suplementu, przykład z tekstu publikacji nie odtwarza się 1:1 (patrz raport); SCORE2-Diabetes, MELD 3.0 i SOFA-2 nie zaimplementowano.
+- Testy: `node tests/etap4-node.test.js`, `tests/e2e-etap4-puppeteer.js`.
+
 ## Testy
 - `node tests/zp-node.test.js` – przypadki ZP-1…ZP-13 (silnik).
 - `node tests/etap2-node.test.js` – silniki etapu 2 (SE, hiponatremia, tiamina, anafilaksja, posiewy, neuroinfekcje).
+- `node tests/etap3-node.test.js`, `node tests/etap4-node.test.js` – etap 3 i kalkulatory (przykłady z publikacji).
 - Testy przeglądarkowe (puppeteer) – opis w raporcie wdrożenia.

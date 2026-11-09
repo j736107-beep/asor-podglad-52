@@ -29,7 +29,7 @@ function anaObs(o){o=o||{};var d=+o.doses||0;if(o.infusion)return{hosp:true,h:nu
  if(d>2||o.severe||o.asthma||o.absorb||o.night||o.access)return{h:12,why:d>2?'>2 dawki adrenaliny':o.severe?'ciężka reakcja':o.asthma?'ciężka astma':o.absorb?'możliwe dalsze wchłanianie alergenu':o.night?'przyjęcie późnym wieczorem / w nocy':'utrudniony dostęp do pomocy'};
  if(d===2||o.biph)return{h:6,why:d===2?'2 dawki adrenaliny i.m.':'reakcja dwufazowa w wywiadzie'};
  if(d===1&&o.pens)return{h:2,why:'1 dawka, pełne ustąpienie objawów, 2 autowstrzykiwacze + instruktaż, pod opieką'};
- if(d===1)return{h:6,why:'1 dawka, ale brak warunków dla 2 h (autowstrzykiwacze, instruktaż, opieka)'};return null;}
+ if(d===1)return{h:6,why:'1 dawka, ale brak warunków dla 2 h (autowstrzykiwacze, instruktaż, opieka) → 6 h obserwacji (zaakceptowane 09.11.2026)'};return null;}
 function obsUntil(hhmm,h,now){var m=/^(\d{1,2}):(\d{2})$/.exec(String(hhmm||'').trim());if(!m||!(h>0))return null;now=now?new Date(now):new Date();var t=new Date(now);t.setHours(+m[1],+m[2],0,0);var u=new Date(t.getTime()+h*3600e3);return{from:t,until:u,label:('0'+u.getHours()).slice(-2)+':'+('0'+u.getMinutes()).slice(-2),active:now<u,leftMin:Math.max(0,Math.round((u-now)/60000))};}
 // ---------- SEPSA ----------
 function map(sbp,dbp){return nz(sbp)&&nz(dbp)&&sbp>0&&dbp>0&&sbp<=300&&dbp<=200?(sbp+2*dbp)/3:NaN;}

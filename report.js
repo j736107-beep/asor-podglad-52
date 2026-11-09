@@ -55,8 +55,10 @@
       var r=snapText(rootEl),all=snaps(),prev=all[mod.id],sub='',subName='';
       // 5.2 etap 2: treść osadzonej ramki (np. Zapalenie płuc → Antybiotykoterapia, mod/zp) trafia do wydruku modułu
       if(!mod.frame){var fr=[].slice.call(rootEl.querySelectorAll('iframe'));fr.forEach(function(f){try{var b=f.contentDocument&&f.contentDocument.body;if(!b)return;var rr=snapText(b);if(rr.text){sub+=(sub?'\n\n':'')+rr.text;subName=f.title||subName;}}catch(e){}});
-        if(!fr.length&&prev&&prev.sub){sub=prev.sub;subName=prev.subName||'';}}
-      if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';}}else delete all[mod.id];
+        if(!fr.length&&prev&&prev.sub&&!prev.subAuto){sub=prev.sub;subName=prev.subName||'';}}
+      // 5.2 etap 4 (zaakceptowane 09.11.2026): wydruk zapalenia płuc ZAWSZE z antybiotykoterapią – gdy ramka nie była otwierana, wylicz ze wspólnego silnika
+      var subAuto=false;if(mod.id==='cap'&&!sub&&r.filled>0&&root.SORZpPrint){try{sub=root.SORZpPrint.text();}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}
+      if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';if(subAuto)all[mod.id].subAuto=true;}}else delete all[mod.id];
       jset(SNAP,all);}catch(e){}}
   function clearSnaps(){try{localStorage.removeItem(SNAP);}catch(e){}}
   // ------------- składanie raportu -------------
