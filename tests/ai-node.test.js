@@ -45,4 +45,19 @@ t('call(): sztuczny fetch – sukces, body bez identyfikatorów, ponowienie bez 
  await assert.rejects(A.call({provider:'anthropic',key:'bad',model:'m'},P,IDS,()=>res(401,{error:{type:'authentication_error'}})),/Nieprawidłowy klucz/);
  await assert.rejects(A.call({provider:'openai',key:'k',model:'m'},P,IDS,()=>Promise.reject(new TypeError('Failed to fetch'))),/Błąd sieci/);});
 t('Maskowanie klucza',()=>{assert.strictEqual(A.mask('sk-proj-abcdefghijklmnop1234'),'sk-…••••••1234');assert.ok(!A.mask('sk-proj-abcdefghijklmnop1234').includes('abcdef'));});
+t('xAI (Grok): domyślny dostawca; POST api.x.ai/v1/chat/completions, Bearer xai-…, format OpenAI, temperatura 0,2, reasoning_effort low tylko dla grok-4.7',()=>{
+ assert.strictEqual(A.DEF,'xai');assert.strictEqual(A.provOf(undefined),'xai');assert.strictEqual(A.provOf('zzz'),'xai');assert.strictEqual(A.MODELS.xai[0][0],'grok-4.7');assert.ok(A.MODELS.xai.length>=3);assert.ok(A.HOSTS.includes('api.x.ai'));
+ const pr={system:'S',user:'U'};const q=A.buildRequest({key:'xai-abc'},pr),b=JSON.parse(q.init.body);
+ assert.strictEqual(q.url,'https://api.x.ai/v1/chat/completions');assert.strictEqual(q.init.method,'POST');assert.strictEqual(q.init.headers.Authorization,'Bearer xai-abc');assert.strictEqual(b.model,'grok-4.7');assert.strictEqual(b.messages[0].role,'system');assert.strictEqual(b.messages[1].content,'U');assert.strictEqual(b.temperature,0.2);assert.strictEqual(b.reasoning_effort,'low');
+ const n=JSON.parse(A.buildRequest({provider:'xai',key:'xai-abc',model:'grok-4.20-0309-non-reasoning'},pr).init.body);assert.strictEqual(n.reasoning_effort,undefined);
+ const tq=A.testRequest({provider:'xai',key:'xai-abc'});assert.strictEqual(tq.url,'https://api.x.ai/v1/models');assert.strictEqual(tq.init.headers.Authorization,'Bearer xai-abc');
+ const P=A.buildPayload(SRC,IDS),bd=A.buildRequest({provider:'xai',key:'xai-k'},A.buildPrompt(P)).init.body;assert.ok(!/Jan|Testowy|44051401359/.test(bd));
+ const x=A.parse('xai',{choices:[{message:{content:SAMPLE}}]},null);assert.ok(/^EPIKRYZA/.test(x.paste)&&/brak wyniku RTG/.test(x.notes));});
+t('xAI: błędy – 400 „Incorrect API key” (format xAI, error jako tekst) → nieprawidłowy klucz z podpowiedzią xai-; 403 kredyty → brak środków',()=>{
+ const e=A.errorText(null,400,'{"code":"invalid-argument","error":"Incorrect API key provided. You can obtain an API key from https://console.x.ai."}');assert.ok(/Nieprawidłowy klucz API \(400\)/.test(e)&&/xai-/.test(e),e);
+ assert.ok(/Brak środków/.test(A.errorText(null,403,'{"code":"permission-denied","error":"Your team has no credits or licenses"}')));
+ assert.ok(/Błędne zapytanie \(400\): Model not found/.test(A.errorText(null,400,'{"error":"Model not found"}')));});
+t('xAI call(): sztuczny fetch – sukces; ponowienie bez reasoning_effort, gdy model go odrzuca',async()=>{const P=A.buildPayload(SRC,IDS);const urls=[],bodies=[];
+ const ok=await A.call({provider:'xai',key:'xai-test',model:'grok-4.7'},P,IDS,(u,init)=>{urls.push(u);bodies.push(JSON.parse(init.body));return bodies.length===1?res(400,{error:'Argument not supported: reasoning_effort'}):res(200,{model:'grok-4.7',choices:[{message:{content:SAMPLE}}]});});
+ assert.ok(urls.every(u=>u==='https://api.x.ai/v1/chat/completions'));assert.ok(bodies[0].reasoning_effort==='low'&&bodies[1].reasoning_effort===undefined&&ok.noReason&&/^EPIKRYZA/.test(ok.paste));});
 Promise.all(pend).then(()=>{console.log('\n'+(n-f)+'/'+n+' PASS');process.exit(f?1:0);});

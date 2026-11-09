@@ -4,11 +4,16 @@
 // sprawdzane (assertClean) – przy wykryciu identyfikatora zapytanie NIE jest wysyłane.
 (function(r,f){var m=f();if(typeof module==='object'&&module.exports)module.exports=m;else r.SORAIEpi=m;})(this,function(){
 'use strict';
-var MODELS={openai:[['gpt-4.1-mini','GPT-4.1 mini (domyślny – szybki, tani)'],['gpt-4.1','GPT-4.1'],['gpt-4o-mini','GPT-4o mini'],['gpt-4o','GPT-4o'],['gpt-5.4-mini','GPT-5.4 mini']],
+var MODELS={xai:[['grok-4.7','Grok 4.7 (domyślny – zalecany przez xAI; rozumowanie „low” dla szybkości)'],['grok-4.20-0309-non-reasoning','Grok 4.20 bez rozumowania (najszybszy – przy przekroczeniu czasu)'],['grok-4.3','Grok 4.3 (tańszy)']],
+ openai:[['gpt-4.1-mini','GPT-4.1 mini (domyślny – szybki, tani)'],['gpt-4.1','GPT-4.1'],['gpt-4o-mini','GPT-4o mini'],['gpt-4o','GPT-4o'],['gpt-5.4-mini','GPT-5.4 mini']],
  anthropic:[['claude-sonnet-5-5','Claude Sonnet 5.5 (domyślny)'],['claude-haiku-5-5','Claude Haiku 5.5 (szybki, tani)'],['claude-opus-5-5','Claude Opus 5.5']]};
-var PROV={openai:{name:'OpenAI',url:'https://api.openai.com/v1/chat/completions',test:'https://api.openai.com/v1/models'},
- anthropic:{name:'Anthropic',url:'https://api.anthropic.com/v1/messages',test:'https://api.anthropic.com/v1/models'}};
-var HOSTS=['api.openai.com','api.anthropic.com'];
+var PROV={xai:{name:'xAI (Grok)',url:'https://api.x.ai/v1/chat/completions',test:'https://api.x.ai/v1/models',keyHint:'xai-…',console:'console.x.ai'},
+ openai:{name:'OpenAI',url:'https://api.openai.com/v1/chat/completions',test:'https://api.openai.com/v1/models',keyHint:'sk-…',console:'platform.openai.com'},
+ anthropic:{name:'Anthropic',url:'https://api.anthropic.com/v1/messages',test:'https://api.anthropic.com/v1/models',keyHint:'sk-ant-…',console:'console.anthropic.com'}};
+var HOSTS=['api.x.ai','api.openai.com','api.anthropic.com'];var DEF='xai';
+function provOf(p){return PROV[p]?p:DEF;}
+// xAI: modele z rozumowaniem (domyślnie „high” – wolno); dla epikryzy wymuszamy „low”, by zmieścić się w 60 s
+function reasons(prov,m){return prov==='xai'&&/^grok-4\.7/.test(m);}
 var TEMP=0.2,TIMEOUT=60000;
 function fin(x){return typeof x==='number'&&isFinite(x);}
 function r1(x,d){var p=Math.pow(10,d==null?1:d);return Math.round(x*p)/p;}
@@ -89,13 +94,13 @@ function buildPrompt(P){var sec=section(P._place);
  '=====','UWAGI DLA LEKARZA','(NIE do wklejenia: brakujące dane, sprzeczności w danych, ryzyka i rzeczy do weryfikacji; punktowo)'].join('\n');
  var usr='Przygotuj dokumentację SOR (format EPIKRYZA SOR) na podstawie poniższych danych.\nMiejsce leczenia wg programu: '+(P.wyniki_programu&&P.wyniki_programu['Miejsce leczenia']||'nieustalone')+' → trzecia sekcja: '+sec+'.\n\nDANE:\n'+dataText(P);
  return{system:sys,user:usr,section:sec};}
-function buildRequest(cfg,pr,o){o=o||{};var prov=cfg.provider==='anthropic'?'anthropic':'openai',model=cfg.model||MODELS[prov][0][0],body;
- if(prov==='openai'){body={model:model,messages:[{role:'system',content:pr.system},{role:'user',content:pr.user}],max_completion_tokens:3000};if(!o.noTemp)body.temperature=TEMP;
-  return{url:PROV.openai.url,init:{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify(body)}};}
+function buildRequest(cfg,pr,o){o=o||{};var prov=provOf(cfg.provider),model=cfg.model||MODELS[prov][0][0],body;
+ if(prov==='openai'||prov==='xai'){body={model:model,messages:[{role:'system',content:pr.system},{role:'user',content:pr.user}],max_completion_tokens:prov==='xai'?4000:3000};if(!o.noTemp)body.temperature=TEMP;if(reasons(prov,model)&&!o.noReason)body.reasoning_effort='low';
+  return{url:PROV[prov].url,init:{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify(body)}};}
  body={model:model,max_tokens:3000,system:pr.system,messages:[{role:'user',content:pr.user}]};if(!o.noTemp)body.temperature=TEMP;
  return{url:PROV.anthropic.url,init:{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)}};}
-function testRequest(cfg){var prov=cfg.provider==='anthropic'?'anthropic':'openai';
- return prov==='openai'?{url:PROV.openai.test,init:{method:'GET',headers:{'Authorization':'Bearer '+cfg.key}}}:{url:PROV.anthropic.test,init:{method:'GET',headers:{'x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}};}
+function testRequest(cfg){var prov=provOf(cfg.provider);
+ return prov!=='anthropic'?{url:PROV[prov].test,init:{method:'GET',headers:{'Authorization':'Bearer '+cfg.key}}}:{url:PROV.anthropic.test,init:{method:'GET',headers:{'x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}};}
 function extract(prov,j){j=j||{};if(prov==='anthropic'){return (j.content||[]).filter(function(c){return c&&c.type==='text';}).map(function(c){return c.text;}).join('\n');}
  var ch=j.choices&&j.choices[0];var c=ch&&ch.message&&ch.message.content;if(Array.isArray(c))c=c.map(function(x){return x.text||'';}).join('');return c||'';}
 function clean(t){return String(t||'').replace(/\r/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/^\s{0,3}#{1,6}\s*/gm,'').replace(/^```[a-z]*\s*$/gm,'').trim();}
@@ -109,25 +114,27 @@ function parse(prov,j,P){var raw=clean(extract(prov,j));if(!raw)throw new Error(
   if(P._place!=='home'&&/ZALECENIA PRZY WYPISIE/.test(paste))warn.push('Model dodał ZALECENIA PRZY WYPISIE, choć miejsce leczenia ≠ dom – usuń je.');}
  if(warn.length)notes=('KONTROLA PROGRAMU:\n- '+warn.join('\n- ')+(notes?'\n\n':''))+notes;
  return{raw:raw,paste:paste,notes:notes,warn:warn};}
-function errorText(e,status,body){var msg='';try{var j=typeof body==='string'?JSON.parse(body):body;msg=(j&&j.error&&(j.error.message||j.error.type))||'';}catch(_){msg=String(body||'').slice(0,200);}
+function errorText(e,status,body){var msg='';try{var j=typeof body==='string'?JSON.parse(body):body;msg=(j&&j.error&&(typeof j.error==='string'?j.error:(j.error.message||j.error.type)))||(j&&j.message)||'';}catch(_){msg=String(body||'').slice(0,200);}
  if(e&&e.name==='AbortError')return 'Przekroczono czas oczekiwania (60 s). Spróbuj ponownie lub wybierz szybszy model.';
- if(e&&!status)return 'Błąd sieci – brak połączenia z serwerem AI (sprawdź internet; sieć szpitalna może blokować api.openai.com / api.anthropic.com).';
- if(status===401)return 'Nieprawidłowy klucz API (401). Sprawdź klucz w Ustawieniach → Sztuczna inteligencja (pilot).';
+ if(e&&!status)return 'Błąd sieci – brak połączenia z serwerem AI (sprawdź internet; sieć szpitalna może blokować api.x.ai / api.openai.com / api.anthropic.com).';
+ if((status===400||status===401||status===403)&&/(incorrect|invalid|wrong|missing)[^.]*api key|api key[^.]*(incorrect|invalid|not valid)/i.test(msg))return 'Nieprawidłowy klucz API ('+status+'). Sprawdź klucz w Ustawieniach → Sztuczna inteligencja (pilot) (xAI: klucz zaczyna się od „xai-”, z console.x.ai).';
+ if(status===402||(status===403&&/credit|billing|balance|spending/i.test(msg)))return 'Brak środków na koncie dostawcy (kredyty / limit wydatków). Doładuj konto (xAI: console.x.ai → Billing).';
+ if(status===401)return 'Nieprawidłowy klucz API (401). Sprawdź klucz w Ustawieniach → Sztuczna inteligencja (pilot) (xAI: klucz zaczyna się od „xai-”, z console.x.ai).';
  if(status===403)return 'Brak dostępu (403) – klucz nie ma uprawnień do tego modelu lub konto jest zablokowane.'+(msg?' ('+msg+')':'');
  if(status===404)return 'Model niedostępny (404) – wybierz inny model w Ustawieniach.'+(msg?' ('+msg+')':'');
- if(status===429)return /quota|credit|billing|balance/i.test(msg)?'Brak środków / wyczerpany limit konta (quota). Doładuj konto u dostawcy.':'Zbyt wiele zapytań (429) – odczekaj chwilę i spróbuj ponownie.';
+ if(status===429)return /quota|credit|billing|balance|spending/i.test(msg)?'Brak środków / wyczerpany limit konta (quota). Doładuj konto u dostawcy.':'Zbyt wiele zapytań (429) – odczekaj chwilę i spróbuj ponownie.';
  if(status===400)return 'Błędne zapytanie (400)'+(msg?': '+msg:'')+'.';
  if(status>=500)return 'Serwer dostawcy AI niedostępny lub przeciążony ('+status+'). Spróbuj za chwilę.';
  return 'Błąd ('+status+')'+(msg?': '+msg:'')+'.';}
 function fetchT(fetchImpl,url,init,ms){var ac=typeof AbortController!=='undefined'?new AbortController():null,t=null;if(ac){init=Object.assign({},init,{signal:ac.signal});t=setTimeout(function(){ac.abort();},ms||TIMEOUT);}
  return fetchImpl(url,init).finally(function(){if(t)clearTimeout(t);});}
-function call(cfg,P,ids,fetchImpl){var pr=buildPrompt(P),prov=cfg.provider==='anthropic'?'anthropic':'openai';
+function call(cfg,P,ids,fetchImpl){var pr=buildPrompt(P),prov=provOf(cfg.provider);
  function go(o){var q=buildRequest(cfg,pr,o);assertClean(q.init.body,ids);
-  return fetchT(fetchImpl,q.url,q.init).then(function(res){return res.text().then(function(t){if(!res.ok){if(res.status===400&&!o.noTemp&&/temperature/i.test(t))return go({noTemp:true});var e=new Error(errorText(null,res.status,t));e.status=res.status;throw e;}
-   var j;try{j=JSON.parse(t);}catch(_){throw new Error('Nieczytelna odpowiedź serwera AI.');}var out=parse(prov,j,P);out.model=j.model||cfg.model;out.noTemp=!!o.noTemp;return out;});},
+  return fetchT(fetchImpl,q.url,q.init).then(function(res){return res.text().then(function(t){if(!res.ok){if(res.status===400&&!o.noTemp&&/temperature/i.test(t))return go(Object.assign({},o,{noTemp:true}));if(res.status===400&&!o.noReason&&/reasoning_effort|reasoning effort/i.test(t))return go(Object.assign({},o,{noReason:true}));var e=new Error(errorText(null,res.status,t));e.status=res.status;throw e;}
+   var j;try{j=JSON.parse(t);}catch(_){throw new Error('Nieczytelna odpowiedź serwera AI.');}var out=parse(prov,j,P);out.model=j.model||cfg.model;out.noTemp=!!o.noTemp;out.noReason=!!o.noReason;return out;});},
    function(e){if(e&&e.status)throw e;var x=new Error(errorText(e,0));x.cause=e;throw x;});}
  return go({});}
-function test(cfg,fetchImpl){var q=testRequest(cfg);return fetchT(fetchImpl,q.url,q.init,20000).then(function(res){return res.text().then(function(t){if(!res.ok)throw new Error(errorText(null,res.status,t));return 'Połączenie OK – klucz '+PROV[cfg.provider==='anthropic'?'anthropic':'openai'].name+' działa.';});},function(e){if(e&&/^(Nieprawidłowy|Brak|Model|Zbyt|Błędne|Serwer|Błąd \()/.test(e.message))throw e;throw new Error(errorText(e,0));});}
+function test(cfg,fetchImpl){var q=testRequest(cfg);return fetchT(fetchImpl,q.url,q.init,20000).then(function(res){return res.text().then(function(t){if(!res.ok)throw new Error(errorText(null,res.status,t));return 'Połączenie OK – klucz '+PROV[provOf(cfg.provider)].name+' działa.';});},function(e){if(e&&/^(Nieprawidłowy|Brak|Model|Zbyt|Błędne|Serwer|Błąd \()/.test(e.message))throw e;throw new Error(errorText(e,0));});}
 function mask(k){k=String(k||'');return k.length<8?(k?'••••':''):k.slice(0,3)+'…'+'•'.repeat(6)+k.slice(-4);}
-return{MODELS:MODELS,PROV:PROV,HOSTS:HOSTS,TEMP:TEMP,TIMEOUT:TIMEOUT,scrub:scrub,assertClean:assertClean,buildPayload:buildPayload,dataText:dataText,buildPrompt:buildPrompt,section:section,buildRequest:buildRequest,testRequest:testRequest,parse:parse,errorText:errorText,call:call,test:test,mask:mask,PLACE:PLACE};
+return{DEF:DEF,provOf:provOf,MODELS:MODELS,PROV:PROV,HOSTS:HOSTS,TEMP:TEMP,TIMEOUT:TIMEOUT,scrub:scrub,assertClean:assertClean,buildPayload:buildPayload,dataText:dataText,buildPrompt:buildPrompt,section:section,buildRequest:buildRequest,testRequest:testRequest,parse:parse,errorText:errorText,call:call,test:test,mask:mask,PLACE:PLACE};
 });
