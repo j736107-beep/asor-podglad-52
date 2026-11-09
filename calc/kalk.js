@@ -35,17 +35,24 @@ var S2={m:{age:0.3742,smk:0.6012,sbp:0.2777,dm:0.6457,tc:0.1458,hdl:-0.2698,smkA
 function score2(age,sex,smk,sbp,tc,hdl,dm,region){var b=S2[sex],cal=S2.cal[region][sex];var ca=(age-60)/5,cs=(sbp-120)/20,ct=tc-6,ch=(hdl-1.3)/0.5;
  var lp=b.age*ca+b.smk*smk+b.sbp*cs+b.dm*dm+b.tc*ct+b.hdl*ch+b.smkA*ca*smk+b.sbpA*ca*cs+b.tcA*ca*ct+b.hdlA*ca*ch+b.dmA*ca*dm;
  var u=1-Math.pow(b.s0,Math.exp(lp));return 1-Math.exp(-Math.exp(cal[0]+cal[1]*Math.log(-Math.log(1-u))));}
-// SCORE2-OP (≥70 lat): WSTRZYMANY 09.11.2026 – implementacja wg współczynników publikacji nie odtwarza tabel ESC 2021 (rys. 3) ani przykładu z tekstu
-// publikacji w granicach zaokrąglenia; suplement z dokładnymi parametrami niedostępny do weryfikacji. Kalkulator widoczny, nieaktywny (C.score2op.suspended).
-C.score2={g:'kard',n:'SCORE2 – 10-letnie ryzyko sercowo-naczyniowe (40–69 lat)',d:'Systematic COronary Risk Evaluation 2: 10-letnie ryzyko zawału serca, udaru lub zgonu sercowo-naczyniowego u osób 40–69 lat bez rozpoznanej choroby sercowo-naczyniowej i bez cukrzycy.',
+// SCORE2-OP (≥70 lat) – model wg parametrów publikacji przekazanych przez lekarza 09.11.2026 (fakty; własny kod):
+// x = Σb·(a,p,d,s,c,h + interakcje z wiekiem), a=wiek−73, s=SBP−150, c=TC−6, h=HDL−1,4; R0=1−S0^exp(x−x̄); kalibracja regionu: R=1−exp(−exp(s1+s2·ln(−ln(1−R0)))).
+// Porównanie z tabelami ESC 2021 (rys. 3, region wysokiego ryzyka, 256 komórek ≥70 lat) – patrz tests/etap4-node.test.js: systematyczne niedoszacowanie
+// (HDL 1,4: 142/256 w ±1 pkt, średnio −1,45 pkt; mężczyźni −1,79) → kalkulator nadal WSTRZYMANY (C.score2op.suspended).
+var OP={m:{b:[0.0634,0.3524,0.4245,0.0094,0.0850,-0.3564,-0.0247,-0.0174,-0.0005,0.0073,0.0091],s0:0.7576,xm:0.0929},
+ f:{b:[0.0789,0.4921,0.6010,0.0102,0.0605,-0.3040,-0.0255,-0.0107,-0.0004,-0.0009,0.0154],s0:0.8082,xm:0.229},cal:{high:{m:[0.08,1.15],f:[0.38,1.09]}}};
+function score2op(age,sex,smk,sbp,tc,hdl,dm,region){var o=OP[sex],b=o.b,k=OP.cal[region||'high'][sex],a=age-73,s=sbp-150,c=tc-6,h=hdl-1.4;
+ var x=b[0]*a+b[1]*smk+b[2]*dm+b[3]*s+b[4]*c+b[5]*h+b[6]*a*smk+b[7]*a*dm+b[8]*a*s+b[9]*a*c+b[10]*a*h;
+ var r0=1-Math.pow(o.s0,Math.exp(x-o.xm));return 1-Math.exp(-Math.exp(k[0]+k[1]*Math.log(-Math.log(1-r0))));}
+C.score2={g:'kardr',url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC) – kalkulator online',n:'SCORE2 – 10-letnie ryzyko sercowo-naczyniowe (40–69 lat)',d:'Systematic COronary Risk Evaluation 2: 10-letnie ryzyko zawału serca, udaru lub zgonu sercowo-naczyniowego u osób 40–69 lat bez rozpoznanej choroby sercowo-naczyniowej i bez cukrzycy.',
  src:'SCORE2 working group, Eur Heart J 2021;42:2439 (współczynniki: suplement, tab. 1 – 4 miejsca po przecinku; weryfikacja: przykład z publikacji 5,9/14,0/4,2/13,7% odtworzony; tabele ESC 2021 rys. 3 – region wysokiego ryzyka); ESC 2021 – wytyczne Europejskiego Towarzystwa Kardiologicznego dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227) – regiony ryzyka (Polska: region wysokiego ryzyka)',yr:2021,
  f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg',{min:60,max:260}),N('tc','Cholesterol całkowity',CHOL_U,{min:1,max:20}),N('hdl','Cholesterol HDL (lipoprotein wysokiej gęstości)',CHOL_U,{min:0.2,max:5}),
   S('reg','Region ryzyka (ESC 2021)',[['high','Polska – region WYSOKIEGO ryzyka (ESC 2021)'],['vhigh','region bardzo wysokiego ryzyka'],['mod','region umiarkowanego ryzyka'],['low','region niskiego ryzyka']],{def:'high'})],
  calc:function(v){var m=need(v,['age','sbp','tc','hdl'],['wiek','SBP','cholesterol całkowity','HDL']);if(!v.sex)m.push('płeć');if(m.length)return{miss:m};
   var a=v.age,reg=v.reg||'high',dm=v.dm===true?1:0,smk=v.smk===true?1:0;
-  if(a>=70&&a<=89)return{err:'Wiek ≥70 lat: SCORE2-OP – KALKULATOR WSTRZYMANY (wynik niezweryfikowany). Odczytaj ryzyko z tabel SCORE2-OP w wytycznych ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227, rys. 3 – region wysokiego ryzyka: Polska) lub w HeartScore (heartscore.org).'};
+  if(a>=70&&a<=89)return{err:'Wiek ≥70 lat: SCORE2-OP – KALKULATOR WSTRZYMANY (wynik niezweryfikowany). Odczytaj ryzyko z tabel SCORE2-OP w wytycznych ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227, rys. 3 – region wysokiego ryzyka: Polska) lub w HeartScore: https://www.heartscore.org/en_GB'};
   if(a<40||a>69)return{err:'SCORE2 zwalidowany dla wieku 40–69 lat.'};
-  if(dm)return{err:'SCORE2 nie dotyczy chorych na cukrzycę – w cukrzycy typu 2 ESC 2023 zaleca SCORE2-Diabetes (nie zaimplementowano).'};
+  if(dm)return{err:'SCORE2 nie dotyczy chorych na cukrzycę. W cukrzycy typu 2 (40–69 lat) użyj kalkulatora SCORE2-Diabetes (ta sama grupa: „Kardiologia – ryzyko SCORE2”; ESC 2023).',link:'score2dm'};
   var op=false,risk=score2(a,v.sex,smk,v.sbp,v.tc,v.hdl,dm,reg)*100;
   var th=a<50?[2.5,7.5]:a<70?[5,10]:[7.5,15],cat=risk<th[0]?0:risk<th[1]?1:2;
   var L=['niskie do umiarkowanego','wysokie','bardzo wysokie'][cat];
@@ -55,10 +62,41 @@ C.score2={g:'kard',n:'SCORE2 – 10-letnie ryzyko sercowo-naczyniowe (40–69 la
   return{v:fx(risk,1)+' %',n:risk,lvl:['green','orange','red'][cat],interp:(op?'SCORE2-OP':'SCORE2')+': ryzyko '+L+' (progi dla wieku '+(a<50?'<50 lat: <2,5 / 2,5–<7,5 / ≥7,5 %':a<70?'50–69 lat: <5 / 5–<10 / ≥10 %':'≥70 lat: <7,5 / 7,5–<15 / ≥15 %')+').',
    cons:cons+' Nie stosuj przy rozpoznanej chorobie sercowo-naczyniowej, przewlekłej chorobie nerek, hipercholesterolemii rodzinnej (ryzyko z definicji wysokie/bardzo wysokie). W SOR wynik informacyjny – do przekazania lekarzowi POZ (podstawowej opieki zdrowotnej).',
    rows:[['Model','SCORE2 (40–69 lat)'],['Region',{high:'wysokiego ryzyka (Polska)',vhigh:'bardzo wysokiego ryzyka',mod:'umiarkowanego ryzyka',low:'niskiego ryzyka'}[reg]],['Cholesterol nie-HDL',fx(v.tc-v.hdl,1)+' mmol/l']]};}};
-C.score2op={g:'kard',suspended:true,n:'SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe (≥70 lat) – WSTRZYMANY',d:'SCORE2-Older Persons (70–89 lat). Kalkulator wstrzymany: implementacja z publikacji nie odtwarza w granicach zaokrąglenia tabel ESC 2021 ani przykładu z publikacji – do czasu weryfikacji ryzyko odczytuj z oficjalnych tabel.',
- src:'SCORE2-OP working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2455; tabele: ESC 2021 – wytyczne Europejskiego Towarzystwa Kardiologicznego dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227), rys. 3 – region wysokiego ryzyka (Polska); kalkulator online: HeartScore (heartscore.org, Europa – wysokie ryzyko)',yr:2021,
- f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg'),N('nhdl','Cholesterol nie-HDL',CHOL_U)],
- calc:function(){return{suspended:true,err:'Kalkulator wstrzymany – wynik niezweryfikowany. Odczytaj 10-letnie ryzyko z tabel SCORE2-OP: ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227), rysunek 3 – „populations at high CVD risk” (Polska = region wysokiego ryzyka), lub w HeartScore (heartscore.org → Europa – wysokie ryzyko). Progi ESC 2021 dla ≥70 lat: <7,5% / 7,5–<15% / ≥15%.'};}};
+C.score2op={g:'kardr',suspended:true,url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC) – kalkulator online',n:'SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe (≥70 lat) – WSTRZYMANY',d:'SCORE2-Older Persons (70–89 lat). Kalkulator wstrzymany: model z parametrami publikacji (sprawdzony 09.11.2026) systematycznie zaniża ryzyko względem tabel ESC 2021 (region wysokiego ryzyka: średnio −1,45 pkt, u mężczyzn −1,8 pkt; tylko 55% komórek w granicach ±1 pkt; maks. różnica 3 pkt) – do czasu weryfikacji odczytuj ryzyko z oficjalnych tabel lub HeartScore.',
+ src:'SCORE2-OP working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2455 (parametry modelu: współczynniki, S0, średnia predyktora, kalibracja regionu wysokiego ryzyka); tabele: ESC 2021 – wytyczne dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227), rys. 3 – region wysokiego ryzyka (Polska); kalkulator online: HeartScore',yr:2021,
+ f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg'),N('tc','Cholesterol całkowity',CHOL_U),N('hdl','Cholesterol HDL',CHOL_U)],
+ calc:function(){return{suspended:true,err:'Kalkulator wstrzymany – wynik niezweryfikowany (model zaniża ryzyko względem tabel ESC 2021). Odczytaj 10-letnie ryzyko z tabel SCORE2-OP: ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227), rysunek 3 – „populations at high CVD risk” (Polska = region wysokiego ryzyka), lub w HeartScore: https://www.heartscore.org/en_GB. Progi ESC 2021 dla ≥70 lat: <7,5% / 7,5–<15% / ≥15%.'};}};
+// SCORE2-Diabetes (ESC 2023, cukrzyca typu 2, 40–69 lat) – współczynniki: SCORE2-Diabetes Working Group, Eur Heart J 2023;44:2544 (parametry przekazane przez lekarza);
+// kalibracja regionów = SCORE2. Weryfikacja: przykłady z publikacji (region umiarkowany) 11 / 17% (M) i 8 / 13% (K) odtworzone: 10,96 / 17,19 / 7,59 / 12,70%.
+var S2D={m:{b:[0.5368,0.4774,0.1322,0.6457,0.1102,-0.1087,-0.0672,-0.0268,-0.0983,-0.0181,0.0095,-0.0998,0.0955,-0.0591,0.0058,-0.0134,0.0115],s0:0.9605},
+ f:{b:[0.6624,0.6139,0.1421,0.8096,0.1127,-0.1568,-0.1122,-0.0167,-0.1272,-0.0200,0.0186,-0.1180,0.1173,-0.0640,0.0062,-0.0196,0.0169],s0:0.9776}};
+function score2dm(age,sex,smk,sbp,tc,hdl,dx,hba,egfr,region){var o=S2D[sex],b=o.b,k=S2.cal[region||'high'][sex];
+ var a=(age-60)/5,p=smk,s=(sbp-120)/20,d=1,c=tc-6,h=(hdl-1.3)/0.5,t=(dx-50)/5,g=(hba-31)/9.34,f=(Math.log(egfr)-4.5)/0.15;
+ var v=[a,p,s,d,c,h,a*p,a*s,a*d,a*c,a*h,t,g,f,f*f,g*a,f*a],x=0;for(var i=0;i<17;i++)x+=b[i]*v[i];
+ var r0=1-Math.pow(o.s0,Math.exp(x));return 1-Math.exp(-Math.exp(k[0]+k[1]*Math.log(-Math.log(1-r0))));}
+function ckdepi09(cr,age,sex){var f=sex==='f',k=f?0.7:0.9,a=f?-0.329:-0.411,x=cr/k;return 141*Math.pow(Math.min(x,1),a)*Math.pow(Math.max(x,1),-1.209)*Math.pow(0.993,age)*(f?1.018:1);}
+function hbaIfcc(pct){return (pct-2.15)*10.929;}
+C.score2dm={g:'kardr',url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC) – kalkulator online',n:'SCORE2-Diabetes – 10-letnie ryzyko sercowo-naczyniowe w cukrzycy typu 2 (40–69 lat)',d:'Ryzyko zawału serca, udaru lub zgonu sercowo-naczyniowego w ciągu 10 lat u chorych na cukrzycę typu 2 bez miażdżycowej choroby sercowo-naczyniowej (ASCVD) i bez ciężkiego uszkodzenia narządowego. Najpierw kryteria „bardzo dużego ryzyka” – jeśli spełnione, model nie jest liczony.',
+ src:'SCORE2-Diabetes Working Group and the ESC Cardiovascular Risk Collaboration, Eur Heart J 2023;44:2544–2556 (współczynniki, S0; kalibracja regionów jak SCORE2); ESC 2023 – wytyczne dot. leczenia chorób sercowo-naczyniowych u chorych na cukrzycę (Marx i wsp., Eur Heart J 2023;44:4043); eGFR: CKD-EPI 2009 (Levey i wsp., Ann Intern Med 2009;150:604); HbA1c: IFCC = (DCCT% − 2,15) × 10,929. Weryfikacja: przykłady z publikacji 11/17% (M), 8/13% (K) odtworzone.',yr:2023,
+ f:[H('1. Kryteria bardzo dużego ryzyka (bez liczenia modelu)'),Y('ascvd','Rozpoznana miażdżycowa choroba sercowo-naczyniowa (ASCVD: przebyty zawał/OZW, rewaskularyzacja, udar/TIA, choroba tętnic obwodowych, istotne blaszki w badaniu obrazowym)',0,{opt:1}),
+  Y('a3','Białkomocz A3 (ACR >300 mg/g; >30 mg/mmol)',0,{opt:1}),Y('a2','Albuminuria A2 (ACR 30–300 mg/g; 3–30 mg/mmol)',0,{opt:1}),Y('micro','Choroba mikronaczyniowa w ≥3 lokalizacjach (np. retinopatia + neuropatia + nefropatia)',0,{opt:1}),
+  H('2. Dane do modelu'),AGE,SEX,Y('smk','Aktualnie pali tytoń',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg',{min:60,max:260}),N('tc','Cholesterol całkowity',CHOL_U,{min:1,max:20}),N('hdl','Cholesterol HDL',CHOL_U,{min:0.2,max:5}),
+  N('dx','Wiek w chwili rozpoznania cukrzycy','lat',{min:0,max:120}),N('hba','HbA1c (IFCC)','mmol/mol',{min:15,max:200}),N('hbap','lub HbA1c w % (DCCT/NGSP) – przeliczę na mmol/mol','%',{min:3,max:20,opt:1}),
+  N('egfr','eGFR (CKD-EPI 2009) – puste = wyliczę z kreatyniny','ml/min/1,73 m²',{min:1,max:200,opt:1}),Object.assign({},CR,{opt:1}),
+  S('reg','Region ryzyka (ESC)',[['high','Polska – region WYSOKIEGO ryzyka'],['vhigh','region bardzo wysokiego ryzyka'],['mod','region umiarkowanego ryzyka'],['low','region niskiego ryzyka']],{def:'high'})],
+ calc:function(v){var VH=function(why){return{v:'BARDZO DUŻE',lvl:'red',interp:'Ryzyko sercowo-naczyniowe BARDZO DUŻE (ESC 2023) – bez liczenia SCORE2-Diabetes: '+why+'.',cons:'Leczenie wg ESC 2023 dla bardzo dużego ryzyka (intensywna kontrola LDL, ciśnienia, leki o udowodnionej korzyści sercowo-naczyniowej) – decyzja lekarza prowadzącego / diabetologa; w SOR wynik informacyjny.',rows:[['Kryterium',why]]};};
+  if(v.ascvd===true)return VH('rozpoznana ASCVD');if(v.a3===true)return VH('białkomocz A3');if(v.micro===true)return VH('choroba mikronaczyniowa w ≥3 lokalizacjach');
+  var eg=v.egfr,egSrc='wpisane';if(!ok(eg)&&ok(v.cr)&&ok(v.age)&&v.sex){eg=ckdepi09(v.cr,v.age,v.sex);egSrc='CKD-EPI 2009 z kreatyniny '+fx(v.cr,2)+' mg/dl';}
+  if(ok(eg)&&eg<45)return VH('eGFR '+fmt(eg,0)+' <45 ml/min/1,73 m²');if(ok(eg)&&eg<60&&v.a2===true)return VH('eGFR '+fmt(eg,0)+' (45–59) z albuminurią A2');
+  var hba=v.hba,hSrc='';if(!ok(hba)&&ok(v.hbap)){hba=hbaIfcc(v.hbap);hSrc=fx(v.hbap,1)+'% → '+fx(hba,1)+' mmol/mol';}
+  var m=need(v,['age','sbp','tc','hdl','dx'],['wiek','SBP','cholesterol całkowity','HDL','wiek rozpoznania cukrzycy']);if(!v.sex)m.push('płeć');if(!ok(hba))m.push('HbA1c (mmol/mol lub %)');if(!ok(eg))m.push('eGFR lub kreatynina');if(m.length)return{miss:m};
+  if(v.age<40||v.age>69)return{err:'SCORE2-Diabetes zwalidowany dla wieku 40–69 lat. ≥70 lat: SCORE2-OP (wstrzymany) – tabele ESC 2021 lub HeartScore: https://www.heartscore.org/en_GB'};
+  if(v.dx>v.age)return{err:'Wiek rozpoznania cukrzycy nie może być większy niż obecny wiek.'};
+  var reg=v.reg||'high',smk=v.smk===true?1:0,risk=Math.round(score2dm(v.age,v.sex,smk,v.sbp,v.tc,v.hdl,v.dx,hba,eg,reg)*1000)/10,cat=risk<5?0:risk<10?1:risk<20?2:3;
+  var L=['MAŁE','UMIARKOWANE','DUŻE','BARDZO DUŻE'][cat];
+  var cons=['Ryzyko małe (<5%): styl życia, kontrola czynników ryzyka wg ESC 2023.','Ryzyko umiarkowane (5–<10%): kontrola lipidów i ciśnienia wg ESC 2023; styl życia.','Ryzyko duże (10–<20%): ESC 2023 – intensywna kontrola czynników ryzyka; rozważ leki hipoglikemizujące o udowodnionej korzyści sercowo-naczyniowej (inhibitor SGLT2 / agonista GLP-1) – decyzja POZ/diabetologa.','Ryzyko bardzo duże (≥20%): ESC 2023 – intensywna kontrola czynników ryzyka; rozważ inhibitor SGLT2 / agonistę GLP-1 – decyzja POZ/diabetologa.'][cat];
+  var rows=[['Model','SCORE2-Diabetes (cukrzyca typu 2, 40–69 lat)'],['Region',{high:'wysokiego ryzyka (Polska)',vhigh:'bardzo wysokiego ryzyka',mod:'umiarkowanego ryzyka',low:'niskiego ryzyka'}[reg]],['eGFR',fmt(eg,0)+' ml/min/1,73 m² ('+egSrc+')'],['HbA1c',hSrc||fx(hba,0)+' mmol/mol'],['Weryfikacja','przykłady z publikacji (region umiarkowany) 11/17% M i 8/13% K – odtworzone; w razie wątpliwości porównaj z HeartScore']];
+  return{v:fx(risk,1)+' %',n:risk,lvl:['green','orange','red','red'][cat],interp:'SCORE2-Diabetes: ryzyko '+L+' (progi ESC 2023: <5 / 5–<10 / 10–<20 / ≥20%).',cons:cons+' Nie stosuj przy ASCVD lub ciężkim uszkodzeniu narządowym (z definicji bardzo duże ryzyko). W SOR wynik informacyjny – do przekazania lekarzowi POZ.',rows:rows};}};
 C.qtc={g:'kard',n:'QTc – skorygowany odstęp QT (Bazett, Fridericia, Framingham, Hodges)',d:'Korekcja odstępu QT względem częstości rytmu serca czterema wzorami.',
  src:'Bazett, Heart 1920; Fridericia, Acta Med Scand 1920; Sagie i wsp. (Framingham), Am J Cardiol 1992;70:797; Hodges i wsp., J Am Coll Cardiol 1983; progi: AHA/ACCF/HRS 2009 (Rautaharju i wsp., Circulation 2009;119:e241) – Amerykańskie Towarzystwo Kardiologiczne / Amerykańskie Kolegium Kardiologii / Towarzystwo Rytmu Serca',yr:2009,
  f:[N('qt','Odstęp QT (zmierzony)','ms',{min:150,max:800}),N('hr','Częstość rytmu serca (HR)','/min',{min:20,max:250}),SEX],
@@ -438,14 +476,35 @@ C.units={g:'lab',n:'Przelicznik jednostek laboratoryjnych (konwencjonalne ↔ SI
   return{v:fmt(v.x,3)+' '+(c2s?a[2]:a[3])+' = '+fmt(y,d+1)+' '+(c2s?a[3]:a[2]),n:y,lvl:'',rows:rows,interp:a[1]+': '+fmt(v.x,3)+' '+(c2s?a[2]:a[3])+' odpowiada '+fmt(y,d+1)+' '+(c2s?a[3]:a[2])+'.',cons:'Zakresy referencyjne zależą od laboratorium – porównuj z normą podaną na wyniku.'};}};
 C.labtab={g:'lab',n:'Tabela współczynników przeliczeniowych',d:'Zestawienie mnożników konwencjonalne → SI dla wszystkich badań przelicznika.',src:C.units.src,yr:2020,f:[],
  calc:function(){return{v:LAB.length+' badań',lvl:'',rows:LAB.map(function(x){return[x[1],'1 '+x[2]+' = '+fmt(x[4],4)+' '+x[3]+(x[6]?' ('+x[6]+')':'')];}),interp:'Mnożenie przez współczynnik: jednostki konwencjonalne → SI; dzielenie: SI → konwencjonalne.',cons:'—'};}};
+// ================= ZP – ROKOWANIE (PESI, sPESI) =================
+var PE_NOTE='ESC 2019: niskie ryzyko = stabilny hemodynamicznie, PESI I–II i sPESI 0, bez dysfunkcji prawej komory (RV) w echo/angio-TK i troponina ujemna lub nieoznaczona. PESI III–V lub sPESI ≥1 = co najmniej ryzyko pośrednie: oceń RV i troponinę (oba dodatnie → pośrednio-wysokie – monitorowanie; ≤1 → pośrednio-niskie – hospitalizacja). Niestabilność hemodynamiczna = wysokie ryzyko niezależnie od skal.';
+var PE_TR='Uwaga: polskie tłumaczenie ESC 2019 (Kardiol Pol 2020;78 supl. II, tab. 8 / ryc. 6) podaje „PESI III–IV”; oryginał: PESI III–V.';
+var PE_F=[AGE,SEX,Y('ca','Nowotwór (czynny)',0),Y('hf','Przewlekła niewydolność serca',0),Y('lung','Przewlekła choroba płuc',0),N('hr','Częstość rytmu serca','/min',{min:20,max:300}),N('sbp','Ciśnienie skurczowe (SBP)','mmHg',{min:30,max:300}),N('rr','Częstość oddechów','/min',{min:2,max:80}),N('temp','Temperatura ciała','°C',{min:25,max:45}),Y('ams','Zaburzenia świadomości (dezorientacja, letarg, stupor, śpiączka)',0),N('spo2','SpO₂ (saturacja tętnicza)','%',{min:30,max:100})];
+C.pesi={g:'vtep',n:'PESI – Pulmonary Embolism Severity Index (30-dniowa śmiertelność w ZP)',d:'Pełna skala PESI: wiek w latach + punkty za płeć, choroby współistniejące i parametry życiowe; klasy I–V z 30-dniową śmiertelnością.',
+ src:'Aujesky i wsp., Am J Respir Crit Care Med 2005;172:1041 (PESI); ESC 2019 – wytyczne dot. ostrej zatorowości płucnej (Konstantinides i wsp., Eur Heart J 2020;41:543–603), tab. 7–8, ryc. 6; wersja polska: Kardiol Pol 2020;78 supl. II',yr:2005,f:PE_F,
+ calc:function(v){var m=need(v,['age','hr','sbp','rr','temp','spo2'],['wiek','HR','SBP','częstość oddechów','temperatura','SpO₂']);if(!v.sex)m.push('płeć');if(m.length)return{miss:m};
+  var s=Math.round(v.age),rows=[['Wiek (lata)','+'+s]];function add(c,l,p){if(c){s+=p;rows.push([l,'+'+p]);}}
+  add(v.sex==='m','Płeć męska',10);add(v.ca===true,'Nowotwór',30);add(v.hf===true,'Przewlekła niewydolność serca',10);add(v.lung===true,'Przewlekła choroba płuc',10);
+  add(v.hr>=110,'HR ≥110/min',20);add(v.sbp<100,'SBP <100 mmHg',30);add(v.rr>=30,'Oddechy ≥30/min',20);add(v.temp<36,'Temperatura <36 °C',20);add(v.ams===true,'Zaburzenia świadomości',60);add(v.spo2<90,'SpO₂ <90%',20);
+  var K=s<=65?['I','0–1,6%','green']:s<=85?['II','1,7–3,5%','green']:s<=105?['III','3,2–7,1%','orange']:s<=125?['IV','4,0–11,4%','red']:['V','10,0–24,5%','red'];
+  rows.push(['Klasa PESI',K[0]+' (30-dniowa śmiertelność '+K[1]+')'],['Tłumaczenie',PE_TR]);
+  return{v:s+' pkt – klasa '+K[0],n:s,cls:K[0],lvl:K[2],interp:'PESI klasa '+K[0]+': 30-dniowa śmiertelność '+K[1]+(s<=85?' – niskie ryzyko wg PESI (I–II).':' – co najmniej ryzyko pośrednie (PESI III–V).'),cons:PE_NOTE,rows:rows};}};
+C.spesi={g:'vtep',n:'sPESI – uproszczony PESI (simplified Pulmonary Embolism Severity Index)',d:'6 kryteriów po 1 pkt; przewlekła choroba serca i/lub płuc = łącznie 1 pkt. 0 pkt = niskie ryzyko wg sPESI.',
+ src:'Jiménez i wsp., Arch Intern Med 2010;170:1383 (sPESI); ESC 2019 – wytyczne dot. ostrej zatorowości płucnej (Konstantinides i wsp., Eur Heart J 2020;41:543–603), tab. 7–8, ryc. 6',yr:2010,f:PE_F.filter(function(f){return ['rr','temp','ams'].indexOf(f.k)<0;}),
+ calc:function(v){var m=need(v,['age','hr','sbp','spo2'],['wiek','HR','SBP','SpO₂']);if(m.length)return{miss:m};var s=0,rows=[];function add(c,l){if(c){s++;rows.push([l,'+1']);}}
+  add(v.age>80,'Wiek >80 lat');add(v.ca===true,'Nowotwór');add(v.hf===true||v.lung===true,'Przewlekła choroba serca i/lub płuc (łącznie 1 pkt)');add(v.hr>=110,'HR ≥110/min');add(v.sbp<100,'SBP <100 mmHg');add(v.spo2<90,'SpO₂ <90%');
+  rows.push(['Tłumaczenie',PE_TR]);
+  return s===0?{v:'0 pkt',n:0,lvl:'green',interp:'sPESI 0: 30-dniowa śmiertelność 1,0% (95% CI 0,0–2,1).',cons:PE_NOTE,rows:rows}:{v:s+' pkt',n:s,lvl:'red',interp:'sPESI ≥1: 30-dniowa śmiertelność 10,9% (95% CI 8,5–13,2) – co najmniej ryzyko pośrednie.',cons:PE_NOTE,rows:rows};}};
 // ================= GRUPY =================
-var G=[['kard','Kardiologia',['score2','score2op','qtc','abi','duke','hasbled'],[['trop','Ból w klatce / troponina (HEART, EKG)'],['af','Migotanie przedsionków (CHA₂DS₂-VA)'],['ahf','Ostra niewydolność serca']]],
+var G=[['kardr','Kardiologia – ryzyko sercowo-naczyniowe (SCORE2)',['score2','score2op','score2dm'],[['dka','Cukrzyca – stany ostre (DKA/HHS)']]],
+ ['kard','Kardiologia',['qtc','abi','duke','hasbled'],[['trop','Ból w klatce / troponina (HEART, EKG)'],['af','Migotanie przedsionków (CHA₂DS₂-VA)'],['ahf','Ostra niewydolność serca']]],
  ['pulm','Pulmonologia',['light','aa','rox'],[['cap','Zapalenie płuc (CURB-65, PSI, antybiotyk)']]],
  ['gast','Gastroenterologia / krwawienie z przewodu pokarmowego',['rockall','aims65','childpugh','meldna','bisap'],[['gib','Krwawienie z przewodu pokarmowego (Glasgow-Blatchford)']]],
  ['nef','Nefrologia i elektrolity',['egfr','fena','osm','ag','na','caCorr'],[['el','Elektrolity'],['tox','Zatrucia (luki, EXTRIP)'],['dka','Cukrzycowa kwasica ketonowa / stan hiperglikemiczno-hiperosmolalny']]],
  ['hem','Hematologia',['fourT','dic','plasmic','anc'],[['transf','Transfuzjologia'],['acoag','Antykoagulacja / odwracanie']]],
  ['neu','Neurologia',['ccthr','ccsr','ottawasah'],[['neuro','Neurologia (NIHSS, GCS, ABCD², ICH, 4AT)']]],
  ['vte','Żylna choroba zakrzepowo-zatorowa i zatorowość płucna',['wellsDvt','wellsPe','geneva','perc','years','pregYears'],[['pe','Zatorowość płucna (sPESI, leczenie)']]],
+ ['vtep','Zatorowość płucna – rokowanie (PESI, sPESI)',['pesi','spesi'],[['pe','Zatorowość płucna (ryzyko ESC 2019, leczenie)']]],
  ['brz','Ostry brzuch',['alvarado','air'],[]],
  ['endo','Endokrynologia',['bwps'],[['dka','Cukrzycowa kwasica ketonowa']]],
  ['sep','Sepsa i niewydolność narządów',['sirs','qsofa','sofa'],[['sepsis','Sepsa (pakiet 1 h)']]],
@@ -453,5 +512,5 @@ var G=[['kard','Kardiologia',['score2','score2op','qtc','abi','duke','hasbled'],
  ['lab','Laboratorium – jednostki',['units','caCorr','labtab'],[]]];
 Object.keys(C).forEach(function(k){C[k].id=k;});
 function run(id,v){var c=C[id];if(!c)return{err:'Nieznany kalkulator: '+id};try{return c.calc(v||{});}catch(e){return{err:'Błąd obliczenia: '+e.message};}}
-return{C:C,G:G,run:run,num:num,fmt:fmt,fx:fx,score2:score2,ckdepi21:ckdepi21,cg:cg,LAB:LAB,OPI:OPI,BZD:BZD,GKS:GKS,PATCH:PATCH};
+return{C:C,G:G,run:run,num:num,fmt:fmt,fx:fx,score2:score2,score2op:score2op,score2dm:score2dm,ckdepi09:ckdepi09,hbaIfcc:hbaIfcc,ckdepi21:ckdepi21,cg:cg,LAB:LAB,OPI:OPI,BZD:BZD,GKS:GKS,PATCH:PATCH};
 });

@@ -69,8 +69,7 @@ window.SKS.peselInfo=peselInfo;
  var phones=[],i;
  for(i=L.length-1;i>=0;i--)if(L[i]&&(L[i].id==='telszp'||L[i].id==='telefony'))phones.unshift(L.splice(i,1)[0]);
  if(phones.length){
-  var h=L.findIndex(function(m){return m&&m.id==='hamulec';});
-  if(h<0)h=L.findIndex(function(m){return m&&m.id==='trends';});
+  var h=L.findIndex(function(m){return m&&m.id==='trends';});
   var at=h<0?Math.min(3,L.length):h+1;
   for(i=0;i<phones.length;i++)L.splice(at+i,0,phones[i]);
  }

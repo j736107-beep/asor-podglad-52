@@ -5,14 +5,15 @@
    - potwierdzenie NIE wyłącza lampy/paska i NIE blokuje „Następny pacjent”; wpis trafia do wydruku.
    Progi kliniczne wyzwalaczy zaakceptowane przez lekarza 09.11.2026. Troponina: alarm dopiero po wpisaniu EKG lub troponiny. */
 (function(){'use strict';
-var KEY='sk_hold',st=load(),timer=null,voice=null,muted=false;
+var KEY='sk_hold',st=purge(load()),timer=null,voice=null,muted=false;
+function purge(o){try{['cap','hamulec'].forEach(function(k){if(o.items&&o.items[k])delete o.items[k];});}catch(e){}return o;}/* 09.11.2026: Zapalenie płuc i Hamulec nie wyzwalają alarmu */
 function load(){try{var o=JSON.parse(sessionStorage.getItem(KEY)||'null');if(o&&o.items)return o;}catch(e){}return{items:{},log:[]};}
 function save(){try{sessionStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function now(){var d=new Date();function p(n){return (n<10?'0':'')+n;}return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function keys(){return Object.keys(st.items);}
 function unacked(){return keys().filter(function(k){return !st.items[k].ack;});}
-function set(key,reasons,mod){reasons=(reasons||[]).filter(Boolean).map(String);if(!reasons.length){clear(key);return;}
+function set(key,reasons,mod){if(key==='cap'||key==='hamulec')return;reasons=(reasons||[]).filter(Boolean).map(String);if(!reasons.length){clear(key);return;}
  var old=st.items[key],fresh=!old||reasons.some(function(r){return old.reasons.indexOf(r)<0;});
  if(!fresh&&old.reasons.length===reasons.length)return; // bez zmian
  st.items[key]={mod:mod||key,reasons:reasons,ts:old&&!fresh?old.ts:now(),ack:fresh?false:old.ack,ackTs:fresh?'':old.ackTs};
@@ -46,5 +47,4 @@ function printHtml(){if(!keys().length&&!st.log.length)return '';var K=keys();
  return '<section class="rp-hold"><h3>⛔ WSTRZYMAJ WYPIS</h3>'+(K.length?'<ul>'+K.map(function(k){var it=st.items[k];return '<li><b>'+esc(it.mod)+'</b> ('+esc(it.ts)+'): '+esc(it.reasons.join('; '))+(it.ack?' – potwierdzono '+esc(it.ackTs)+' („pacjent NIE zostanie wypisany do domu”)':' – NIEPOTWIERDZONE')+'</li>';}).join('')+'</ul>':'<p>Brak aktywnych alarmów (były wcześniej – patrz dziennik).</p>')+'</section>';}
 document.addEventListener('DOMContentLoaded',paint);if(document.readyState!=='loading')setTimeout(paint,0);
 window.SORHold={set:set,clear:clear,ack:ack,reset:reset,active:function(){return keys().length>0;},unacked:function(){return unacked().length>0;},items:function(){return JSON.parse(JSON.stringify(st.items));},log:function(){return st.log.slice();},printHtml:printHtml,overlay:function(){overlay(true);}};
-// zgodność wsteczna: stary SORWypis.trigger (moduł „Ostateczny hamulec” jest wstrzymany w 5.2)
 })();

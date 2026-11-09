@@ -108,3 +108,5 @@ table.tb{border-collapse:collapse;width:100%;margin:6px 0;font-size:13px}table.t
 body.dark .kk-panel,html.dark .kk-panel{background:inherit}
 .kk-susp-t{color:#c62828;font-weight:700}.kk-susp{border-color:#c62828;background:#fdecea}.kk-chip-susp{border-color:#c62828;color:#c62828;background:#fff}.kk-chip-susp.on{background:#c62828;color:#fff}
 .kk-panel-susp{border-color:#c62828}.kk-panel-susp input:disabled,.kk-panel-susp select:disabled{background:#eee;color:#888;cursor:not-allowed}
+
+.kk-url{margin:.3em 0;font-size:.9em}.kk-url a{font-weight:600}.kk-urlu{color:#666;font-size:.85em;word-break:break-all}.kk-go{margin-left:.4em;cursor:pointer}

@@ -12,7 +12,7 @@ const has=await page.evaluate(()=>!!document.querySelector('#side button[data-id
 await page.evaluate(()=>{const s=(q,v)=>{const e=document.querySelector(q);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));};s('#pa','50');s('#pw','70');s('#pc','1.0');document.querySelector('#psex button[data-s="m"]').click();});await sleep(300);
 await go('kalk');
 const info=await page.evaluate(()=>({g:document.querySelectorAll('.kk-g').length,c:document.querySelectorAll('.kk-chip').length,max:Math.max(...[...document.querySelectorAll('.kk-g')].map(g=>g.querySelectorAll('.kk-chip').length))}));
-rec('12 grup, ≥43 kalkulatory, ≤6 w grupie',info.g===12&&info.c>=43&&info.max<=6,JSON.stringify(info));
+rec('14 grup, ≥46 kalkulatorów, ≤6 w grupie',info.g===14&&info.c>=46&&info.max<=6,JSON.stringify(info));
 // każdy kalkulator otwiera się bez błędu
 const ids=await page.evaluate(()=>Object.keys(KALK.C));let bad=[];
 for(const id of ids){const r=await page.evaluate(id=>{const b=document.querySelector('.kk-chip[data-c="'+id+'"]');b.click();const p=document.getElementById('kk-panel');return !!(p&&p.querySelector('.kk-res')&&p.querySelector('.kk-src'));},id);if(!r)bad.push(id);}
@@ -46,6 +46,31 @@ await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2"]').cli
 await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='75';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(250);
 const s75=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('SCORE2 przy wieku 75 → brak liczby, komunikat WSTRZYMANY',/WSTRZYMANY/.test(s75)&&!/\d+,\d %/.test(s75),s75.slice(0,100));
 await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='50';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(200);
+// 09.11.2026: HeartScore, SCORE2 → SCORE2-Diabetes, SCORE2-Diabetes, PESI/sPESI
+const hs=await page.evaluate(()=>['score2','score2op','score2dm'].map(id=>{document.querySelector('.kk-chip[data-c="'+id+'"]').click();const a=document.querySelector('#kk-panel .kk-url a');return a&&a.href;}));
+rec('HeartScore: link w SCORE2 / SCORE2-OP / SCORE2-Diabetes',hs.every(h=>h==='https://www.heartscore.org/en_GB'),JSON.stringify(hs));
+await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2"]').click();});await sleep(150);await page.click('#kk-score2-dm');await sleep(200);
+const sdm=await page.evaluate(()=>({t:document.getElementById('kk-out').textContent,b:!!document.querySelector('#kk-out [data-kalk="score2dm"]')}));
+rec('SCORE2 + cukrzyca → odesłanie do SCORE2-Diabetes (przycisk)',/SCORE2-Diabetes/.test(sdm.t)&&sdm.b,sdm.t.slice(0,120));
+await page.click('#kk-out [data-kalk="score2dm"]');await sleep(300);
+const sel=await page.evaluate(()=>document.querySelector('#kk-panel h3').textContent);
+for(const [k,v] of [['sbp','140'],['tc','5.5'],['hdl','1.3'],['dx','45'],['hbap','7'],['egfr','90']])await page.type('#kk-score2dm-'+k,v);await sleep(250);
+const dmo=await page.evaluate(()=>document.getElementById('kk-out').textContent);
+rec('SCORE2-Diabetes: otwarty z SCORE2, wiek z paska, HbA1c 7% → 53 mmol/mol, wynik % + kategoria',/SCORE2-Diabetes/.test(sel)&&/\d+,\d %/.test(dmo)&&/53,0 mmol\/mol/.test(dmo)&&/ryzyko (MAŁE|UMIARKOWANE|DUŻE|BARDZO DUŻE)/.test(dmo),sel.slice(0,40)+' | '+dmo.slice(0,140));
+if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/kalk-score2dm.png'});}
+await page.click('#kk-score2dm-a3');await sleep(200);
+const dmv=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('SCORE2-Diabetes: białkomocz A3 → BARDZO DUŻE bez liczenia',/BARDZO DUŻE/.test(dmv)&&!/\d+,\d %/.test(dmv),dmv.slice(0,100));
+await go('pe');await page.evaluate(()=>{const f=document.querySelector('.clinical-form');if(f){const e=f.querySelector('#hr');if(e){e.value='80';e.dispatchEvent(new Event('input',{bubbles:true}));}}});await sleep(300);
+const peb=await page.evaluate(()=>!!document.querySelector('#main [data-kalk="pesi"]'));
+await page.evaluate(()=>document.querySelector('#main [data-kalk="pesi"]').click());await sleep(500);
+const pa=await page.evaluate(()=>({act:SKS.active().id,h:document.querySelector('#kk-panel h3').textContent}));
+for(const [k,v] of [['hr','115'],['sbp','120'],['rr','16'],['temp','37'],['spo2','95']])await page.type('#kk-pesi-'+k,v);await page.click('#kk-pesi-ca');await sleep(250);
+const po=await page.evaluate(()=>document.getElementById('kk-out').textContent);
+rec('PESI: przycisk w module ZP → Kalkulatory; 50 l. M (pasek) + nowotwór + HR 115 = 110 pkt, klasa IV',peb&&pa.act==='kalk'&&/PESI/.test(pa.h)&&/110 pkt – klasa IV/.test(po)&&/4,0–11,4%/.test(po),JSON.stringify(pa)+' | '+po.slice(0,90));
+if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/kalk-pesi.png'});}
+await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="spesi"]').click();});await sleep(150);
+for(const [k,v] of [['hr','115'],['sbp','120'],['spo2','95']])await page.type('#kk-spesi-'+k,v);await page.click('#kk-spesi-ca');await sleep(250);
+const so=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('sPESI: nowotwór + HR 115 = 2 pkt → 10,9% (8,5–13,2)',/^2 pkt/.test(so.trim())&&/10,9% \(95% CI 8,5–13,2\)/.test(so),so.slice(0,90));
 // opioidy
 await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="opioid"]').click();});await sleep(150);await page.type('#kk-opioid-dose','40');await sleep(150);
 const o=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('Opioidy: oksykodon 40 → morfina 30 mg (ostrożnie, −50%), metadon wyłączony',/^30 mg/.test(o.trim())&&/Metadon/.test(o),o.slice(0,90));
@@ -64,6 +89,6 @@ rec('ZP: wydruk zawiera antybiotykoterapię',/Proponowane|Propozycja/.test(capTx
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
 rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-etap4-b/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-etap4-c/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();

@@ -8,7 +8,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **Pasek pacjenta:** imię i nazwisko, PESEL (suma kontrolna; wiek i płeć uzupełniane automatycznie), czas przyjęcia. Dane identyfikacyjne tylko w tej karcie (`sessionStorage`). Przenoszone do Troponiny, Neurologii i na wydruk.
 - **Następny pacjent:** czyści wszystkie dane pacjenta we wszystkich modułach (m.in. `zp1state`, `zp_handoff`, `el1state:*`, `se4state:*`, zakładki modułów, alarmy). Zostają: ustawienia, ulubione, konfiguracja lokalna, własne leki, zatwierdzenia pomp, ustawienia DKA.
 - **Wydruk A4:** przycisk „🖨 Drukuj do dokumentacji (A4)” w każdym module; nagłówek szpitala + pacjent; sekcja WSTRZYMAJ WYPIS; tekst modułu skracany, by zmieścić 1–2 strony.
-- **Ostateczny hamulec:** wstrzymany – widoczny, przyciski nieaktywne, komunikat „Moduł nie działa prawidłowo i został wstrzymany”.
+- **Ostateczny hamulec:** moduł całkowicie usunięty 09.11.2026 (decyzja lekarza) – menu, kod `mod/hamulec`, `wypis.js`, wpisy w pamięci podręcznej SW i testy.
 - **WSTRZYMAJ WYPIS (hold.js, wariant B):** duża migająca lampa, czerwony pasek, nakładka z dźwiękiem (ton z Ustawień + komunikat głosowy) powtarzanym co 12 s do potwierdzenia. Potwierdzenie wycisza dźwięk, lampa i pasek zostają do „Następny pacjent”; nowa przyczyna – alarm od nowa. Nie blokuje „Następny pacjent”. Wyzwalacze: zapalenie płuc (oddział/OIT), Troponina (światło czerwone / próg hospitalizacji), Elektrolity (ciężkie), Stan padaczkowy (podane leki), Sepsa, DKA/HHS.
 - **Zapalenie płuc:** jeden silnik `calc/cap-severity.js` dla zakładki „Skale” i modułu antybiotykoterapii. PSI liczony automatycznie (bez ręcznego wyboru), kryteria ATS/IDSA z danych, deterministyczne miejsce leczenia, „Dom” przekreślony i zablokowany, ręczna zmiana tylko w górę, „Dom” nie jest zapamiętywany, wynik w ramce odświeża się na żywo.
 
@@ -57,6 +57,14 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **SCORE2 (40–69 lat) zweryfikowany:** przykład z publikacji odtworzony (5,9 / 14,0 / 4,2 / 13,7%); tabele ESC 2021 (dane w `tests/data/esc2021_score2_charts.json`, wyodrębnione z tekstu wektorowego PDF) – region wysokiego ryzyka 384/384 komórek w granicach ≤1,1 pkt % (≥90% identycznych po zaokrągleniu) przy HDL ok. 1,13 (M) / 1,32 (K); tabele podają nie-HDL, a przyjętej w nich wartości HDL publikacja nie podaje.
 - Nie zaimplementowano: SCORE2-Diabetes, MELD 3.0, SOFA-2.
 - Testy: `node tests/etap4-node.test.js`, `tests/e2e-etap4-puppeteer.js`.
+
+## Zmiany lekarza 09.11.2026 (23:24)
+- **Zapalenie płuc:** usunięty alarm „WSTRZYMAJ WYPIS” (brak lampy, dźwięku, nakładki i wyzwalacza – `clinical-ui.js`, `mod/zp/app.js`; `hold.js` ignoruje klucz `cap`). Logika miejsca leczenia (Dom zablokowany, sugestia OIT) bez zmian.
+- **Ostateczny hamulec:** moduł całkowicie usunięty (menu, `mod/hamulec/`, `wypis.js`, pamięć podręczna SW, testy).
+- **PESI / sPESI** (Aujesky 2005; Jiménez 2010; ESC 2019): grupa „Zatorowość płucna – rokowanie”, wiek/płeć z paska; klasy I–V z 30-dniową śmiertelnością, sPESI 0 → 1,0% / ≥1 → 10,9%; nota ESC 2019 (niskie ryzyko) i uwaga o tłumaczeniu („III–IV” w wersji polskiej; oryginał III–V). Przycisk w module „Zatorowość płucna”.
+- **SCORE2-Diabetes** (Eur Heart J 2023;44:2544; ESC 2023): 40–69 lat, cukrzyca typu 2; najpierw kryteria bardzo dużego ryzyka (ASCVD, eGFR <45, eGFR 45–59 + A2, A3, mikroangiopatia ≥3 lokalizacje); eGFR CKD-EPI 2009 z kreatyniny z paska; HbA1c mmol/mol lub % (IFCC = (DCCT − 2,15) × 10,929); kategorie <5 / 5–<10 / 10–<20 / ≥20%. **Weryfikacja:** przykłady z publikacji (region umiarkowany) M 11 / 17%, K 8 / 13% → 10,96 / 17,19 / 7,59 / 12,70%. SCORE2 u chorych na cukrzycę odsyła do SCORE2-Diabetes.
+- **SCORE2-OP** – model z parametrami podanymi przez lekarza zaimplementowany (`KALK.score2op`), ale porównanie z tabelami ESC 2021 (region wysokiego ryzyka, 256 komórek ≥70 lat): przy HDL 1,4 tylko 152/256 (59%) w ±1 pkt, 104 komórki różnią się o ≥2 pkt, maks. 3 pkt, średnio −1,36 pkt (mężczyźni −1,70) – zawsze niedoszacowanie; przy HDL 1,13/1,32 (założenie, które odtwarza SCORE2) 230/256, średnio −0,61, maks. 3 pkt (wiek 82–87). → **nadal WSTRZYMANY**.
+- **HeartScore** (https://www.heartscore.org/en_GB) – link w SCORE2, SCORE2-OP, SCORE2-Diabetes.
 
 ## Testy
 - `node tests/zp-node.test.js` – przypadki ZP-1…ZP-13 (silnik).

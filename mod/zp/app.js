@@ -73,7 +73,7 @@ function sevPanel(a){var e=$('#sevOut');if(!e)return;var p=a.psi,s=a.severe;
  e.innerHTML=h;}
 function places(o){var auto=o.pAuto,R=CS?CS.RANK:{home:0,obs:0,ward:1,icu:2};document.querySelectorAll('[data-pl]').forEach(function(b){var k=b.dataset.pl;var bl=k&&R[k]<R[auto];b.classList.toggle('blk',!!bl);b.disabled=!!bl;b.title=bl?'Zablokowane: '+(o.place.why||[]).join('; '):'';});
  var w=$('#plWhy');if(w)w.innerHTML='<b>Silnik:</b> '+esc(Z_LABEL[auto]||'')+(o.place.why&&o.place.why.length?' – '+esc(o.place.why.join('; ')):'');}
-function holdSync(o){try{var H=window.parent&&window.parent!==window&&window.parent.SORHold;if(!H)return;if(o.p==='ward'||o.p==='icu')H.set('cap',o.place.why.filter(function(x){return x.indexOf('niskie ryzyko')<0;}).concat(o.p==='icu'?['ciężkie PZP – rozważ OIOM / OIT']:[]),'Zapalenie płuc');else H.clear('cap');}catch(e){}}
+function holdSync(o){/* 09.11.2026: alarm WSTRZYMAJ WYPIS usunięty z Zapalenia płuc (decyzja lekarza) – logika miejsca leczenia bez zmian */}
 function fit(){try{var fr=window.frameElement;if(fr&&fr.dataset.auto)fr.style.height=(document.documentElement.scrollHeight+20)+'px';}catch(e){}}
 function copy(ix){var t=Z.discharge(last,ix);var b=$('#cpBox'),ta=$('#copyOut');b.hidden=false;ta.value=t;
  var done=function(){var x=document.querySelector('[data-cp="'+ix+'"]');if(x){x.textContent='✔ Skopiowano';setTimeout(function(){x.textContent='📋 Kopiuj do zaleceń wypisowych';},2000);}};

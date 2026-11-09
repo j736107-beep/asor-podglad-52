@@ -31,11 +31,9 @@ const ids=await page.evaluate(()=>SKM.list.filter(m=>m&&!m.sep&&m.id).map(m=>m.i
 const before=errs.length;const perMod={};
 for(const id of ids){const e0=errs.length;await go(id);await sleep(id==='pompy'||/frame/.test(id)?900:350);if(errs.length>e0)perMod[id]=errs.slice(e0);}
 rec('Brak błędów JS w '+ids.length+' modułach',Object.keys(perMod).length===0,JSON.stringify(perMod).slice(0,1500));
-// ---- hamulec
-await go('hamulec');const hf=await frameOf('mod/hamulec');await sleep(500);
-const hm=await hf.evaluate(()=>({txt:document.getElementById('paused').textContent,dis:[...document.querySelectorAll('button,textarea')].every(b=>b.disabled),n:document.querySelectorAll('button').length}));
-const hname=await page.$eval('#side button[data-id="hamulec"]',b=>b.textContent);
-rec('Hamulec wstrzymany (widoczny, nieaktywny)',/nie działa prawidłowo i został wstrzymany/.test(hm.txt)&&hm.dis&&hm.n>=4&&/WSTRZYMANY/.test(hname),JSON.stringify(hm)+' '+hname);
+// ---- Ostateczny hamulec – moduł usunięty (09.11.2026)
+const hm=await page.evaluate(async()=>({menu:!!document.querySelector('#side button[data-id="hamulec"]'),list:SKM.list.some(m=>m.id==='hamulec'),wyp:typeof window.SORWypis,txt:/hamulec/i.test(document.getElementById('side').textContent),sw:/hamulec|wypis\.js/.test(await (await fetch('sw.js',{cache:'no-store'})).text())}));
+rec('Hamulec usunięty (menu, lista modułów, pliki, SW)',!hm.menu&&!hm.list&&hm.wyp==='undefined'&&!hm.txt&&!hm.sw,JSON.stringify(hm));
 // ---- Zapalenie płuc – Skale (ZP-1 w UI): 40 M SpO2 70
 await page.evaluate(()=>{document.querySelector('#pa').value='40';document.querySelector('#pa').dispatchEvent(new Event('input'));});
 await go('cap');
@@ -44,12 +42,8 @@ const clickTab=async t=>{await page.evaluate(t=>document.querySelector('[data-cl
 await clickTab('scores');
 const NORM={rr:16,sbp:120,dbp:80,hr:80,temp:37,spo2:97,urea:24,na:140,glu:108,ph:7.4,hct:40,pao2:85,pf:400,wbc:8,platelets:250,nursing:false,cancer:false,liver:false,heart:false,stroke:false,renal:false,confusion:false,effusion:false,multilobar:false,fluidHypotension:false,ventilation:false,vasopressor:false,oral:true};
 await setScores(Object.assign({},NORM,{spo2:70}));await sleep(500);
-let sc=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,hold:SORHold.items(),ov:!document.getElementById('holdOv').hidden,lamp:!document.getElementById('holdLamp').hidden,banner:!document.getElementById('holdBanner').hidden}));
-rec('ZP-1 Skale: OIT + WSTRZYMAJ WYPIS',/OIOM \/ OIT/.test(sc.eng||'')&&sc.hold.cap&&sc.ov&&sc.lamp&&sc.banner,JSON.stringify(sc).slice(0,400));
-// potwierdzenie
-await page.click('#holdAck');await sleep(200);
-let ak=await page.evaluate(()=>({ov:!document.getElementById('holdOv').hidden,lamp:!document.getElementById('holdLamp').hidden,banner:document.getElementById('holdBanner').textContent}));
-rec('Alarm: potwierdzenie → nakładka znika, lampa+pasek zostają',!ak.ov&&ak.lamp&&/potwierdzono/.test(ak.banner),JSON.stringify(ak).slice(0,200));
+let sc=await page.evaluate(()=>{const vis=id=>{const e=document.getElementById(id);return !!e&&!e.hidden;};return {eng:(document.querySelector('#capEngine')||{}).textContent,hold:SORHold.items(),ov:vis('holdOv'),lamp:vis('holdLamp'),banner:vis('holdBanner'),lamp2:document.getElementById('lamp').classList.contains('on')};});
+rec('ZP-1 Skale SpO₂ 70%: OIT, BEZ alarmu WSTRZYMAJ WYPIS (bez nakładki, lampy, paska)',/OIOM \/ OIT/.test(sc.eng||'')&&!sc.hold.cap&&!sc.ov&&!sc.lamp&&!sc.banner&&!sc.lamp2,JSON.stringify(sc).slice(0,400));
 // ramka antybiotykoterapii
 await clickTab('abx51');const zf=await frameOf('mod/zp');await sleep(900);
 const zr=async()=>zf.evaluate(()=>({place:(document.getElementById('zpPlace')||{}).textContent,dom:(()=>{const b=document.querySelector('[data-pl="home"]');return b&&{dis:b.disabled,blk:b.classList.contains('blk'),title:b.title};})(),res:document.getElementById('res').textContent,quick:document.getElementById('quick').textContent,psiBtn:document.querySelectorAll('[data-psi]').length,minor:!!document.getElementById('minor'),psi:(document.getElementById('zpPsi')||{}).textContent}));
@@ -82,16 +76,15 @@ await clickTab('scores');await setScores({spo2:91});await sleep(800);
 const pl2b=await p2.$eval('#zpPlace',e=>e.textContent);
 rec('ZP-12 ramka odświeża się bez przeładowania',/domowe/.test(pl2a)&&/HOSPITALIZACJA – oddział/.test(pl2b),pl2a+' → '+pl2b);
 // ZP-10 (UI): SpO2 91 → oddział + alarm
-let s10=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,hold:!!SORHold.items().cap,ov:!document.getElementById('holdOv').hidden}));
-rec('ZP-10 Skale: SpO₂ 91 → oddział, nowy alarm (ponowne wyzwolenie)',/oddział/.test(s10.eng)&&s10.hold&&s10.ov,JSON.stringify(s10).slice(0,200));
+let s10=await page.evaluate(()=>{const e=document.getElementById('holdOv');return {eng:(document.querySelector('#capEngine')||{}).textContent,hold:!!SORHold.items().cap,ov:!!e&&!e.hidden,lamp:document.getElementById('lamp').classList.contains('on')};});
+rec('ZP-10 Skale: SpO₂ 91 → oddział, bez alarmu',/oddział/.test(s10.eng)&&!s10.hold&&!s10.ov&&!s10.lamp,JSON.stringify(s10).slice(0,200));
 await p2.close();
 // ---- Druk A4: moduł cap
-await page.click('#holdAck');
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 await page.emulateMediaType('print');const pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');
 const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap.pdf',pdf);
 const ph=await page.evaluate(()=>document.getElementById('printArea').textContent);
-rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, alarm',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/44051401359/.test(ph)&&/WSTRZYMAJ WYPIS/.test(ph),'stron: '+pages);
+rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez alarmu ZP',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/44051401359/.test(ph)&&!/WSTRZYMAJ WYPIS/.test(ph),'stron: '+pages);
 const navp=await page.$('#skPrint');rec('Przycisk „Drukuj do dokumentacji (A4)” w module',!!navp,'');
 // ---- DKA hold
 await go('dka');await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>{const e=f.querySelector('#'+id);if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}};set('glu','450');set('ket','5');set('ph','7.1');set('hco3','10');set('k','4.5');set('na','135');});await sleep(400);
