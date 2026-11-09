@@ -110,3 +110,19 @@ body.dark .kk-panel,html.dark .kk-panel{background:inherit}
 .kk-panel-susp{border-color:#c62828}.kk-panel-susp input:disabled,.kk-panel-susp select:disabled{background:#eee;color:#888;cursor:not-allowed}
 
 .kk-url{margin:.3em 0;font-size:.9em}.kk-url a{font-weight:600}.kk-urlu{color:#666;font-size:.85em;word-break:break-all}.kk-go{margin-left:.4em;cursor:pointer}
+
+/* pilot AI – Epikryza */
+.ai-epi{background:#f5f8ff;border:1px solid #c5d3f0;border-radius:12px;padding:8px 12px;margin:8px 0}
+.ai-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ai-btn{font-weight:700;padding:7px 14px;border-radius:10px;border:1px solid #3949ab;background:#3949ab;color:#fff;cursor:pointer}
+.ai-btn[disabled]{background:#ccc;border-color:#bbb;color:#666;cursor:not-allowed}
+.ai-pilot{font-size:.75em;font-weight:700;color:#3949ab;border:1px solid #3949ab;border-radius:6px;padding:0 5px}
+.ai-why{color:#8a5a00;font-size:.9em}
+.ai-step,.ai-out{margin-top:8px}.ai-lbl{display:block;font-size:.92em}
+.ai-epi textarea{width:100%;box-sizing:border-box;font:inherit;font-size:.95em;margin-top:4px;padding:6px;border:1px solid #b8c2d8;border-radius:8px}
+.ai-epi pre{white-space:pre-wrap;font-size:.85em;background:#fff;border:1px solid #dde;border-radius:8px;padding:6px;max-height:320px;overflow:auto}
+.ai-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.ai-act button{padding:5px 12px;border-radius:8px;border:1px solid #8a94b0;background:#fff;cursor:pointer}
+.ai-send{background:#2e7d32!important;color:#fff;border-color:#2e7d32!important;font-weight:700}
+.ai-warn{color:#c62828;font-weight:700;margin:4px 0}.ai-err{color:#c62828;font-weight:600;margin:6px 0}
+.ai-notes summary{font-weight:700;color:#8a5a00;cursor:pointer}
+@media print{.ai-epi,.ai-set{display:none!important}}

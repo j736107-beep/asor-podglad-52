@@ -66,6 +66,15 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **SCORE2-OP** – model z parametrami podanymi przez lekarza zaimplementowany (`KALK.score2op`), ale porównanie z tabelami ESC 2021 (region wysokiego ryzyka, 256 komórek ≥70 lat): przy HDL 1,4 tylko 152/256 (59%) w ±1 pkt, 104 komórki różnią się o ≥2 pkt, maks. 3 pkt, średnio −1,36 pkt (mężczyźni −1,70) – zawsze niedoszacowanie; przy HDL 1,13/1,32 (założenie, które odtwarza SCORE2) 230/256, średnio −0,61, maks. 3 pkt (wiek 82–87). → **nadal WSTRZYMANY**.
 - **HeartScore** (https://www.heartscore.org/en_GB) – link w SCORE2, SCORE2-OP, SCORE2-Diabetes.
 
+## Pilot AI – „Epikryza (AI)” (10.11.2026, zgoda lekarza)
+- Tylko moduł **Zapalenie płuc**. Pliki: `calc/ai-epi.js` (biała lista, prompt, zapytanie, parsowanie, błędy), `ai-ui.js` (Ustawienia + panel).
+- **Klucz API**: wyłącznie lekarza, wpisywany w *Ustawienia → Sztuczna inteligencja (pilot)*, zapisany tylko w tej przeglądarce (`localStorage` `v52:ai_cfg`; „Następny pacjent” go nie usuwa, „Resetuj wszystkie dane” – tak). W repozytorium nie ma żadnego klucza.
+- **Dostawcy**: OpenAI Chat Completions (`gpt-4.1-mini` domyślnie, `gpt-4.1`, `gpt-4o-mini`, `gpt-4o`, `gpt-5.4-mini`, inny – wpisz) i Anthropic Messages API z nagłówkiem `anthropic-dangerous-direct-browser-access: true` (`claude-sonnet-5-5` domyślnie, `claude-haiku-5-5`, `claude-opus-5-5`, inny). Temperatura 0,2 (gdy model jej nie obsługuje – jedno ponowienie bez niej), limit czasu 60 s.
+- **RODO**: wysyłane tylko dane kliniczne z białej listy (`buildPayload`): wiek, płeć, masa/wzrost, kreatynina/eGFR/CrCl, obciążenia, parametry życiowe, badania, wywiad PSI, kryteria ATS/IDSA, wyniki programu (CURB-65, PSI, miejsce leczenia z uzasadnieniem), antybiotykoterapia z silnika, alergia, czynniki ryzyka, opcjonalne notatki kliniczne. Imię, nazwisko, PESEL, czas przyjęcia – nigdy; notatki są czyszczone (`scrub`), a gotowe body sprawdzane (`assertClean`) – przy wykryciu identyfikatora wysyłka jest blokowana. Podgląd „Co zostanie wysłane” + przycisk potwierdzenia.
+- **Wynik**: edytowalne pole (EPIKRYZA, ROZPOZNANIA ICD-10, ZALECENIA PRZY WYPISIE tylko przy miejscu leczenia = dom; inaczej uzasadnienie hospitalizacji/OIT), „Kopiuj” (bez UWAG), osobno „UWAGI DLA LEKARZA” + kontrola programu (czy model zacytował dosłownie miejsce leczenia i klasę PSI). Wydruk A4: epikryza AI z etykietą; imię i PESEL tylko w lokalnym nagłówku wydruku.
+- CSP: `connect-src 'self' https://api.openai.com https://api.anthropic.com`; Service Worker nie przechwytuje zapytań do API AI.
+- Testy: `tests/ai-node.test.js`, `tests/e2e-ai-puppeteer.js` (atrapa API – bez prawdziwych wywołań).
+
 ## Testy
 - `node tests/zp-node.test.js` – przypadki ZP-1…ZP-13 (silnik).
 - `node tests/etap2-node.test.js` – silniki etapu 2 (SE, hiponatremia, tiamina, anafilaksja, posiewy, neuroinfekcje).

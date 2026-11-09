@@ -10,8 +10,14 @@ function input(){var h=handoff(),b=(h&&h.i)||{},p=root.SKS&&root.SKS.P?root.SKS.
  ['mrsa','pseudo','recent','asp','abscess','leg','atyp','qt','liver','hd','statin','vka','doac','ssri','steroid','colch'].forEach(function(k){if(i[k]==null)i[k]=false;});return{i:i,h:h};}
 var LBL={home:'Leczenie domowe możliwe (niskie ryzyko)',obs:'PSI III – krótka obserwacja, dom tylko po decyzji lekarza',ward:'HOSPITALIZACJA – oddział (dom zablokowany)',icu:'CIĘŻKIE PZP – sugerowany OIOM / OIT (dom zablokowany)'};
 function item(x){return strip(x.n)+' '+strip(x.dose)+' '+strip(x.route)+' '+strip(x.q)+(x.rmod||x.rdec?' [nerki: '+strip(x.renal)+']':'');}
-function text(){var Z=root.ZP;if(!Z||!Z.plan)return '';var a=input(),o;try{o=Z.plan(a.i);}catch(e){return '';}
- var L=['Antybiotykoterapia – wyliczona automatycznie ze wspólnego silnika (zakładka „Antybiotykoterapia – dobór” nie była otwierana). Założenia: alergia na penicyliny NIEUSTALONA (schemat zakłada brak alergii), brak dodatkowych czynników ryzyka (MRSA, Pseudomonas, zachłyśnięcie) – zweryfikuj w zakładce. DO DECYZJI LEKARZA.'];
+// pilot AI (10.11.2026): wejście uzupełnione o wybory z zakładki „Antybiotykoterapia” (alergia, czynniki ryzyka, ręczne podwyższenie miejsca) – zp1state
+function zpState(){try{var z=JSON.parse(localStorage.getItem('zp1state')||'null');return z&&typeof z==='object'?z:null;}catch(e){return null;}}
+function inputFull(){var a=input(),z=zpState();if(!z)return{i:a.i,h:a.h,z:null};var o=z.o||{},i=a.i;
+ if(z.allergy)i.allergy=z.allergy;if(z.place==='ward'||z.place==='icu')i.place=z.place;
+ ['mrsa','pseudo','recent','asp','abscess','leg','atyp','qt','liver','hd','statin','vka','doac','ssri','steroid','colch'].forEach(function(k){if(o[k])i[k]=true;});if(o.abscess)i.asp=true;if(o.comorb)i.comorb=true;if(o.vent)i.ventilation=true;if(o.vaso)i.vasopressor=true;if(o.noOral)i.oral=false;
+ return{i:i,h:a.h,z:z};}
+function text(opt){opt=opt||{};var Z=root.ZP;if(!Z||!Z.plan)return '';var a=opt.full?inputFull():input(),o;try{o=Z.plan(a.i);}catch(e){return '';}
+ var L=[opt.full?('Antybiotykoterapia ze wspólnego silnika programu'+(a.z?' (z wyborami z zakładki „Antybiotykoterapia – dobór”)':' (zakładka „Antybiotykoterapia – dobór” nie była otwierana: alergia nieustalona, brak dodatkowych czynników ryzyka)')+'. DO DECYZJI LEKARZA.'):'Antybiotykoterapia – wyliczona automatycznie ze wspólnego silnika (zakładka „Antybiotykoterapia – dobór” nie była otwierana). Założenia: alergia na penicyliny NIEUSTALONA (schemat zakłada brak alergii), brak dodatkowych czynników ryzyka (MRSA, Pseudomonas, zachłyśnięcie) – zweryfikuj w zakładce. DO DECYZJI LEKARZA.'];
  if(a.h&&a.h.txt)L.push('Skale: '+a.h.txt+'.');
  if(o.need&&o.need.length){L.push('Brak schematu – uzupełnij: '+o.need.map(strip).join('; ')+'.');return L.join('\n');}
  L.push('Miejsce leczenia: '+(o.obs?LBL.obs:LBL[o.p]||'—')+(o.pDef?' (domyślnie – dane niepełne)':' (wg silnika)')+'.');
@@ -23,5 +29,5 @@ function text(){var Z=root.ZP;if(!Z||!Z.plan)return '';var a=input(),o;try{o=Z.p
  if(o.dec&&o.dec.length)L.push('DO DECYZJI LEKARZA: '+o.dec.map(strip).join('; ')+'.');
  if(o.ix&&o.ix.length)L.push('Interakcje / QT: '+o.ix.map(strip).join('; ')+'.');
  return L.join('\n');}
-root.SORZpPrint={text:text,input:input};
+root.SORZpPrint={text:text,input:input,inputFull:inputFull,zpState:zpState};
 })(typeof window!=='undefined'?window:this);

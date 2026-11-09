@@ -140,7 +140,7 @@ function wipe(){window.SKS.pwMem=null;window.SKS.ordMem=null;try{window.SORClini
  if(window.SORClearCase)window.SORClearCase();
  // 5.2: pełny reset – WSZYSTKIE dane pacjenta we wszystkich modułach (także zp1state, zp_handoff, el1state:, se4state:, zakładki modułów); zostają tylko ustawienia i ulubione
  var KEEP=['sk_settings','omdl_settings','sor_favorites','sor_local_cfg','sor_leki_wlasne','sor_icd_recent','sor_pompy_zatw_v2','sk_m_dka_cfg'];
- Object.keys(localStorage).forEach(function(k){if(KEEP.indexOf(k)>=0||k.indexOf('discAccepted')===0||k.indexOf('sor_cfg')===0)return;localStorage.removeItem(k);});
+ Object.keys(localStorage).forEach(function(k){if(KEEP.indexOf(k)>=0||k.indexOf('discAccepted')===0||k.indexOf('sor_cfg')===0||k.indexOf('v52:ai_cfg')===0)return;localStorage.removeItem(k);});
  try{window.SORHold&&SORHold.reset();}catch(e){}try{sessionStorage.clear();}catch(e){}
  localStorage.setItem('sk_mod','dashboard');location.reload();}
 window.SKS.nextPatient=function(){var h=window.SORHold&&SORHold.active();if(!confirm((h?'UWAGA: aktywny alarm WSTRZYMAJ WYPIS dla obecnego pacjenta.\n\n':'')+'Następny pacjent: wyczyścić WSZYSTKIE dane pacjenta we wszystkich modułach (dane identyfikacyjne, pasek pacjenta, wyniki, zlecenia, wykonane, dokumentacja, trendy, zapalenie płuc, elektrolity, alarmy)? Ustawienia i ulubione zostają.'))return;wipe();};

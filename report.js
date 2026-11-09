@@ -24,7 +24,7 @@
     if(n.nodeType!==1)return;
     var t=n.tagName;
     if(/^(SCRIPT|STYLE|SVG|BUTTON|OPTION|TEXTAREA|NOSCRIPT|IFRAME)$/.test(t)||!visible(n))return;
-    if(n.classList&&(n.classList.contains('info')||n.classList.contains('infobox')||n.classList.contains('disc')||n.classList.contains('tabs')||n.classList.contains('ptstrip')||false))return;
+    if(n.classList&&(n.classList.contains('info')||n.classList.contains('infobox')||n.classList.contains('disc')||n.classList.contains('tabs')||n.classList.contains('ptstrip')||n.classList.contains('ai-noprint')||false))return;
     if(n.classList&&n.classList.contains('gcs-box')){var sm=n.querySelector('.gcs-sum');var st=sm?sm.textContent.replace(/\s+/g,' ').trim():'';if(/^GCS =/.test(st)){ctx.filled++;ctx.out.push('\n'+st);}return;}
     if(t==='INPUT'||t==='SELECT'){return;}
     if(t==='LABEL'){var c=n.querySelector('input,select');
@@ -58,7 +58,9 @@
         if(!fr.length&&prev&&prev.sub&&!prev.subAuto){sub=prev.sub;subName=prev.subName||'';}}
       // 5.2 etap 4 (zaakceptowane 09.11.2026): wydruk zapalenia płuc ZAWSZE z antybiotykoterapią – gdy ramka nie była otwierana, wylicz ze wspólnego silnika
       var subAuto=false;if(mod.id==='cap'&&!sub&&r.filled>0&&root.SORZpPrint){try{sub=root.SORZpPrint.text();}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}
-      if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';if(subAuto)all[mod.id].subAuto=true;}}else delete all[mod.id];
+      // pilot AI (10.11.2026): epikryza AI (tylko blok do wklejenia, bez UWAG) – w wydruku A4; nagłówek pacjenta (imię/PESEL) dodaje lokalnie wydruk
+      var ai=(mod.id==='cap'&&root.SORAIUI&&root.SORAIUI.printText)?root.SORAIUI.printText():'';if(ai)r.filled=Math.max(r.filled,1);
+      if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';if(subAuto)all[mod.id].subAuto=true;}if(ai)all[mod.id].ai=ai.slice(0,8000);}else delete all[mod.id];
       jset(SNAP,all);}catch(e){}}
   function clearSnaps(){try{localStorage.removeItem(SNAP);}catch(e){}}
   // ------------- składanie raportu -------------
@@ -82,7 +84,7 @@
   var LIM=4200;
   function modulesHtml(ids,lim){var all=snaps(),keys=Object.keys(all).filter(function(k){return !ids||ids.indexOf(k)>=0;});
     function cut(t,l){t=String(t||'');return l&&t.length>l?t.slice(0,l).replace(/\s+\S*$/,'')+' … [skrócono do wydruku A4 – pełna treść w module]':t;}
-    return keys.map(function(k){var s=all[k],l1=lim&&s.sub?Math.round(lim*0.5):lim,t=cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3><div class="rp-text">'+esc(t)+'</div>'+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,lim?lim-l1:0))+'</div>':'');}).join('');}
+    return keys.map(function(k){var s=all[k],L0=lim&&s.ai?Math.max(1500,lim-s.ai.length):lim,l1=L0&&s.sub?Math.round(L0*0.5):L0,t=cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3>'+(s.ai?'<div class="rp-text rp-ai">'+esc(s.ai)+'</div>':'')+'<div class="rp-text">'+esc(t)+'</div>'+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,L0?L0-l1:0))+'</div>':'');}).join('');}
   function pwHtml(){var m=root.SKS&&root.SKS.pwMem;if(!m||!m.report)return '';var R=m.report;function ul(t,a){return a&&a.length?'<h3>'+esc(t)+'</h3><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}return ul('Nie przeocz',R.alerts)+ul('Co zrobić teraz',R.actions)+ul('Czego brakuje',R.missing)+(R.algo&&R.algo.length?ul('Algorytmy',R.algo):'');}
   var TITLES={pw:'Przegląd wyników – czujnik bezpieczeństwa',doc:'Dokumentacja',done:'Co rzeczywiście wykonano',pumps:'Pompy – zapisane nastawy',fluid:'Bilans płynów',modules:'Moduły użyte u pacjenta'};
   function build(parts){
