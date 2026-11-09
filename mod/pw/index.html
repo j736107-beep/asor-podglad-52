@@ -1,0 +1,13 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><script src="../../storage52.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Przegląd wyników – czujnik bezpieczeństwa</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<header><h1>Przegląd wyników <span>– czujnik bezpieczeństwa</span></h1><p class="sub">Wklej wyniki i opisy badań z Optimedu. Program uporządkuje je i wskaże, czego nie przeoczyć.</p></header>
+<div class="pt" id="pt"><label>Wiek <input id="age" inputmode="numeric" size="4" autocomplete="off"> lat</label><label class="chk"><input type="checkbox" id="preg"> Ciąża</label><label>Trymestr <select id="tri" disabled><option value="">nieznany</option><option value="1">I</option><option value="2">II</option><option value="3">III</option></select></label><label>YEARS (ciąża) <select id="yrs" disabled><option value="">nieokreślone</option><option value="0">0 kryteriów</option><option value="1">≥ 1 kryterium</option></select></label><span class="ptn" title="Kryteria YEARS: objawy ZŻG, krwioplucie, ZP najbardziej prawdopodobna">Wiek i ciąża zmieniają próg D-dimerów. Wiek jest pobierany z paska pacjenta.</span></div>
+<label for="paste" class="lbl">Wklej wyniki z Optimedu</label>
+<textarea id="paste" autocomplete="off" spellcheck="false" placeholder="Zaznacz w Optimedzie wyniki (także kilka pobrań) i opisy RTG / TK / USG / EKG, skopiuj i wklej tutaj."></textarea>
+<div id="cnt" class="cnt" aria-live="polite">0 / 50 000 znaków</div>
+<div class="btns"><button id="go" class="pri">Analizuj</button><button id="ex">Wczytaj przykład</button><button id="clr">Wyczyść</button></div>
+<p class="priv">Dane nie są nigdzie wysyłane ani zapisywane – są trzymane tylko w pamięci na czas tej sesji (powrót z innego modułu je przywraca) i znikają po zamknięciu aplikacji lub „Wyczyść”.</p>
+<div id="out" aria-live="polite"></div>
+<p class="disc">Narzędzie pomocnicze, niecertyfikowane. Nie zastępuje przeczytania pełnych wyników i opisów. Progi i działania oznaczone „DO DECYZJI LEKARZA” są propozycją do zatwierdzenia.</p>
+</main>
+<script src="config.js"></script><script src="engine.js"></script><script src="sample.js"></script><script src="app.js"></script></body></html>
