@@ -1,4 +1,4 @@
-# Asystent lekarza SOR – wersja 5.2 (testowa) · etap 2 · 09.11.2026
+# Asystent lekarza SOR – wersja 5.2 (testowa) · etap 3 · 09.11.2026
 
 Narzędzie pomocnicze, **niecertyfikowane**. Każdą dawkę i decyzję weryfikuje lekarz.
 Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w przeglądarce są oddzielone od 5.1
@@ -29,6 +29,13 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **DKA/HHS:** pełne polskie nazwy w menu, tytule i wydruku.
 - **Bilans płynów / Antykoagulacja:** pasek pacjenta na ekranie i przycisk wydruku (w Antykoagulacji – w każdej zakładce).
 - **Zapalenie płuc:** wydruk zawiera treść modułu antybiotykoterapii (ramka `mod/zp`).
+
+## Etap 3 (zrealizowany 09.11.2026)
+- Troponina / OZW: sekcja „EKG 12-odprowadzeniowe ≤10 min” – licznik od pierwszego kontaktu, 16 kart wzorców z rysunkami SVG (`mod/troponina/ecg-svg.js`, 25 mm/s, 10 mm/mV): STEMI, ściana dolna, prawa komora (V4R), ściana tylna, de Winter, LBBB/stymulator + Sgarbossa i Smith (ST/S ≤ −0,25), aVR, Wellens A/B, obniżenie ST, odwrócenie T, LBBB, stymulator bez kryteriów, zmiany niespecyficzne, LVH (Sokolow-Lyon, strain), EKG prawidłowe. Logika HEART/świateł bez zmian (mapowanie nowych kart na dotychczasowe klucze).
+- Szata kliniczna bez różu (granat #1f3a5f, grafit, szary; czerwień tylko alarmy) – Omdlenie (przeprojektowane), Elektrolity, Zapalenie płuc, Stan padaczkowy, Pompy, Troponina, powłoka.
+- Zatrucia → grzyby: miniatury 210 px bez przycinania (object-fit: contain), podpisy pod zdjęciem.
+- Nie realizowano: pole kodu kompendium, EUCAST / własne kalkulatory (oczekują decyzji). Decyzje otwarte z etapu 2 bez zmian.
+- Testy: `node tests/etap3-node.test.js`, `tests/e2e-etap3-puppeteer.js`.
 
 ## Testy
 - `node tests/zp-node.test.js` – przypadki ZP-1…ZP-13 (silnik).

@@ -9,7 +9,7 @@ const page=await br.newPage();await page.setViewport({width:1400,height:1000});
 const errs=[];page.on('pageerror',e=>errs.push('pageerror '+e.message));page.on('console',m=>{if(m.type()==='error')errs.push('console '+m.text());});
 page.on('dialog',d=>d.accept());
 await page.goto(BASE,{waitUntil:'networkidle0'});await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await page.reload({waitUntil:'networkidle0'});
-const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 2',/5\.2 \(testowa\) · etap 2 · 09\.11\.2026/.test(ver),ver);
+const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 2+',/5\.2 \(testowa\) · etap [23] · 09\.11\.2026/.test(ver),ver);
 const go=async id=>{await page.evaluate(id=>{document.querySelector('#side button[data-id="'+id+'"]').click();},id);await sleep(800);};
 const frameOf=async src=>{for(let k=0;k<30;k++){const f=page.frames().find(f=>f.url().includes(src));if(f){try{await f.waitForSelector('body');return f;}catch(e){}}await sleep(200);}return null;};
 const ack=async()=>{await page.evaluate(()=>{const b=document.getElementById('holdAck');if(b&&!document.getElementById('holdOv').hidden)b.click();});};

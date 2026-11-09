@@ -4,19 +4,28 @@
 <meta property="og:image" content="https://j736107-beep.github.io/sor-kalkulatory/og.png"><meta property="og:type" content="website">
 <link rel="icon" href="../../icon.png">
 <style>
-*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif;background:#f3f1f8;color:#1d1830}
-header{background:#7b3fe4;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
+*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f6f8;color:#2b2f36}
+header{background:#1f3a5f;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
 header b{font-size:18px}header small{opacity:.85}.prev{background:#ffd23f;color:#000;padding:2px 8px;border-radius:6px;font-weight:700;font-size:12px}
 main{max-width:1100px;margin:0 auto;padding:12px}
 .card{background:#fff;border-radius:12px;padding:12px 14px;margin:10px 0;box-shadow:0 1px 3px #0002}
-h2{margin:0 0 8px;font-size:17px;color:#5a2bb0}h3{margin:10px 0 4px;font-size:14px;color:#444}
+h2{margin:0 0 8px;font-size:17px;color:#1f3a5f}h3{margin:10px 0 4px;font-size:14px;color:#444}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 label{display:inline-flex;gap:5px;align-items:center}input,select{font:inherit;padding:5px 7px;border:1px solid #bbb;border-radius:7px}
-.yn{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed #e4e0ee}
+.yn{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed #dde2e8}
 .yn span{flex:1}.yn .b{display:flex;gap:4px}
-button{font:inherit;cursor:pointer;border:1px solid #9b80d8;background:#fff;border-radius:8px;padding:5px 10px}
-button.on{background:#7b3fe4;color:#fff;border-color:#7b3fe4}button.no.on{background:#666;border-color:#666}
-.ecg button{margin:3px}.ecg button.on.st{background:#c4001a;border-color:#c4001a}
+button{font:inherit;cursor:pointer;border:1px solid #8aa1bf;background:#fff;border-radius:8px;padding:5px 10px}
+button.on{background:#1565c0;color:#fff;border-color:#1565c0}button.no.on{background:#666;border-color:#666}
+.ecg10{color:#c62828;font-weight:800;font-size:16px;margin:0 0 6px}.ecgt{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}#ecgCnt{font-weight:700;padding:3px 8px;border-radius:6px;background:#eef2f6}#ecgCnt.late{background:#c62828;color:#fff}
+#ecg{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:10px}
+.ek{border:1.5px solid #c3cad4;border-left:6px solid #1565c0;border-radius:10px;padding:8px 10px;background:#fff;display:flex;flex-direction:column;gap:6px}
+.ek.c1{border-left-color:#c62828}.ek.c2{border-left-color:#b45309}.ek.on{box-shadow:0 0 0 3px #1565c066;background:#f3f8ff}.ek.c1.on{box-shadow:0 0 0 3px #c6282866;background:#fff5f5}
+.ek h3{margin:0;font-size:15px;color:#1f3a5f}.ek .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;margin-right:6px;color:#fff;background:#1565c0}.ek.c1 .tag{background:#c62828}.ek.c2 .tag{background:#b45309}
+.ek .cr{font-size:13px;line-height:1.35;color:#2b2f36}.ek figure{margin:0;overflow-x:auto;cursor:zoom-in;background:#fff;border:1px solid #e6e9ee;border-radius:6px}.ek figure svg{display:block;max-width:100%;height:auto}
+.ek figure.big{position:fixed;inset:4vh 3vw;z-index:60;background:#fff;box-shadow:0 0 0 100vmax #0009;cursor:zoom-out;display:flex;align-items:center;justify-content:center;padding:10px}.ek figure.big svg{width:100%;height:100%;max-height:90vh}
+.ek .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.ek.wide{grid-column:1/-1}.ek .mk{align-self:flex-start;font-weight:700}.ek .mk.on{background:#1565c0}.ek.c1 .mk.on{background:#c62828;border-color:#c62828}
+.sgt{font-size:12.5px;border-collapse:collapse;width:100%}.sgt td,.sgt th{border:1px solid #d5dbe3;padding:3px 5px}
+#pr .ecg-svg{max-width:100%;height:auto;max-height:42mm}
 .mut{color:#666;font-size:13px}.wer{background:#fff3c4;border:1px solid #e0b000;border-radius:5px;padding:0 4px;font-size:12px;font-weight:700;color:#7a5600}
 #light{border-radius:14px;padding:14px;color:#fff;font-size:16px}#light h2{color:#fff;font-size:22px}
 .L-red{background:#c4001a}.L-yel{background:#e9a800;color:#000!important}.L-yel h2{color:#000!important}.L-grn{background:#1d8a3a}.L-gry{background:#777}
@@ -29,7 +38,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4p
 #pr h1{font-size:16px;margin:0 0 4px}#pr .box{border:1.5px solid #000;padding:6px;margin:6px 0}#pr td{font-size:11px}@page{size:A4;margin:13mm}}
 </style></head><body>
 <div id="flash"></div>
-<header><b>🫀 Troponina / OZW</b><small>(ostry zespół wieńcowy) · SOR Kalkulatory</small><span class="prev" style="background:#fff;color:#5a2bb0">SOR Kalkulatory v3.7</span>
+<header><b>🫀 Troponina / OZW</b><small>(ostry zespół wieńcowy) · SOR Kalkulatory</small><span class="prev" style="background:#fff;color:#1f3a5f">SOR Kalkulatory v3.7</span>
 <span style="flex:1"></span><button id="mute" style="background:#fff" class="sa">🔇 Wycisz syrenę</button><button id="print" style="background:#fff">🖨 Wydruk A4</button><button id="next" style="background:#fff">🆕 Następny pacjent</button></header>
 <main>
 <div class="card" style="background:#fff8e1"><b>Narzędzie pomocnicze, niecertyfikowane.</b> Decyzję podejmuje lekarz. Nie czekaj na troponinę przy STEMI (zawał z uniesieniem ST) lub OMI (ostra okluzja tętnicy wieńcowej). Wyklucz ostry zespół aortalny i PE (zatorowość płucna).</div>
@@ -59,7 +68,9 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4p
 <h3>Stan „bardzo wysokiego ryzyka” (natychmiastowa strategia inwazyjna)</h3><div id="vhr"></div></div>
 </div>
 
-<div class="card ecg"><h2>EKG (12 odprowadzeń, do 10 min)</h2><div id="ecg"></div><div class="mut">Czerwone przyciski = STEMI lub równoważnik → natychmiast ŚWIATŁO CZERWONE. Przy uniesieniu ST w V1–V3 obniżeniu/ wysokim R → V7–V9; zawał dolny → V3R–V4R.</div></div>
+<div class="card ecg"><h2>EKG (elektrokardiogram) 12-odprowadzeniowe – analiza wzorców</h2><div class="ecg10">EKG 12-odprowadzeniowe ≤10 min od pierwszego kontaktu (ESC 2023 – Europejskie Towarzystwo Kardiologiczne)</div>
+<div class="ecgt"><label>Pierwszy kontakt <input id="ecgFmc" type="time"></label><label>EKG wykonane <input id="ecgT" type="time"></label><span id="ecgCnt">wpisz godzinę pierwszego kontaktu</span></div>
+<div class="mut" style="margin-bottom:6px">Czerwona karta = STEMI (zawał z uniesieniem ST) lub równoważnik → natychmiast ŚWIATŁO CZERWONE; pomarańczowa = wysokie ryzyko. Schematy dydaktyczne (25 mm/s, 10 mm/mV; kratka 1 mm) – dotknij, aby powiększyć. Przy obniżeniu ST w V1–V3 lub wysokim R → V7–V9; zawał dolny → V3R–V4R.</div><div id="ecg"></div></div>
 
 <div class="card"><h2>Troponina hs-TnT (ng/l) i godziny pobrań</h2>
 <table><tr><th>Pobranie</th><th>Godzina</th><th>Wynik ng/l</th><th>Δ (delta – zmiana bezwzględna od 0 h)</th></tr>
@@ -67,7 +78,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4p
 <tr><td>1 h lub 2 h</td><td><input id="t1" type="time"></td><td><input id="c1" size="5" inputmode="decimal"></td><td id="d1"></td></tr>
 <tr><td>3 h (opcjonalnie, strefa obserwacji)</td><td><input id="t3" type="time"></td><td><input id="c3" size="5" inputmode="decimal"></td><td id="d3"></td></tr></table>
 <div id="alg" style="margin-top:8px"></div>
-<svg id="chart" viewBox="0 0 600 230" style="width:100%;max-width:700px;background:#fafafe;border:1px solid #ddd;border-radius:8px;margin-top:8px"></svg></div>
+<svg id="chart" viewBox="0 0 600 230" style="width:100%;max-width:700px;background:#fafbfc;border:1px solid #ddd;border-radius:8px;margin-top:8px"></svg></div>
 
 <div class="grid2">
 <div class="card"><h2>Skala HEART <span class="mut">(Historia, EKG, Wiek, Czynniki ryzyka, Troponina)</span></h2><div id="heart"></div></div>
@@ -90,20 +101,42 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4p
 <li>Lokalna „KARTA SOR — OZW i troponiny — AKTUALNA” (SOR Nowy Targ, 19.08.2026).</li></ul></div>
 </main>
 <div id="pr"></div>
-<script src="../../sound.js"></script><script src="../../calc/trop.js"></script>
+<script src="../../sound.js"></script><script src="../../calc/trop.js"></script><script src="ecg-svg.js"></script>
 <script>
 const T=SK.trop;
 const $=id=>document.getElementById(id);const S={h:{},r:{},v:{},e:{}};
 const HIST=[['typ','Ból typowy (gniotący/uciskający, za mostkiem, wysiłkowy, ustępuje po spoczynku/nitro)'],['rad','Promieniowanie do ramienia/barku/żuchwy'],['diaph','Poty (diaphoresis)'],['ongo','Ból trwa nadal lub nawraca'],['insp','Ból nasila się przy wdechu (opłucnowy)'],['palp','Ból odtwarzalny uciskiem klatki'],['atyp','Ból kłujący, punktowy, sekundowy (cechy nietypowe)']];
 const RF=[['htn','Nadciśnienie tętnicze'],['dm','Cukrzyca'],['lip','Hipercholesterolemia'],['smk','Palenie (obecne lub &lt;3 mies.)'],['fam','Wywiad rodzinny wczesnej choroby wieńcowej'],['obes','Otyłość (BMI ≥30)'],['cad','Znana choroba wieńcowa / przebyty zawał / PCI (przezskórna angioplastyka) / CABG (pomostowanie)'],['pad','Miażdżyca innych naczyń (udar, choroba tętnic obwodowych)'],['ckd','Niewydolność nerek (eGFR &lt;60)']];
 const VHR=[['shock','Wstrząs / niestabilność hemodynamiczna'],['refr','Ból nawracający lub oporny na leczenie'],['arr','Groźna arytmia (VT/VF – częstoskurcz/migotanie komór) lub NZK (nagłe zatrzymanie krążenia)'],['ahf','Ostra niewydolność serca z niedokrwienia'],['mech','Powikłanie mechaniczne zawału']];
-const ECG=[['stemi','STEMI (uniesienie ST w ≥2 sąsiednich odpr.)',1],['post','Zawał ściany tylnej (obniżenie ST V1–V3, uniesienie V7–V9)',1],['rv','Zawał prawej komory (V3R–V4R)',1],['dew','Wzór de Wintera (obniżenie ST z wysokimi T w V1–V6)',1],['sgar','LBBB/stymulacja + dodatnie zmodyf. kryteria Sgarbossy',1],
-['avr','Uniesienie ST w aVR + rozlane obniżenia ST (ciężkie globalne niedokrwienie)',2],['well','Zespół Wellensa (dwufazowe/głęboko ujemne T V2–V3 – krytyczne zwężenie LAD)',2],
-['std','Obniżenie ST ≥0,5 mm (niedokrwienne)',0],['ti','Odwrócenie załamka T',0],['lbbb','LBBB (blok lewej odnogi) / rytm stymulowany bez kryteriów Sgarbossy',0],['nonsp','Niespecyficzne zaburzenia repolaryzacji / LVH (przerost LK)',0],['norm','EKG prawidłowe',0]];
+const ECG=[
+['stemi','STEMI – zawał serca z uniesieniem odcinka ST',1,'Nowe uniesienie ST w punkcie J (koniec QRS) w ≥2 sąsiednich odprowadzeniach: ≥1 mm we wszystkich poza V2–V3; w V2–V3: ≥2 mm u mężczyzn ≥40 lat, ≥2,5 mm u mężczyzn <40 lat, ≥1,5 mm u kobiet (4. uniwersalna definicja zawału serca; ESC 2023).',['stemi']],
+['inf','Zawał ściany dolnej',1,'Uniesienie ST w II, III i aVF z obniżeniem lustrzanym w aVL. Uniesienie w III większe niż w II sugeruje zamknięcie prawej tętnicy wieńcowej (RCA) → wykonaj odprowadzenia prawokomorowe V3R–V4R i tylne V7–V9.',['inf']],
+['rv','Zawał prawej komory',1,'Uniesienie ST ≥0,5 mm w V3R–V4R (≥1 mm u mężczyzn <30 lat), zwykle przy zawale ściany dolnej. Unikaj azotanów (nitrogliceryny); przy hipotensji płyny dożylne.',['rv']],
+['post','Zawał ściany tylnej',1,'Poziome obniżenie ST w V1–V3 z dodatnim załamkiem T i wysokim R (obraz lustrzany). Potwierdzenie: uniesienie ST ≥0,5 mm w V7–V9 (≥1 mm u mężczyzn <40 lat).',['post']],
+['dew','Wzór de Wintera (równoważnik STEMI)',1,'Skośne ku górze obniżenie ST 1–3 mm w punkcie J w V1–V6, przechodzące w wysokie, symetryczne załamki T; często uniesienie ST 0,5–1 mm w aVR. Zwykle zamknięcie proksymalnego odcinka gałęzi przedniej zstępującej lewej tętnicy wieńcowej (LAD) – postępuj jak w STEMI.',['dew']],
+['sgar','LBBB (blok lewej odnogi pęczka Hisa) lub rytm stymulatora + dodatnie kryteria Sgarbossy',1,'',['sgar1','sgar2','sgar3']],
+['avr','Uniesienie ST w aVR z rozlanym obniżeniem ST',2,'Uniesienie ST ≥1 mm w aVR (często też w V1) z obniżeniem ST ≥1 mm w ≥6 odprowadzeniach (zwłaszcza I, II, V4–V6): ciężkie, rozlane niedokrwienie – zwężenie pnia lewej tętnicy wieńcowej lub choroba wielonaczyniowa; szczególnie groźne przy niestabilności hemodynamicznej. Pilna konsultacja kardiologiczna.',['avr']],
+['wellA','Zespół Wellensa – typ A',2,'Dwufazowy załamek T (najpierw dodatni, potem ujemny) w V2–V3. Zapis w okresie bez bólu, bez lub z minimalnym (<1 mm) uniesieniem ST, zachowane załamki R, bez patologicznych załamków Q. Krytyczne zwężenie proksymalnego odcinka LAD (gałęzi przedniej zstępującej) – NIE wykonuj próby wysiłkowej.',['wellA']],
+['wellB','Zespół Wellensa – typ B',2,'Głębokie, symetryczne, ujemne załamki T w V2–V3 (często do V4–V6), w okresie bez bólu, bez lub z minimalnym uniesieniem ST, z zachowanymi załamkami R. Krytyczne zwężenie proksymalnego odcinka LAD – NIE wykonuj próby wysiłkowej.',['wellB']],
+['std','Obniżenie ST ≥0,5 mm (niedokrwienne)',0,'Nowe poziome lub skośne ku dołowi obniżenie ST ≥0,5 mm w punkcie J w ≥2 sąsiednich odprowadzeniach. Przy obniżeniu ST w V1–V3 wykonaj V7–V9 (zawał ściany tylnej?).',['std']],
+['ti','Odwrócenie załamka T',0,'Ujemny załamek T ≥1 mm w ≥2 sąsiednich odprowadzeniach z wyraźnym załamkiem R lub stosunkiem R/S >1. Porównaj z wcześniejszym EKG – dynamika zmian zwiększa prawdopodobieństwo OZW (ostrego zespołu wieńcowego).',['ti']],
+['lbbb','LBBB (blok lewej odnogi pęczka Hisa) – kryteria czasowe',0,'QRS ≥120 ms; QS lub rS w V1; szeroki, zazębiony lub płaski na szczycie załamek R w I, aVL, V5–V6; brak załamka q w I, V5–V6; czas do szczytu R >60 ms w V5–V6; wtórne zmiany ST-T niezgodne z kierunkiem QRS (AHA/ACCF/HRS 2009 – amerykańskie towarzystwa kardiologiczne i rytmu serca). Zawsze oceń kryteria Sgarbossy.',['lbbb']],
+['pace','Rytm stymulatora bez kryteriów Sgarbossy',0,'Iglica (spike) stymulatora przed szerokim QRS; wtórne zmiany ST-T niezgodne z QRS; stosunek ST/S > −0,25, brak zgodnych zmian ST. ESC 2023: przy LBBB lub rytmie stymulatora i silnym podejrzeniu trwającego niedokrwienia postępuj jak w STEMI niezależnie od kryteriów.',['pace']],
+['nonsp','Niespecyficzne zaburzenia repolaryzacji',0,'Spłaszczone załamki T, obniżenie ST <0,5 mm, bez dynamiki. Porównaj z poprzednim EKG; przy utrzymującym się bólu powtórz EKG po 15–30 min.',['nonsp']],
+['lvh','LVH (przerost lewej komory)',0,'Sokolow-Lyon: S w V1 + R w V5 lub V6 ≥35 mm (na schemacie 20 + 25 = 45 mm); Cornell: R w aVL + S w V3 >28 mm u mężczyzn, >20 mm u kobiet. Wzorzec przeciążenia (strain): skośne ku dołowi obniżenie ST z asymetrycznym ujemnym T w V5–V6, I, aVL – utrudnia ocenę niedokrwienia.',['lvh']],
+['norm','EKG prawidłowe',0,'Rytm zatokowy, brak kryteriów z powyższych kart. Prawidłowe EKG NIE wyklucza OZW (ostrego zespołu wieńcowego) – powtórz przy nawrocie bólu oraz po 15–30 min przy trwającym bólu.',['norm']]];
+const SGAR_HTML='<table class="sgt"><tr><th colspan="2">Klasyczne kryteria Sgarbossy (1996) – zawał przy ≥3 pkt</th></tr><tr><td>① uniesienie ST ≥1 mm <b>zgodne</b> z kierunkiem QRS (dowolne odprowadzenie)</td><td>5 pkt</td></tr><tr><td>② obniżenie ST ≥1 mm w V1, V2 lub V3 (QRS ujemny – zgodne)</td><td>3 pkt</td></tr><tr><td>③ uniesienie ST ≥5 mm <b>niezgodne</b> z QRS</td><td>2 pkt</td></tr><tr><th colspan="2">Zmodyfikowane (Smith 2012): ③ zastąpione stosunkiem ST/S ≤ −0,25 (uniesienie ST ≥25% głębokości poprzedzającego S); dodatni wynik = ≥1 kryterium</th></tr></table>';
+// 5.2 etap 3: nowe karty mapowane na dotychczasowe klucze silnika (calc/trop.js) – bez zmiany logiki decyzji
+function ecgEff(){const e=Object.assign({},S.e);if(e.inf)e.stemi=true;if(e.wellA||e.wellB)e.well=true;if(e.pace)e.lbbb=true;if(e.lvh)e.nonsp=true;return e;}
+function ecgCard([k,t,c,cr,dr]){const svgs=dr.map(d=>ECGSVG.svg(ECGSVG.P[d],{title:t}));const tag=c===1?'STEMI / równoważnik':c===2?'wysokie ryzyko':'';
+ return `<div class="ek c${c}${k==='sgar'||k==='inf'?' wide':''}" data-card="${k}"><h3>${tag?`<span class="tag">${tag}</span>`:''}${t}</h3>${cr?`<div class="cr">${cr}</div>`:''}${k==='sgar'?SGAR_HTML:''}${svgs.length>1?`<div class="mini">${svgs.map(x=>`<figure>${x}</figure>`).join('')}</div>`:`<figure>${svgs[0]}</figure>`}<button class="mk" data-k="${k}" type="button">☐ Zaznacz</button></div>`;}
 function yn(box,list,st){$(box).innerHTML=list.map(([k,t])=>`<div class="yn"><span>${t}</span><div class="b"><button data-k="${k}" data-v="1">TAK</button><button class="no" data-k="${k}" data-v="0">NIE</button></div></div>`).join('');
  $(box).onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,v=+b.dataset.v;st[k]=st[k]===v?undefined:v;draw()}}
 yn('hist',HIST,S.h);yn('rf',RF,S.r);yn('vhr',VHR,S.v);
-$('ecg').innerHTML=ECG.map(([k,t,c])=>`<button data-k="${k}" class="${c?'st':''}">${c===1?'🚨 ':c===2?'⚠️ ':''}${t}</button>`).join('');
+$('ecg').innerHTML=ECG.map(ecgCard).join('');
+document.getElementById('ecg').addEventListener('click',e=>{const f=e.target.closest('figure');if(f&&!e.target.closest('button')){f.classList.toggle('big');e.stopPropagation();}},true);
+function ecgClock(){const f=tmin('ecgFmc'),t=tmin('ecgT'),el=$('ecgCnt');if(f==null){el.textContent='wpisz godzinę pierwszego kontaktu';el.className='';return;}const nowM=(()=>{const d=new Date();return d.getHours()*60+d.getMinutes()})();const d=t!=null?((t-f+1440)%1440):((nowM-f+1440)%1440);el.textContent=t!=null?`EKG po ${d} min od pierwszego kontaktu`+(d>10?' – PRZEKROCZONO 10 min':' ✔'):`od pierwszego kontaktu: ${d} min`+(d>10?' – brak EKG >10 min!':'');el.className=d>10?'late':'';}
+['ecgFmc','ecgT'].forEach(id=>$(id).addEventListener('input',ecgClock));setInterval(ecgClock,20000);
 $('ecg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;S.e[k]=!S.e[k];if(k==='norm'&&S.e.norm)for(const x in S.e)if(x!=='norm')S.e[x]=false;if(k!=='norm'&&S.e[k])S.e.norm=false;draw()};
 const num=id=>{const v=$(id).value.replace(',','.').trim();return v===''?null:+v};
 const tmin=id=>{const v=$(id).value;if(!v)return null;const[h,m]=v.split(':');return +h*60+ +m};
@@ -119,7 +152,7 @@ function siren(on){if(window.parent!==window)return;if(window.SORSound&&SORSound
  else if(sirenOn){try{clearInterval(sweep);osc.stop()}catch(e){}sirenOn=false}}
 $('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔊 Włącz syrenę':'🔇 Wycisz syrenę';draw()};
 function onsetH(){const h=num('onseth');if(h!=null)return h;const o=tmin('onset'),t=tmin('t0');if(o==null)return null;let ref=t!=null?t:(new Date().getHours()*60+new Date().getMinutes());let d=ref-o;if(d<0)d+=1440;return d/60}
-function inputs(){const t0=tmin('t0'),t1=tmin('t1');return{c0:num('c0'),c1:num('c1'),c3:num('c3'),oh:onsetH(),url:urlv(),dt:(t0!=null&&t1!=null)?((t1-t0+1440)%1440):null,h:S.h,r:S.r,e:S.e,v:S.v,age:num('age'),sex:$('sex').value,trops:[num('c0'),num('c1'),num('c3')]}}
+function inputs(){const t0=tmin('t0'),t1=tmin('t1');return{c0:num('c0'),c1:num('c1'),c3:num('c3'),oh:onsetH(),url:urlv(),dt:(t0!=null&&t1!=null)?((t1-t0+1440)%1440):null,h:S.h,r:S.r,e:ecgEff(),v:S.v,age:num('age'),sex:$('sex').value,trops:[num('c0'),num('c1'),num('c3')]}}
 function edacsPart(){const a=num('age');if(a==null)return null;return T.edacs({...inputs(),sex:'f'})}
 function edMissing(part){const miss=[num('age')==null?'wiek':null,!$('sex').value?'płeć':null].filter(Boolean);const h=S.h;const hp=(h.diaph===1?3:0)+(h.rad===1?5:0)+(h.insp===1?-4:0)+(h.palp===1?-6:0);
  return `<p><b style="color:#b36b00">EDACS nie jest policzona – brakuje: ${miss.join(' i ')}.</b></p><p class="mut">Uzupełnij pola w karcie „Pacjent” (wiek, płeć – przy wpisaniu w pasku u góry uzupełnią się same).${part!=null?` Dotychczas: <b>co najmniej ${part} pkt</b> (bez +6 dla mężczyzny).`:` Punkty z wywiadu dotąd: ${hp>0?'+':''}${hp}.`}</p>`}
@@ -128,7 +161,7 @@ function chart(){const P=[['0 h',tmin('t0'),num('c0')],['2.',tmin('t1'),num('c1'
  const U=urlv(),ym=Math.max(60,U*1.3,...pts.map(p=>p.y*1.15)),xm=Math.max(3.5,...pts.map(p=>p.x+.5));const X=x=>45+x/xm*535,Y=y=>200-y/ym*180;
  let s=`<line x1="45" y1="200" x2="580" y2="200" stroke="#555"/><line x1="45" y1="20" x2="45" y2="200" stroke="#555"/><text x="5" y="15" font-size="11">ng/l</text><text x="545" y="222" font-size="11">godz.</text>`;
  for(let h=0;h<=xm;h++)s+=`<text x="${X(h)-4}" y="214" font-size="11">${h}</text>`;
- [[U,'#c4001a',`99. percentyl ${U}`],[52,'#7b3fe4','rule-in 52'],[5,'#1d8a3a','5']].forEach(([v,c,t])=>{if(v<ym)s+=`<line x1="45" x2="580" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${X(xm)-110}" y="${Y(v)-3}" font-size="11" fill="${c}">${t}</text>`});
+ [[U,'#c4001a',`99. percentyl ${U}`],[52,'#1f3a5f','rule-in 52'],[5,'#1d8a3a','5']].forEach(([v,c,t])=>{if(v<ym)s+=`<line x1="45" x2="580" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${X(xm)-110}" y="${Y(v)-3}" font-size="11" fill="${c}">${t}</text>`});
  if(pts.length>1)s+=`<polyline fill="none" stroke="#222" stroke-width="2.5" points="${pts.map(p=>X(p.x)+','+Y(p.y)).join(' ')}"/>`;
  pts.forEach(p=>s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="${p.y>U?'#c4001a':'#1d8a3a'}"/><text x="${X(p.x)+7}" y="${Y(p.y)-7}" font-size="12" font-weight="700">${p.y}</text>`);
  if(!pts.length)s+=`<text x="200" y="110" fill="#999">Wpisz wyniki troponiny – pojawi się wykres</text>`;$('chart').innerHTML=s}
@@ -144,7 +177,7 @@ function trefInfo(){const k=tref();if(!k)return {html:'<b style="color:#b36b00">
 const HOSP='Hospitalizacja – bezwzględnie konsultacja kardiologa (nie kierować do poradni)';
 let LAST={};
 function draw(){document.querySelectorAll('[data-k][data-v]').forEach(b=>{const st=b.closest('#hist')?S.h:b.closest('#rf')?S.r:S.v;b.classList.toggle('on',st[b.dataset.k]===+b.dataset.v)});
- document.querySelectorAll('#ecg button').forEach(b=>b.classList.toggle('on',!!S.e[b.dataset.k]));
+ document.querySelectorAll('#ecg button.mk').forEach(b=>{const on=!!S.e[b.dataset.k];b.classList.toggle('on',on);b.textContent=on?'☑ Zaznaczone':'☐ Zaznacz';b.closest('.ek').classList.toggle('on',on);});
  const U=urlv();$('cutinfo').innerHTML=`Algorytm 0/1 h (karta lokalna, ESC 2023): rule-out 0 h &lt;5 (ból &gt;3 h) lub 0 h &lt;12 i Δ1h &lt;3 · rule-in 0 h ≥52 lub Δ1h ≥5. Algorytm 0/2 h (ESC 2023): rule-out 0 h &lt;6 i Δ2h &lt;4 · rule-in 0 h ≥52 lub Δ2h ≥10 <span class="wer">DO WERYFIKACJI</span>. Aktualny URL: <b>${U} ng/l</b>. Czułość analityczna 3 ng/l; czas oznaczenia ~9 min STAT.`;
  const TI=trefInfo();$('trefinfo').innerHTML=TI.html;const oh=onsetH();$('oninfo').innerHTML=oh==null?'':oh<=3?`<b style="color:#c4001a">${oh.toFixed(1)} h od początku – za wcześnie na wykluczenie jednym wynikiem → konieczna 2. próbka</b>`:`${oh.toFixed(1)} h od początku bólu`;
  const c0=num('c0'),c1=num('c1'),c3=num('c3');$('d1').textContent=c0!=null&&c1!=null?(c1-c0>=0?'+':'')+(c1-c0).toFixed(1):'';$('d3').textContent=c0!=null&&c3!=null?(c3-c0>=0?'+':'')+(c3-c0).toFixed(1):'';
@@ -170,7 +203,7 @@ $('next').onclick=()=>{if(!confirm('Wyczyścić dane i zacząć następnego pacj
 $('print').onclick=()=>{const p=LAST,lab={red:'CZERWONE – pilna konsultacja kardiologiczna',yel:'ŻÓŁTE – obserwacja w SOR',grn:'ZIELONE – rule-out algorytmiczny (wypis po weryfikacji lab NT / kardiolog)',gry:'brak decyzji'};const yes=(L,st)=>L.filter(([k])=>st[k]===1).map(x=>x[1]).join('; ')||'—';
  $('pr').innerHTML=`<h1>Protokół – podejrzenie OZW (ostry zespół wieńcowy) · SOR</h1><div>SOR Kalkulatory · wydruk ${new Date().toLocaleString('pl-PL')}</div>
  <div class="box"><b>Pacjent:</b> ${$('pname').value||'......................................'} · PESEL ${$('pesel').value||'..................'} · wiek ${$('age').value||'—'} · płeć ${{m:'M',f:'K'}[$('sex').value]||'—'} · początek bólu: ${$('onset').value||($('onseth').value?$('onseth').value+' h temu':'—')}</div>
- <div class="box"><b>Wywiad:</b> ${yes(HIST,S.h)}<br><b>Czynniki ryzyka:</b> ${yes(RF,S.r)}<br><b>Bardzo wysokie ryzyko:</b> ${yes(VHR,S.v)}<br><b>EKG:</b> ${ECG.filter(([k])=>S.e[k]).map(x=>x[1]).join('; ')||'—'}</div>
+ <div class="box"><b>Wywiad:</b> ${yes(HIST,S.h)}<br><b>Czynniki ryzyka:</b> ${yes(RF,S.r)}<br><b>Bardzo wysokie ryzyko:</b> ${yes(VHR,S.v)}<br><b>EKG:</b> ${ECG.filter(([k])=>S.e[k]).map(x=>x[1]).join('; ')||'—'}${ECG.filter(([k])=>S.e[k]).map(x=>x[4].map(d=>ECGSVG.svg(ECGSVG.P[d],{title:x[1]})).join(' ')).join(' ')}${$('ecgT').value?`<br>EKG wykonane: ${$('ecgT').value} (pierwszy kontakt ${$('ecgFmc').value||'—'})`:''}</div>
  <div class="box"><b>hs-TnT Roche Elecsys</b> (URL ${urlv()} ng/l): 0 h ${$('c0').value||'—'} (${$('t0').value||'—'}) · 2. ${$('c1').value||'—'} (${$('t1').value||'—'}) · 3 h ${$('c3').value||'—'} (${$('t3').value||'—'})<br>${p.a.txt.replace(/<[^>]+>/g,'')}<div>${$('chart').outerHTML.replace('max-width:700px','max-width:420px')}</div></div>
  <div class="box"><b>HEART:</b> ${p.H.tot}/10 (H${p.H.H} E${p.H.E} A${p.H.A??'—'} R${p.H.R} T${p.H.T??'—'}) · <b>EDACS:</b> ${p.ed??'—'}</div>
  <div class="box">Odniesienie dla 0/1/3 h: <b>${p.tref}</b></div>${p.hosp?`<div class="box" style="border-width:3px"><b>${p.hosp}</b></div>`:''}
