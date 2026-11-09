@@ -4,7 +4,7 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
  function draw(){el.innerHTML='<button class="info">ℹ</button><h2>'+title+'</h2>'+(tabs.length>1?'<div class="tabs">'+tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===tab?'on':'')+'">'+t[1]+'</button>'}).join('')+'</div>':'')+'<div id="f"></div><div id="out"></div><div class="infobox" hidden></div><div class="disc">Narzędzie pomocnicze, niecertyfikowane. Każdą dawkę weryfikuje lekarz.</div>';
   el.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){tab=b.dataset.t;store(mod.id+'_tab').set({t:tab});draw()}});
   infoToggle(el,info);var f=el.querySelector('#f');f.innerHTML='<div class="row">'+form(tab)+'</div>';var g=bind(f,mod.id+'_'+tab,upd);if(window.SKGCS)SKGCS.mount(f);self.update=upd;
-  function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);}upd();}
+  function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=(mod.printTab&&window.SORReport&&SORReport.ptStrip?SORReport.ptStrip()+SORReport.printBtn('Drukuj tę zakładkę: '+((tabs.filter(function(t){return t[0]===tab;})[0]||[])[1]||'')):'')+r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);}upd();}
  draw();}};}
 SKM.util.tabbed=tabbed;SKM.util.chk=chk;
 // ============ ANTYKOAGULACJA ============
@@ -18,7 +18,7 @@ function NOACC(g,w){var H='',lvl='ok';if(!g('nb'))return{H:bx('orange','','Brak 
  if(!H)H=bx('','','Zaznacz lek.');return{H:H,lvl:lvl};}
 SKM.util.NOACF=NOACF;SKM.util.NOACC=NOACC;
 
-var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja'},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar'],['alt3','Alteplaza: ZP'],['prot','Protamina']],
+var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar'],['alt3','Alteplaza: ZP'],['prot','Protamina']],
  function(t){return t==='ufh'?chk('acs','ACS (zamiast ŻChZZ/ZP)'):t==='enox'?chk('proph','profilaktyka (zamiast leczenia)'):t==='vka'?inp('inr','INR','')+chk('bleed','krwawienie zagrażające życiu / pilny zabieg'):t==='noac'?NOACF():t==='alt1'?SKB1.altForm('stemi'):t==='alt2'?SKB1.altForm('stroke'):t==='alt3'?SKB1.altForm('pe'):
   SKB1.protForm();},
  function(t,g,P){var H='',lvl='ok',w=P.w;

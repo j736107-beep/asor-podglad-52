@@ -83,7 +83,7 @@ function csfInterp(i){i=i||{};var cell=num(i.cells),prot=num(i.prot),glu=num(i.g
  if(nz(glu)&&(glu<0||glu>1000))return{ok:false,msg:'Glukoza PMR poza realnym zakresem.'};if(nz(sglu)&&(sglu<20||sglu>2000))return{ok:false,msg:'Glukoza w surowicy poza realnym zakresem.'};
  if(nz(lac)&&(lac<0||lac>40))return{ok:false,msg:'Mleczany poza realnym zakresem.'};if(nz(neutPct)&&(neutPct<0||neutPct>100))return{ok:false,msg:'% neutrofili poza zakresem.'};
  var ratio=nz(glu)&&nz(sglu)?glu/sglu:NaN;var b=[],v=[],tbfu=[];
- if(nz(cell)){if(cell>=1000)b.push('cytoza ≥1000/µl');else if(cell>=100)b.push('cytoza ≥100/µl (zakres „kilkaset” – bakteryjne i wirusowe się nakładają)');else if(cell>5)v.push('cytoza '+cell+'/µl (kilka–kilkaset: typowo wirusowe)');}
+ if(nz(cell)){if(cell>=1000)b.push('cytoza ≥1000/µl');else if(cell>=100){if(nz(neutPct)&&neutPct<50)v.push('cytoza '+cell+'/µl z przewagą limfocytów (kilkaset – typowo wirusowe; 5.2)');else b.push('cytoza ≥100/µl (zakres „kilkaset” – bakteryjne i wirusowe się nakładają)');}else if(cell>5)v.push('cytoza '+cell+'/µl (kilka–kilkaset: typowo wirusowe)');}
  if(nz(neutPct)&&nz(cell)&&cell>5){if(neutPct>=50)b.push('przewaga neutrofili');else v.push('przewaga limfocytów');}
  if(nz(prot)){if(prot>100)b.push('białko >100 mg/dl');else v.push('białko ≤100 mg/dl (typowo norma lub nieznacznie podwyższone w wirusowych)');}
  if(nz(ratio)){if(ratio<0.4)b.push('współczynnik glukozy <0,4');else if(ratio>=0.6)v.push('współczynnik glukozy ≥0,6');else tbfu.push('współczynnik glukozy 0,4–0,6 (strefa pośrednia: m.in. gruźlica, grzybice, część bakteryjnych)');}
@@ -134,8 +134,16 @@ function neuroTreat(i){i=i||{};var age=num(i.age),w=num(i.w);var res={ok:false,n
    var rl=renalFor('amp_q4','2 g co 4 h i.v. – ESCMID 2016','2 g co 4 h i.v.',crcl,rrt);D.push(Object.assign({role:'Listeria: wiek >50 lat lub czynnik ryzyka (immunosupresja, nowotwór, cukrzyca)',drug:'Ampicylina'},rl));
   }
  }
- var hsv=(i.encephalitis===true);
- if(hsv){var ra=AB.renal('acv',crcl,rrt);var mg=nz(w)?10*w:NaN;D.push({role:'zapalenie mózgu – NIE czekaj na PCR',drug:'Acyklowir',dose:nz(w)?'10 mg/kg co 8 h i.v. = '+r1(mg)+' mg/dawkę (masa '+w+' kg; przy otyłości: masa należna/skorygowana – '+DEC+')':'10 mg/kg co 8 h i.v. (podaj masę w pasku, aby wyliczyć mg; przy otyłości: masa należna/skorygowana – '+DEC+')',std:'10 mg/kg co 8 h (HSV – zapalenie mózgu)',status:ra.status,text:ra.text,mod:!!ra.mod,avoid:false,tdm:false,name:'Acyklowir'});}
+ // 5.2 etap 2: wzorzec PMR (csfInterp.cls) steruje leczeniem – wirusowy / mieszany → acyklowir
+ var cc=i.csfCls||'';res.csfCls=cc;var hsv=(i.encephalitis===true)||cc==='viral'||cc==='mixed';
+ if(hsv){var ra=AB.renal('acv',crcl,rrt);var mg=nz(w)?10*w:NaN;
+  var adj=null;if(rrt==='none'&&c.ok&&nz(crcl)){adj=crcl>50?{mgkg:10,q:8}:crcl>=25?{mgkg:10,q:12}:crcl>=10?{mgkg:10,q:24}:{mgkg:5,q:24};}
+  res.acv={mgkg:adj?adj.mgkg:10,q:adj?adj.q:8,mg:nz(w)?(adj?adj.mgkg:10)*w:NaN,adjusted:!!(adj&&(adj.q!==8||adj.mgkg!==10)),crcl:nz(crcl)?crcl:null};
+  var adjTxt=nz(w)&&adj&&(adj.q!==8||adj.mgkg!==10)?' → przy CrCl '+r1(crcl)+' ml/min (Cockcroft-Gault): '+r1(adj.mgkg*w)+' mg co '+adj.q+' h (ChPL)':'';
+  if(cc==='viral'){res.csfMsg='Profil PMR wirusowy: acyklowir 10 mg/kg i.v. co 8 h na pierwszym miejscu'+(nz(w)?' = '+r1(10*w)+' mg co 8 h':'')+adjTxt+'; wlew ≥1 h, nawodnienie. PCR HSV/VZV w PMR; kontynuuj do wyniku PCR, przy dodatnim HSV 14–21 dni. Antybiotyk empiryczny pozostaje do wyniku Grama i posiewu'+(i.bms===0?'; czysty obraz wirusowy i BMS = 0: rozważ odstawienie antybiotyku po wykluczeniu bakteryjnego – '+DEC:'')+'. Kleszczowe zapalenie mózgu (Podhale): leczenie objawowe, IgM w surowicy i PMR.';
+   if(i.bms===0)res.decisions.push('Obraz wirusowy i BMS = 0: rozważ odstawienie antybiotyku po wykluczeniu etiologii bakteryjnej – '+DEC+'.');}
+  else if(cc==='mixed')res.csfMsg='Obraz PMR mieszany: acyklowir'+(nz(w)?' '+r1(10*w)+' mg co 8 h':' 10 mg/kg co 8 h')+adjTxt+' RAZEM z ceftriaksonem (± ampicylina, wankomycyna) do wyników Grama, posiewu i PCR.';
+  D.push({role:cc==='viral'?'WZORZEC WIRUSOWY W PMR – lek pierwszego wyboru; NIE czekaj na PCR':cc==='mixed'?'obraz PMR mieszany – acyklowir + antybiotyk':'zapalenie mózgu – NIE czekaj na PCR',drug:'Acyklowir',dose:(adj&&nz(w)&&(adj.q!==8||adj.mgkg!==10)?r1(adj.mgkg*w)+' mg co '+adj.q+' h i.v. (CrCl '+r1(crcl)+' ml/min; norma: 10 mg/kg co 8 h = '+r1(10*w)+' mg) – ':'')+(nz(w)?'10 mg/kg co 8 h i.v. = '+r1(mg)+' mg/dawkę (masa '+w+' kg; przy otyłości: masa należna/skorygowana – '+DEC+')':'10 mg/kg co 8 h i.v. (podaj masę w pasku, aby wyliczyć mg; przy otyłości: masa należna/skorygowana – '+DEC+')'),std:'10 mg/kg co 8 h (HSV – zapalenie mózgu)',status:ra.status,text:ra.text,mod:!!ra.mod,avoid:false,tdm:false,name:'Acyklowir'});if(cc==='viral'){var ac=D.pop();D.unshift(ac);}}
  res.drugs=D;
  // deksametazon
  var dx={dose:'10 mg i.v. co 6 h przez 4 dni (dorośli; ESCMID 2016, A; IDSA 2004: 0,15 mg/kg co 6 h przez 2–4 dni – '+(nz(w)?r1(0.15*w)+' mg':'podaj masę')+')',

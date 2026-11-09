@@ -23,6 +23,8 @@ function htmlText(h){var t=String(h).replace(/<style[\s\S]*?<\/style>/g,'').repl
 function mkG(modId,tab){var v=store(modId+'_'+tab).get();return function(id){var x=v[id];var k=id.slice(0,2);if(k==='k_')return x===true;if(k==='o_')return x==null?'':String(x);if(x==null||x==='')return NaN;var n=N(String(x));return n;};}
 // ============================================================ NEUROINFEKCJE ============================================================
 var MID='neuroinf';
+function csfCI(g){var sg=g('glu'),sgl=g('sglu');var gMg=isNaN(sg)?NaN:UN.fromSI('glu',sg,'conv'),sMg=isNaN(sgl)?NaN:UN.fromSI('glu',sgl,'conv');
+ return E.csfInterp({cells:g('cells'),neutPct:g('neut'),prot:g('prot'),glu:gMg,sglu:sMg,lac:g('lac'),gram:g('k_gram'),csfNeut:g('cneut'),bloodNeut:g('bneut'),seiz:g('k_seiz')});}
 function symState(){var v=store(MID+'_s').get(),o={};E.SYMP.forEach(function(s){o[s[0]]=v['k_'+s[0]]===true;});return o;}
 function crclBox(c){if(!c)return '';if(!c.ok)return bx('orange','CrCl nieobliczony','Brakuje: <b>'+esc(c.missing.join(', '))+'</b> (pasek pacjenta). Korekta nerkowa nie została wykonana.');
  return bx(c.crcl<30?'orange':'ok','CrCl (Cockcroft–Gault z korektą masy): <span class="b2res">'+F(c.crcl,0)+' ml/min</span>','Kreatynina '+(sysU()==='si'?c.crUmol+' µmol/l ('+F(c.crMg,2)+' mg/dl)':F(c.crMg,2)+' mg/dl ('+c.crUmol+' µmol/l)')+' · masa użyta '+F(c.wUsed,0)+' kg ('+esc(c.basis)+')');}
@@ -52,8 +54,7 @@ var NS={
    ['KZM IgM / IgG','ekspozycja na kleszcze, przebieg dwufazowy','wg KOROUN endemiczne: woj. podlaskie, warmińsko-mazurskie; poza tym '+DEC],
    ['Cryptococcus (antygen / tusz chiński)','niedobór odporności (HIV, immunosupresja)','dostępność lokalnie: '+DEC],
    ['Gruźlica (BK, PCR, ADA)','przebieg podostry, glukoza ↓, białko ↑↑, limfocytoza','w ośrodku referencyjnym: '+DEC]].map(function(r){return r.map(rich);}))+srcl([E.SRC.koroun]));
-  var sg=g('glu'),sgl=g('sglu');var gMg=isNaN(sg)?NaN:UN.fromSI('glu',sg,'conv'),sMg=isNaN(sgl)?NaN:UN.fromSI('glu',sgl,'conv');
-  var ci=E.csfInterp({cells:g('cells'),neutPct:g('neut'),prot:g('prot'),glu:gMg,sglu:sMg,lac:g('lac'),gram:g('k_gram'),csfNeut:g('cneut'),bloodNeut:g('bneut'),seiz:g('k_seiz')});
+  var ci=csfCI(g);
   if(!ci.ok)H+=bx('orange','Interpretacja PMR – brak wyniku',esc(ci.msg));
   else{var cl={bact:'red',viral:'ok',mixed:'orange',tbfungal:'orange','':'orange'}[ci.cls];
    H+=bx(cl,'Interpretacja PMR','<b>'+rich(ci.txt)+'</b>'+(isFinite(ci.ratio)?'<div>Współczynnik glukozy PMR/surowica: <b>'+F(ci.ratio,2)+'</b> (prawidłowo ≥0,6; <0,4 – bakteryjne)</div>':'')+
@@ -63,9 +64,10 @@ var NS={
   H+=bx('','Tabela odniesienia (KOROUN 2026, Tab. 23)',tbl(['','Bakteryjne','Wirusowe'],[['wygląd','mętny','przejrzysty'],['cytoza','kilkaset – >1000/µl, neutrofile','kilka – kilkaset/µl, limfocyty'],['białko','często >100 mg/dl','prawidłowe / nieznacznie podwyższone'],['glukoza PMR/surowica','<0,4','>0,6'],['mleczany','podwyższone (>2,4 mmol/l)','prawidłowe / niskie (1,1–2,4)']])+'<div class="mut">Mleczany >2,4 mmol/l przemawiają za etiologią bakteryjną, grzybiczą lub gruźliczą.</div>');
   return{H:H,lvl:ci.ok&&ci.cls==='bact'?'red':'ok'};},
  t:function(g,P){var s=symState();var enc=g('k_enc')||(s.fever&&(s.alt||s.seiz||s.focal));var pr=tri(g('o_preg')),ba=tri(g('o_beta'));
-  var r=E.neuroTreat({age:P.age,w:P.w,h:P.h,sex:P.sex,crMg:P.crMg,rrt:g('o_rrt')||'none',pregnancy:pr,betaAllergy:ba,encephalitis:!!enc,listeriaRisk:g('k_list')||g('k_dm')||g('k_ca'),immuno:s.immuno});
+  var ci=csfCI(mkG(MID,'p'));
+  var r=E.neuroTreat({age:P.age,w:P.w,h:P.h,sex:P.sex,crMg:P.crMg,rrt:g('o_rrt')||'none',pregnancy:pr,betaAllergy:ba,encephalitis:!!enc,listeriaRisk:g('k_list')||g('k_dm')||g('k_ca'),immuno:s.immuno,csfCls:ci.ok?ci.cls:'',bms:ci.ok?ci.bms:null});
   var H='';if(!r.ok)return{H:bx('orange','Uzupełnij – brak propozycji leczenia','Brakuje: <b>'+esc(r.needs.join(', '))+'</b>. Nie wyliczono dawek.'),lvl:'ok'};
-  H+=crclBox(r.crcl);if(r.warnings.length)H+=bx('orange','Uwagi',ul(r.warnings));
+  H+=crclBox(r.crcl);if(r.csfMsg)H+=bx(r.csfCls==='viral'?'red':'orange','Wzorzec z PMR: '+(r.csfCls==='viral'?'WIRUSOWY':'MIESZANY')+' → acyklowir','<b id="csfSteer">'+esc(r.csfMsg)+'</b>');if(r.warnings.length)H+=bx('orange','Uwagi',ul(r.warnings));
   if(enc&&!g('k_enc'))H+=bx('orange','Acyklowir dodany automatycznie','Gorączka + zaburzenia świadomości / drgawki / objawy ogniskowe → podejrzenie zapalenia mózgu (z karty „Objawy”).');
   var listTag=r.listeria?(r.drugs.some(function(d){return d.drug==='Ampicylina';})?' · <span class="dw">+ Listeria (ampicylina)</span>':r.drugs.some(function(d){return /TMP-SMX|Trimetoprim/.test(d.drug);})?' · <span class="dw">+ Listeria (TMP-SMX – DO DECYZJI)</span>':''):'';
   if(r.drugs.some(function(d){return d.drug==='Meropenem';}))listTag+=' · <span class="dw">alergia β-laktamów → meropenem</span>';

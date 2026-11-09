@@ -85,3 +85,10 @@ select{font:inherit;padding:5px 7px;border:2px solid #cfc3e8;border-radius:8px;b
 #pbar .pid{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}#pbar input.bad{background:#ffd9de;border-color:#c00}
 @media print{#printArea.compact .rp-text{font-size:8.5pt;line-height:1.2;column-count:2;column-gap:6mm}#printArea.compact table{font-size:9pt}#printArea.compact th,#printArea.compact td{padding:1px 4px}#printArea.compact .src,#printArea.compact .rp-src,#printArea.compact .srcfoot{font-size:7.5pt}}
 @media print{#printArea.compact .rp-srcwrap{font-size:7.5pt;line-height:1.2}#printArea.compact .rp-srcwrap h2{font-size:9pt}}
+
+/* 5.2 etap 2 */
+table.tb{border-collapse:collapse;width:100%;margin:6px 0;font-size:13px}table.tb td,table.tb th{border:1px solid #ccc;padding:3px 5px;text-align:left}table.tb tr.def{background:#fff4d6}
+.ptstrip{background:#eef4ff;border:1px solid #9bb6e8;border-radius:10px;padding:6px 10px;margin:6px 0;font-size:14px}
+.tabPrint{margin:4px 0 8px}
+.cultrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cultrow .ctm{width:110px}
+@media print{.ptstrip,.tabPrint{display:none}}

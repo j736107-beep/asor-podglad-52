@@ -24,7 +24,7 @@
     if(n.nodeType!==1)return;
     var t=n.tagName;
     if(/^(SCRIPT|STYLE|SVG|BUTTON|OPTION|TEXTAREA|NOSCRIPT|IFRAME)$/.test(t)||!visible(n))return;
-    if(n.classList&&(n.classList.contains('info')||n.classList.contains('infobox')||n.classList.contains('disc')||n.classList.contains('tabs')||false))return;
+    if(n.classList&&(n.classList.contains('info')||n.classList.contains('infobox')||n.classList.contains('disc')||n.classList.contains('tabs')||n.classList.contains('ptstrip')||false))return;
     if(n.classList&&n.classList.contains('gcs-box')){var sm=n.querySelector('.gcs-sum');var st=sm?sm.textContent.replace(/\s+/g,' ').trim():'';if(/^GCS =/.test(st)){ctx.filled++;ctx.out.push('\n'+st);}return;}
     if(t==='INPUT'||t==='SELECT'){return;}
     if(t==='LABEL'){var c=n.querySelector('input,select');
@@ -52,8 +52,11 @@
     try{if(!mod||!mod.id||SKIP[mod.id])return;var host=document.getElementById('main'),rootEl=host;
       if(typeof mod.snapshot==='function'){var sn=mod.snapshot();if(sn&&sn.text){var all0=snaps();all0[mod.id]={name:mod.name,ts:Date.now(),text:String(sn.text).slice(0,12000)};jset(SNAP,all0);return;}}
       if(mod.frame){var f=host.querySelector('iframe');if(!f||!f.contentDocument||!f.contentDocument.body)return;rootEl=f.contentDocument.body;}
-      var r=snapText(rootEl),all=snaps();
-      if(r.filled>0&&r.text){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};}else delete all[mod.id];
+      var r=snapText(rootEl),all=snaps(),prev=all[mod.id],sub='',subName='';
+      // 5.2 etap 2: treść osadzonej ramki (np. Zapalenie płuc → Antybiotykoterapia, mod/zp) trafia do wydruku modułu
+      if(!mod.frame){var fr=[].slice.call(rootEl.querySelectorAll('iframe'));fr.forEach(function(f){try{var b=f.contentDocument&&f.contentDocument.body;if(!b)return;var rr=snapText(b);if(rr.text){sub+=(sub?'\n\n':'')+rr.text;subName=f.title||subName;}}catch(e){}});
+        if(!fr.length&&prev&&prev.sub){sub=prev.sub;subName=prev.subName||'';}}
+      if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';}}else delete all[mod.id];
       jset(SNAP,all);}catch(e){}}
   function clearSnaps(){try{localStorage.removeItem(SNAP);}catch(e){}}
   // ------------- składanie raportu -------------
@@ -76,7 +79,8 @@
   // 5.2: wydruk jednego modułu mieści się na 1–2 stronach A4 (tekst skracany do LIM znaków)
   var LIM=4200;
   function modulesHtml(ids,lim){var all=snaps(),keys=Object.keys(all).filter(function(k){return !ids||ids.indexOf(k)>=0;});
-    return keys.map(function(k){var s=all[k],t=String(s.text||'');if(lim&&t.length>lim)t=t.slice(0,lim).replace(/\s+\S*$/,'')+' … [skrócono do wydruku A4 – pełna treść w module]';return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3><div class="rp-text">'+esc(t)+'</div>';}).join('');}
+    function cut(t,l){t=String(t||'');return l&&t.length>l?t.slice(0,l).replace(/\s+\S*$/,'')+' … [skrócono do wydruku A4 – pełna treść w module]':t;}
+    return keys.map(function(k){var s=all[k],l1=lim&&s.sub?Math.round(lim*0.5):lim,t=cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3><div class="rp-text">'+esc(t)+'</div>'+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,lim?lim-l1:0))+'</div>':'');}).join('');}
   function pwHtml(){var m=root.SKS&&root.SKS.pwMem;if(!m||!m.report)return '';var R=m.report;function ul(t,a){return a&&a.length?'<h3>'+esc(t)+'</h3><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}return ul('Nie przeocz',R.alerts)+ul('Co zrobić teraz',R.actions)+ul('Czego brakuje',R.missing)+(R.algo&&R.algo.length?ul('Algorytmy',R.algo):'');}
   var TITLES={pw:'Przegląd wyników – czujnik bezpieczeństwa',doc:'Dokumentacja',done:'Co rzeczywiście wykonano',pumps:'Pompy – zapisane nastawy',fluid:'Bilans płynów',modules:'Moduły użyte u pacjenta'};
   function build(parts){
@@ -99,6 +103,10 @@
   function brand(a){if(!a)return a;a.querySelectorAll('.brand-h,.brand-f,.pid-h').forEach(function(x){x.remove();});a.insertAdjacentHTML('afterbegin',brandHead());a.insertAdjacentHTML('beforeend',brandFoot());return a;}
   if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeprint',function(){brand(document.getElementById('printArea'));});
   function fill(parts){var a=document.getElementById('printArea');if(!a){a=document.createElement('div');a.id='printArea';document.body.appendChild(a);}a.innerHTML=build(parts);a.classList.toggle('compact',!!(parts&&parts.length===1&&parts[0]&&parts[0].module));brand(a);return a;}
+  // 5.2 etap 2: pasek pacjenta na ekranie modułu (Bilans płynów, Antykoagulacja) + przycisk wydruku
+  function ptStrip(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():{},p=root.SKS&&root.SKS.P?root.SKS.P():{},C=root.SK&&root.SK.core;function f(x,d){return isFinite(x)&&C?C.fmt(x,d):'—';}
+    return '<div class="ptstrip" id="ptStrip">👤 <b>'+esc(I.name||'— (nie wpisano)')+'</b> · PESEL '+esc(I.pesel||'—')+' · wiek '+f(p.age,0)+' · płeć '+({m:'M',f:'K'}[p.sex]||'—')+' · masa '+(isFinite(p.w)?f(p.w,0)+' kg':'—')+' · CrCl '+(isFinite(p.crcl)?f(p.crcl,0)+' ml/min':'—')+'</div>';}
+  function printBtn(l){return '<button type="button" class="tabPrint primary-action" onclick="var b=document.getElementById(\'printMod\');if(b)b.click();">🖨 '+esc(l||'Drukuj tę zakładkę (A4)')+'</button>';}
   function print(parts){var cur=root.SKS&&root.SKS.active?root.SKS.active():null;if(cur)capture(cur);fill(parts);root.print();}
-  return{brand:brand,brandHead:brandHead,brandFoot:brandFoot,HOSP:HOSP,FOOT:FOOT,esc:esc,pumpList:pumpList,addPump:addPump,clearPumps:clearPumps,snapText:snapText,capture:capture,snaps:snaps,clearSnaps:clearSnaps,build:build,fill:fill,print:print,SKIP:SKIP};
+  return{brand:brand,brandHead:brandHead,brandFoot:brandFoot,HOSP:HOSP,FOOT:FOOT,esc:esc,pumpList:pumpList,addPump:addPump,clearPumps:clearPumps,snapText:snapText,capture:capture,snaps:snaps,clearSnaps:clearSnaps,build:build,fill:fill,print:print,ptStrip:ptStrip,printBtn:printBtn,SKIP:SKIP};
 });

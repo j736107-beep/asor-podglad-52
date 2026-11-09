@@ -11,7 +11,12 @@ var LINES=[['0–5 min','Stabilizacja · glikemia · tiamina',[]],
  ['>40 min','Stan oporny: intubacja + wlew anestetyku z ciągłym EEG',[['mid3','Midazolam','bolus+wlew'],['pro','Propofol','bolus+wlew'],['tpn','Tiopental','bolus+wlew'],['ket','Ketamina','bolus+wlew']]]];
 SH.midbuc='Buccolam 10 mg/2 ml · Epistatus 10 mg/1 ml';SH.dzpr='Relsed 10 mg/2,5 ml (mikrowlewka)';SH.fos='Fosfenytoina — brak w RPL';SH.pb='Fenobarbital i.v. — brak w RPL';SH.pht='Epanutin 250 mg/5 ml · Phenytoin Hikma 250 mg/5 ml';
 function given(){var g={dzpMg:0};st.log.forEach(function(e){g[e.k]=(g[e.k]||0)+1;if(e.k==='dzp')g.dzpMg+=e.mg||0;});return g;}
-function R(){return E.compute({w:st.w,zrmDoses:st.zrmDoses,zrmDzp:0,crcl:st.crcl,co:st.co,given:given()});}
+function t0ms(){if(!st.t0)return null;var p=String(st.t0).split(':');var d=new Date();d.setHours(+p[0],+p[1],0,0);if(d.getTime()>Date.now()+60000)d.setDate(d.getDate()-1);return d.getTime();}
+function R(){return E.compute({w:st.w,zrmDoses:st.zrmDoses,zrmDzp:0,crcl:st.crcl,co:st.co,given:given(),log:st.log,now:Date.now(),t0:t0ms()});}
+function extra(r){r=r||R();var s3=$('#stage3'),s2=$('#second'),th=$('#thia');if(!s3)return;
+ s3.innerHTML=r.stage3Now?'<div class="mx s3alarm" id="s3msg">🛑 '+esc(r.stage3Msg)+'</div>':(r.elapsed!=null?'<div class="hint">Od początku napadu: <b>'+r.elapsed+' min</b> (III rzut przy ≥40 min)</div>':'');
+ var x=r.second;if(x&&r.W>0){var ev=new Date(x.evalAt);s2.innerHTML='<section class="second" id="secondCard"><h3>'+esc(x.title)+'</h3><p>'+esc(x.note)+'</p><p>Ocena skuteczności: ok. <b>'+('0'+ev.getHours()).slice(-2)+':'+('0'+ev.getMinutes()).slice(-2)+'</b></p>'+x.alts.map(function(a){return '<div class="alt '+(a.blocked?'blk':'')+'" data-alt="'+a.k+'"><b>'+esc(a.name)+'</b>: '+(a.blocked?'<s>'+esc(a.head)+'</s> – ZABLOKOWANY':esc(a.head))+(a.why.length?'<div class="mut">'+esc(a.why.join(' '))+'</div>':'')+'</div>';}).join('')+(x.first?'':'<div class="mx">Brak leku II rzutu bez przeciwwskazań – DO DECYZJI LEKARZA / III rzut.</div>')+'</section>';}else s2.innerHTML='';
+ th.innerHTML=r.thiamine&&window.SKThiamine?SKThiamine.html(r.thiamine,esc):'';}
 function vals(k,r){var d=E.defaults(k,r),u=st.ed[k]||{},o={};Object.keys(d).forEach(function(x){o[x]=u[x]!=null?u[x]:d[x];});return o;}
 function tagLine(x){var n=[],c=false;x.src.forEach(function(s){if(s.t==='C')c=true;else if(s.t==='W'&&n.indexOf(S[s.k].n)<0)n.push(S[s.k].n);});
  return(n.length?'<b>Wytyczne (off-label):</b> '+n.join(', '):'')+(c?(n.length?' · ':'')+'<b>ChPL</b>':'');}
@@ -46,14 +51,16 @@ function result(){var r=R(),k=st.sel,h='';
 function hhmm(t){var d=new Date(t);return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function logLine(){var l=$('#lg');if(!l)return;l.innerHTML=st.log.length?st.log.slice(-4).map(function(e){return'<b>'+hhmm(e.t)+'</b> '+esc(e.txt)}).join('<br>')+(st.log.length?' <a href="#" id="clr">wyczyść</a>':''):'brak podań';}
 function render(){var r=R();document.body.appendChild($('#res'));$('#w').classList.toggle('bad',r.weight==='red');grid(r);result();
- document.querySelectorAll('.tg').forEach(function(b){b.classList.toggle('on',!!st.co[b.dataset.c])});$('#crr').hidden=!st.co.renal;$('#zn').textContent=st.zrmDoses;}
+ document.querySelectorAll('.tg').forEach(function(b){b.classList.toggle('on',!!st.co[b.dataset.c])});$('#crr').hidden=!st.co.renal;$('#zn').textContent=st.zrmDoses;
+ document.querySelectorAll('.tg2').forEach(function(b){b.classList.toggle('on',!!st.co[b.dataset.c])});extra(r);}
 function info(){var h='<button class="rs" id="ix" style="float:right">✕</button><h2>Stan padaczkowy</h2><p>Napad ≥5 min lub ≥2 napady bez powrotu świadomości (ILAE 2015; PTE 2018).</p><p><b>OIOM:</b> napad trwa mimo benzodiazepiny + leku 2. rzutu (SE oporny) → wlew anestetyku z ciągłym EEG, cel: ustąpienie napadów / burst-suppression, 24–48 h (PTE 2018; NCS 2012).</p><p>Benzodiazepina maks. 2 dawki łącznie z ZRM. Glukoza &lt;60 mg/dl (3,3 mmol/l): tiamina 100 mg, potem 50 ml glukozy 50% (AES 2016).</p><p>Kolory: zielony = preferowany, pomarańczowy = ostrożnie, czerwony = unikać.</p><h2>Źródła</h2>'+Object.keys(S).map(function(k){return'<div><a href="'+S[k].url+'" target="_blank" rel="noopener">'+esc(S[k].label)+'</a></div>'}).join('');
  var b=$('#infoBox');b.innerHTML=h;b.hidden=false;$('#ix').onclick=function(){b.hidden=true;};}
 $('#w').value=isFinite(st.w)?String(st.w).replace('.',','):'';$('#crcl').value=isFinite(st.crcl)?st.crcl:'';
 $('#w').oninput=function(){st.w=num(this.value);st.ed={};save();render();};
 $('#crcl').oninput=function(){st.crcl=num(this.value);save();render();};
 $('#zm').onclick=function(){st.zrmDoses=Math.max(0,st.zrmDoses-1);save();render();};$('#zp').onclick=function(){st.zrmDoses=Math.min(3,st.zrmDoses+1);save();render();};
-document.querySelectorAll('.tg').forEach(function(b){b.onclick=function(){st.co[b.dataset.c]=!st.co[b.dataset.c];save();render();}});
+document.querySelectorAll('.tg,.tg2').forEach(function(b){b.onclick=function(){st.co[b.dataset.c]=!st.co[b.dataset.c];save();render();}});
+$('#t0').value=st.t0||'';$('#t0').oninput=function(){st.t0=this.value;save();render();};setInterval(function(){try{extra();}catch(e){}},20000);
 $('#info').onclick=info;
 function table(){var r=R();if(!(r.W>0)){alert('Wpisz masę ciała');return;}var h='<button class="rs" id="ix" style="float:right">✕</button><h2>Tabela dawek — '+f(r.W)+' kg</h2><table class="rows dt"><tr><th>Etap</th><th>Lek / preparat</th><th>Dawka dla masy</th><th>Źródła</th></tr>';
  LINES.forEach(function(L){L[2].forEach(function(b){var x=r.drugs[b[0]];h+='<tr><td>'+L[0]+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.head)+'</td><td>'+x.src.map(function(z){return esc(S[z.k].n)}).filter(function(v,i,a){return a.indexOf(v)===i}).join(', ')+'</td></tr>';});});

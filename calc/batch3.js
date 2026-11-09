@@ -17,6 +17,20 @@ function adrIM(w,age){var mg=null,needW=false,note='';
  return{mg:mg,ml:mg==null?null:mg/1,needW:needW,note:note};}
 function anaFluid(w,age){if(nz(age)&&age<18&&w>0)return{ml:10*w,txt:'10 ml/kg krystaloidu'};return{ml:[500,1000],txt:'500–1000 ml krystaloidu'};}
 function glucagon(){return{lo:1,hi:5,txt:'Glukagon 1–5 mg i.v. w 5 min, potem 5–15 µg/min (beta-bloker)'};}
+// 5.2 etap 2 – anafilaksja oporna (RCUK 2021, WAO 2020, ASCIA). Glukagon w anafilaksji ≠ schemat zatrucia β-blokerem.
+function anaGlucagon(){return{lo:1,hi:2,txt:'Glukagon 1–2 mg i.v. (powoli, ok. 5 min) lub i.m.; można powtórzyć co 5 min',alt:'WAO 2020 / AAAAI: 1–5 mg i.v. w 5 min, następnie wlew 5–15 µg/min – DO DECYZJI LEKARZA (receptura wlewu poza ChPL – uzgodnij z apteką)',warn:'częste wymioty – ułóż na boku / zabezpiecz drogi oddechowe; hiperglikemia'};}
+function anaRefr(w){if(!(w>0))return null;var lo=5*w,hi=10*w; // µg/h (0,5–1 ml/kg/h roztworu 10 µg/ml – RCUK 2021)
+ function r(c,l,prep,def){return{conc:c,l:l,prep:prep,def:!!def,mlhLo:lo/c,mlhHi:hi/c};}
+ return{ugkghLo:5,ugkghHi:10,ugkgminLo:5/60,ugkgminHi:10/60,ughLo:lo,ughHi:hi,ugminLo:lo/60,ugminHi:hi/60,
+  rec:[r(20,'1 mg / 50 ml = 20 µg/ml (propozycja SOR)','1 ml adrenaliny 1 mg/ml + 49 ml NaCl 0,9% w strzykawce 50 ml',true),r(10,'1 mg / 100 ml = 10 µg/ml (RCUK 2021)','1 ml adrenaliny 1 mg/ml + 99 ml NaCl 0,9%'),r(100,'5 mg / 50 ml = 100 µg/ml (lokalna baza „Pompy SOR”)','5 ml adrenaliny 1 mg/ml + 45 ml NaCl 0,9%; tylko dostęp centralny / duża żyła')]};}
+function anaNor(w,dose){if(!(w>0))return null;dose=dose>0?dose:0.05;return{dose:dose,conc:80,mlh:dose*w*60/80,ugmin:dose*w,prep:'4 mg (4 ml 1 mg/ml) + 46 ml NaCl 0,9% = 50 ml (80 µg/ml) – lokalna baza „Pompy SOR”, dostęp centralny'};}
+// czas obserwacji (RCUK 2021) od ustąpienia objawów; o:{doses,biph,severe,asthma,absorb,night,access,pens,infusion}
+function anaObs(o){o=o||{};var d=+o.doses||0;if(o.infusion)return{hosp:true,h:null,why:'wlew adrenaliny / wazopresor → hospitalizacja (RCUK 2021)'};
+ if(d>2||o.severe||o.asthma||o.absorb||o.night||o.access)return{h:12,why:d>2?'>2 dawki adrenaliny':o.severe?'ciężka reakcja':o.asthma?'ciężka astma':o.absorb?'możliwe dalsze wchłanianie alergenu':o.night?'przyjęcie późnym wieczorem / w nocy':'utrudniony dostęp do pomocy'};
+ if(d===2||o.biph)return{h:6,why:d===2?'2 dawki adrenaliny i.m.':'reakcja dwufazowa w wywiadzie'};
+ if(d===1&&o.pens)return{h:2,why:'1 dawka, pełne ustąpienie objawów, 2 autowstrzykiwacze + instruktaż, pod opieką'};
+ if(d===1)return{h:6,why:'1 dawka, ale brak warunków dla 2 h (autowstrzykiwacze, instruktaż, opieka)'};return null;}
+function obsUntil(hhmm,h,now){var m=/^(\d{1,2}):(\d{2})$/.exec(String(hhmm||'').trim());if(!m||!(h>0))return null;now=now?new Date(now):new Date();var t=new Date(now);t.setHours(+m[1],+m[2],0,0);var u=new Date(t.getTime()+h*3600e3);return{from:t,until:u,label:('0'+u.getHours()).slice(-2)+':'+('0'+u.getMinutes()).slice(-2),active:now<u,leftMin:Math.max(0,Math.round((u-now)/60000))};}
 // ---------- SEPSA ----------
 function map(sbp,dbp){return nz(sbp)&&nz(dbp)&&sbp>0&&dbp>0&&sbp<=300&&dbp<=200?(sbp+2*dbp)/3:NaN;}
 function sepsis(i){var o={lvl:'ok',w:[]};o.map=nz(i.map)?i.map:map(i.sbp,i.dbp);
@@ -63,4 +77,4 @@ function gbs(i){var s=0,u=i.urea,hb=i.hb;
  return{score:s,low:s<=1,lvl:s<=1?'ok':s>=7?'red':'orange'};}
 function terli(w){if(!(w>0))return null;var mg=w<50?1:w<=70?1.5:2;return{mg:mg,txt:fmtn(mg)+' mg i.v. co 4 h'};}
 function hbThreshold(cardiac){return cardiac?{t:8,target:'≥10 g/dl'}:{t:7,target:'7–9 g/dl'};}
-return{SRC:SRC,adrIM:adrIM,anaFluid:anaFluid,glucagon:glucagon,map:map,sepsis:sepsis,abx:abx,vancoLoad:vancoLoad,NAC_CAP:NAC_CAP,nac21:nac21,paraLine:paraLine,para:para,naloxone:naloxone,naloxInf:naloxInf,flumazenil:flumazenil,cha:cha,afRate:afRate,afRhythm:afRhythm,gbs:gbs,terli:terli,hbThreshold:hbThreshold};});
+return{SRC:SRC,adrIM:adrIM,anaFluid:anaFluid,glucagon:glucagon,anaGlucagon:anaGlucagon,anaRefr:anaRefr,anaNor:anaNor,anaObs:anaObs,obsUntil:obsUntil,map:map,sepsis:sepsis,abx:abx,vancoLoad:vancoLoad,NAC_CAP:NAC_CAP,nac21:nac21,paraLine:paraLine,para:para,naloxone:naloxone,naloxInf:naloxInf,flumazenil:flumazenil,cha:cha,afRate:afRate,afRhythm:afRhythm,gbs:gbs,terli:terli,hbThreshold:hbThreshold};});

@@ -2,7 +2,7 @@
 var $=function(s){return document.querySelector(s);},E=PW,ta=$('#paste'),out=$('#out');
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var f=E.fmt,SEVL={crit:'KRYTYCZNE',alert:'PILNE',warn:'UWAGA'};
-var MODN={el:'Elektrolity SOR',pompy:'Pompy SOR',cap:'Zapalenie płuc',sepsis:'Sepsa',trop:'Troponina / OZW',dka:'DKA / HHS',acoag:'Antykoagulacja',transf:'Transfuzjologia',gib:'Krwawienie z GI',fluid:'Bilans płynów',pe:'Zatorowość płucna',ahf:'Ostra niewydolność serca',neuro:'Neurologia',af:'AF',tox:'Zatrucia'};
+var MODN={el:'Elektrolity SOR',pompy:'Pompy SOR',cap:'Zapalenie płuc',sepsis:'Sepsa',trop:'Troponina / OZW',dka:'Kwasica ketonowa (DKA) / Stan hiperosmolarny (HHS)',acoag:'Antykoagulacja',transf:'Transfuzjologia',gib:'Krwawienie z GI',fluid:'Bilans płynów',pe:'Zatorowość płucna',ahf:'Ostra niewydolność serca',neuro:'Neurologia',af:'AF',tox:'Zatrucia'};
 function inApp(){try{return window.parent!==window&&window.parent.SKS&&typeof window.parent.SKS.show==='function';}catch(e){return false;}}
 function vals(r){return r.points.map(function(p){return r.sameUnit?p.val:p.v;});}
 function nrm(r){var lo=null,hi=null;r.points.forEach(function(q){if(q.lo!=null)lo=q.lo;if(q.hi!=null)hi=q.hi;});r.points.forEach(function(q){if(q.lo==null&&q.hi==null&&r.sameUnit){q.lo=lo;q.hi=hi;}});}

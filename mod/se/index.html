@@ -3,9 +3,11 @@
 <header><h1>⚡ Stan padaczkowy SOR</h1><button id="tab" class="ib" title="Tabela dawek">📋</button><button id="info" class="ib">ℹ</button></header>
 <div class="wrow"><label for="w">Masa ciała [kg]</label><input id="w" inputmode="decimal" placeholder="70"></div>
 <div class="crow"><button class="tg" data-c="liver">wątroba</button><button class="tg" data-c="renal">nerki</button><button class="tg" data-c="cardiac">serce</button><button class="tg" data-c="preg">ciąża</button><span class="zr">ZRM BZD <button id="zm">−</button><b id="zn">0</b><button id="zp">+</button></span></div>
+<div class="crow c2" id="co2"><button class="tg2" data-c="alco">alkoholizm / niedożywienie / bariatria / wymioty</button><button class="tg2" data-c="wern">podejrzenie Wernickego</button><button class="tg2" data-c="polg">choroba mitochondrialna / POLG</button><button class="tg2" data-c="ucd">zaburzenia cyklu mocznikowego</button><button class="tg2" data-c="plt">PLT &lt;100 G/l / skaza</button><button class="tg2" data-c="carb">karbapenem (meropenem)</button><button class="tg2" data-c="resp">pogorszenie oddychania</button><label class="t0l">Początek napadu <input id="t0" type="time"></label></div>
+<div id="stage3"></div><div id="second"></div><div id="thia"></div>
 <div class="crow" id="crr" hidden><label>CLkr [ml/min]</label><input id="crcl" inputmode="decimal" class="sml"></div>
 <div id="grid"></div>
 <div id="res"></div>
 <div id="infoBox" hidden></div>
 <div class="disc">Narzędzie pomocnicze, niecertyfikowane. Każdą dawkę weryfikuje lekarz.</div>
-<script src="engine.js"></script><script src="app.js"></script></body></html>
+<script src="../../calc/thiamine.js"></script><script src="engine.js"></script><script src="app.js"></script></body></html>

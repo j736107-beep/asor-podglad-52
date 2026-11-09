@@ -170,7 +170,7 @@ function compute(st){
   glu:{aesG:25,aesMl50:50,ml40aes:25/0.4,chplG:0.2*W,ml40chpl:0.2*W/0.4},
   rows:[['Glikemia <60 mg/dl (3,3 mmol/l)','AES 2016: tiamina 100 mg i.v., potem 50 ml glukozy 50% (= 25 g)'],
    ['Glukoza w PL','Glucosum Teva 40% (amp. 10 ml = 4 g): 25 g (AES) = 62,5 ml ≈ 6,3 amp.; ChPL: 0,2 g/kg = '+f(0.2*W)+' g = '+f(0.2*W/0.4)+' ml 40% → DO DECYZJI LEKARZA'],
-   ['Tiamina','100 mg i.v. przed glukozą (AES 2016); w RPL brak tiaminy do wstrzykiwań dla ludzi (tylko weterynaryjna) — sprawdź aptekę / import docelowy']],
+   ['Tiamina','100 mg i.v. przed glukozą lub razem z nią (AES 2016); przy hipoglikemii nie opóźniaj glukozy. Preparat i.v. – POTWIERDŹ Z APTEKĄ SZPITALNĄ (w RPL iniekcje tiaminy mają drogę i.m.). Pełna karta tiaminy: przełącznik „alkoholizm / niedożywienie”.']],
   src:[G('AES','0–5 min: stabilizacja, EKG, glikemia; <60 mg/dl: tiamina 100 mg i.v., potem 50 ml D50W i.v.'),C('GLU','hipoglikemia: 20% lub 40% glukoza i.v. 0,2 g/kg mc.')]};
  // ---------- flagi chorób ----------
  var F={};Object.keys(d).forEach(function(k){F[k]=[];});
@@ -204,6 +204,30 @@ function compute(st){
  var p3=c.cardiac?pick(['mid3','ket']):[];
  p1.concat(p2,p3).forEach(function(k){if(!d[k].cls)d[k].cls='pref';});
  R.preferred=p1.concat(p2,p3);
+ // ---------- 5.2 etap 2: przeciwwskazania walproinianu (ChPL 4.3/4.4; EMA) ----------
+ if(c.polg){fl2('vpa','avoid','ChPL 4.3: przeciwwskazany w chorobach mitochondrialnych z mutacją POLG (ryzyko ostrej niewydolności wątroby).');}
+ if(c.ucd){fl2('vpa','avoid','ChPL 4.3: przeciwwskazany w zaburzeniach cyklu mocznikowego (hiperamonemia).');}
+ if(c.plt){fl2('vpa','caution','ChPL 4.4: małopłytkowość / zaburzenia krzepnięcia – kontrola PLT i krzepnięcia; rozważ inny lek II rzutu.');}
+ if(c.carb){fl2('vpa','caution','ChPL 4.5: karbapenemy (np. meropenem) obniżają stężenie walproinianu o 60–100% w ciągu 2 dni – unikać skojarzenia; wybierz inny lek II rzutu.');}
+ if(c.preg){fl2('vpa','avoid','EMA/ChPL: ciąża i kobiety w wieku rozrodczym – walproinian tylko przy braku alternatywy.');}
+ function fl2(k,cls,txt){d[k].flags.push([cls,txt]);if(cls==='avoid')d[k].cls='avoid';else if(d[k].cls!=='avoid')d[k].cls='caution';var i=R.preferred.indexOf(k);if(i>=0&&cls==='avoid')R.preferred.splice(i,1);}
+ // ---------- 5.2 etap 2: drugi lek II rzutu (ESETT 2019 – LEV = VPA = fPHT; NCS 2012 – dodatkowy lek bez opóźniania III rzutu) ----------
+ var L2=['lev','vpa','pht','fos','pb','lcm'],L3=['mid3','pro','tpn','ket'],log=st.log||[];
+ var g2=log.filter(function(e){return L2.indexOf(e.k)>=0;}),g3=log.filter(function(e){return L3.indexOf(e.k)>=0;});
+ var now=st.now||Date.now(),t0=st.t0||(log.length?log[0].t:null),el=t0?Math.floor((now-t0)/60000):null;
+ R.elapsed=el;R.t0=t0;
+ R.stage3Now=(el!=null&&el>=40)||!!c.resp;
+ R.stage3Msg=R.stage3Now?'Nie zwlekaj: III rzut – intubacja, wlew anestetyku, ciągłe EEG (elektroencefalografia), konsultacja OIT (oddział intensywnej terapii)'+(el!=null?' · od początku napadu: '+el+' min':'')+(c.resp?' · pogorszenie oddychania':''):'';
+ if(g2.length&&!g3.length){var givenK=g2.map(function(e){return e.k;}),last=g2[g2.length-1];
+  var infMin={lev:15,vpa:10,pht:Math.max(10,(d.pht&&d.pht.n&&d.pht.n.min)||20),fos:10,pb:10,lcm:15}[last.k]||10;
+  var order=givenK.indexOf('lev')>=0?['vpa','pht','lcm']:givenK.indexOf('vpa')>=0?['lev','pht','lcm']:['lev','vpa','lcm'];
+  var alts=order.filter(function(k){return givenK.indexOf(k)<0&&d[k];}).map(function(k){var x=d[k];var n=x.n||{},cl=n.mg>0?fmt(n.mg)+' mg'+(n.capped?' (maks.)':'')+(n.ml>0?' = '+fmt(n.ml)+' ml':'')+(n.vials>0?' ('+n.vials+' fiol.)':'')+(n.min>0?' w '+fmt(n.min)+' min':'')+(n.mlh>0?' → pompa '+fmt(n.mlh)+' ml/h':''):'';return{k:k,name:x.name,head:x.head,calc:cl,cls:x.cls,blocked:x.cls==='avoid',why:(x.flags||[]).filter(function(z){return z[0]!=='ok';}).map(function(z){return z[1];})};});
+  var useable=alts.filter(function(a){return !a.blocked;});
+  R.second={given:givenK,last:last.k,evalAt:last.t+(infMin+10)*60000,infMin:infMin,alts:alts,first:useable[0]||null,
+   title:'II rzut – drugi lek (opcjonalnie, bez opóźniania III rzutu)',
+   note:'Jeśli napad trwa po zakończeniu wlewu ('+infMin+' min) i ok. 10 min obserwacji: można podać INNY lek II rzutu (ESETT 2019: lewetyracetam = walproinian = fosfenytoina; NCS 2012: dodatkowy lek dopuszczalny, jeśli nie opóźnia III rzutu).'};}
+ // ---------- 5.2 etap 2: tiamina ----------
+ R.thiamine=(c.alco||c.wern)?{alco:!!c.alco,wern:!!c.wern}:null;
  return R;}
 
 // ---------- edytowalne dawki ----------

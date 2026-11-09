@@ -113,10 +113,10 @@ function sync(f,m){var d;try{d=f.contentWindow.document}catch(e){return}if(!d||!
  ['pname','pesel'].forEach(function(k){var e=d.getElementById(k);var v=k==='pname'?PID.name:PID.pesel;if(e&&v)setVal(e,v,m,'id_'+k);});
  if(m.red)alarm(m.id+':dom',!!d.querySelector(m.red));
  holdFrame(d,m);}
-// 5.2: wyzwalacze „WSTRZYMAJ WYPIS” w modułach-ramkach [progi DO AKCEPTACJI]
+// 5.2: wyzwalacze „WSTRZYMAJ WYPIS” w modułach-ramkach (zaakceptowane przez lekarza 09.11.2026)
 function txt(e){return e?String(e.textContent||'').replace(/\s+/g,' ').trim():'';}
 function holdFrame(d,m){if(!window.SORHold)return;var R=[];
- if(m.id==='trop'){var L=d.querySelector('#light.L-red');if(L){var p=L.querySelector('p');R.push('światło czerwone – '+(txt(p)||'pilna konsultacja kardiologiczna').slice(0,240));}var h=d.querySelector('#hosp.on');if(h)R.push(txt(h.querySelector('p'))||'próg hospitalizacji (HEART/EDACS)');SORHold.set('trop',R,'Troponina / OZW');}
+ if(m.id==='trop'){var hasData=!!d.querySelector('#ecg button.on')||['c0','c1','c3'].some(function(k){var e=d.getElementById(k);return e&&String(e.value).trim()!=='';});if(!hasData){SORHold.clear('trop');return;}var L=d.querySelector('#light.L-red');if(L){var p=L.querySelector('p');R.push('światło czerwone – '+(txt(p)||'pilna konsultacja kardiologiczna').slice(0,240));}var h=d.querySelector('#hosp.on');if(h)R.push(txt(h.querySelector('p'))||'próg hospitalizacji (HEART/EDACS)');SORHold.set('trop',R,'Troponina / OZW');}
  else if(m.id==='el'){var s=d.querySelector('.sev.red');if(s)R.push('ciężkie zaburzenie elektrolitowe: '+txt(s));SORHold.set('el',R,'Elektrolity');}
  else if(m.id==='se'){var g=d.getElementById('lg');var t=txt(g);if(g&&t&&t!=='brak podań')R.push('stan padaczkowy – leczenie w toku (podania: '+t.replace(/ ?wyczyść$/,'').slice(0,200)+')');SORHold.set('se',R,'Stan padaczkowy');}}
 // ---------- start ----------

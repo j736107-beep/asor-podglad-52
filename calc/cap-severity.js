@@ -2,10 +2,10 @@
 // Używany przez zakładkę „Skale i hospitalizacja” (clinical-ui.js) ORAZ moduł antybiotykoterapii (mod/zp).
 // Zasady (SPEC 5.2, P1): PSI liczony automatycznie (bez ręcznego wyboru klasy), małe/duże kryteria ATS/IDSA 2019 liczone z danych,
 // brak danych NIE otwiera drogi do domu, ręczna zmiana miejsca leczenia tylko W GÓRĘ.
-// Progi oznaczone [DO AKCEPTACJI] wymagają decyzji lekarza (SpO₂ <85% → konsultacja OIT; SpO₂ <92% → oddział).
+// Progi zaakceptowane przez lekarza 09.11.2026: SpO₂ <85% → konsultacja OIT; SpO₂ 85–91% → oddział; PSI III → krótka obserwacja.
 (function(root,f){var m=f();if(typeof module==='object'&&module.exports)module.exports=m;else root.CAPSEV=m;})(this,function(){
 'use strict';
-var SPO2_ICU=85,SPO2_WARD=92; // [DO AKCEPTACJI]
+var SPO2_ICU=85,SPO2_WARD=92; // zaakceptowane przez lekarza 09.11.2026
 function num(v){if(typeof v==='number')return v;v=String(v==null?'':v).replace(',','.').trim();return v===''?NaN:parseFloat(v);}
 function fin(v){return typeof v==='number'&&isFinite(v);}
 function norm(i){i=i||{};var o={};for(var k in i)o[k]=i[k];
@@ -50,12 +50,12 @@ function assess(raw){var i=norm(raw),c=curb(i),p=psi(i),s=severeCap(i),R=[],plac
  function up(pl,t){R.push(t);if(RANK[pl]>RANK[place]||(pl==='obs'&&place==='home'))place=pl;}
  if(s.major.length)up('icu','duże kryterium ciężkiego PZP (ATS/IDSA 2019): '+s.majorTxt.join(', ')+' → OIT obowiązkowo');
  if(s.minor.length>=3)up('icu','≥3 małe kryteria ciężkiego PZP (ATS/IDSA 2019): '+s.minorTxt.join(', ')+' → OIT');
- if(fin(i.spo2)&&i.spo2<SPO2_ICU)up('icu','SpO₂ '+i.spo2+'% (<'+SPO2_ICU+'%) – ciężka hipoksemia → pilna konsultacja OIT [DO AKCEPTACJI]');
+ if(fin(i.spo2)&&i.spo2<SPO2_ICU)up('icu','SpO₂ '+i.spo2+'% (<'+SPO2_ICU+'%) – ciężka hipoksemia → pilna konsultacja OIT');
  if(c.score>=3)up('icu','CURB-65 '+c.score+'/5 – ciężkie PZP → oddział z rozważeniem OIT (NPOA 2016 / BTS)');
  var pc=p.complete?p.cls:p.atLeast;
  if(pc==='IV'||pc==='V')up('ward','PSI '+(p.complete?'':'co najmniej ')+'klasa '+pc+' ('+p.score+' pkt) – leczenie szpitalne');
  if(c.score===2)up('ward','CURB-65 2/5 – leczenie szpitalne');
- if(fin(i.spo2)&&i.spo2<SPO2_WARD&&i.spo2>=SPO2_ICU)up('ward','SpO₂ '+i.spo2+'% (<'+SPO2_WARD+'%) – hipoksemia → oddział [DO AKCEPTACJI]');
+ if(fin(i.spo2)&&i.spo2<SPO2_WARD&&i.spo2>=SPO2_ICU)up('ward','SpO₂ '+i.spo2+'% (<'+SPO2_WARD+'%) – hipoksemia → oddział');
  if(fin(i.sbp)&&i.sbp<90)up('ward','SBP <90 mmHg');
  if(i.oral===false)up('ward','brak tolerancji leczenia doustnego');
  var miss=[];if(!c.complete)miss.push('CURB-65: '+c.missing.join(', '));if(!p.complete)miss.push('PSI: '+p.missing.join(', '));if(!fin(i.spo2)&&!fin(i.pao2))miss.push('SpO₂');

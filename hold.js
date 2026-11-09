@@ -3,7 +3,7 @@
    - duża migająca czerwona lampa + czerwony pasek widoczne do „Następny pacjent”
    - nakładka z dźwiękiem (ton z Ustawień + głos) powtarzanym do potwierdzenia; nowa przyczyna = alarm od nowa
    - potwierdzenie NIE wyłącza lampy/paska i NIE blokuje „Następny pacjent”; wpis trafia do wydruku.
-   Progi kliniczne wyzwalaczy oznaczone w modułach [DO AKCEPTACJI]. */
+   Progi kliniczne wyzwalaczy zaakceptowane przez lekarza 09.11.2026. Troponina: alarm dopiero po wpisaniu EKG lub troponiny. */
 (function(){'use strict';
 var KEY='sk_hold',st=load(),timer=null,voice=null,muted=false;
 function load(){try{var o=JSON.parse(sessionStorage.getItem(KEY)||'null');if(o&&o.items)return o;}catch(e){}return{items:{},log:[]};}
