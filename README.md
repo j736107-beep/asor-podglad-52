@@ -124,10 +124,19 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - ZP: przeciwwskazania do trombolizy jako lista punktowana.
 - 32 karty leków przewlekłych: na wierzchu dawka, nerki, link ChPL; wątroba/dzieci/ciąża/przeciwwskazania/interakcje zwinięte (treść bez zmian).
 - Pompy (decyzje lekarza 11.11.2026): dopamina – ampułka 4% (200 mg/5 ml): 50 ml = 3,75 ml + 46,25 ml = 3 mg/ml, 20 ml = 1,25 ml + 18,75 ml = 2,5 mg/ml (w zakresie ChPL 0,4–3,2 mg/ml; ml/h bez zmian). Oktreotyd aktywny (zatwierdzony): 10 µg/ml w NaCl 0,9% (receptury dla amp. 50/100/500 µg/ml), 25 µg/h = 2,5 ml/h, 50 µg/h = 5 ml/h = MAKS. (ChPL 4.4 – blok AV), bolus 50 µg i.v. wyłącznie „DO DECYZJI LEKARZA” (Baveno VII / AGA). Levosimendan – standard lokalny zatwierdzony (bez bramki; można przenieść do rejestru).
-- Moduł „Dokumentacja SOR” zostaje: workbench.js zawiera też Pulpit dyżuru, wpis menu PW i SORClearCase (reset pacjenta: rejestr leczenia, „Co wykonano”, płyny); report.js drukuje jego dokument (część „doc” w „Drukuj wszystko”).
 - SW: asor-v52-fix7.
 
+## Poprawki 11.11.2026 (5) – usunięcie modułu „Dokumentacja SOR”
+
+- Za zgodą lekarza moduł usunięty w całości (workbench.js, wpis w menu, kafelek na Pulpicie, style `.wb-area/.wb-panel/.wb-hint/.document-editor`, część „Dokumentacja” w wydruku).
+- Przeniesione do `pulpit.js`: Pulpit dyżuru (kafelki: Rejestr leczenia, Pompy, telefony, Kompendium, lista modułów), wpis menu „Przegląd wyników”, `SORClearCase` (reset przy „Następny pacjent”: rejestr leczenia, „Co wykonano”, bilans płynów).
+- `shell.js`: stary id `documentation` → Pulpit (MOD_ALIAS); przy starcie czyszczone ślady (zapisany ostatni moduł, ulubione, klucze `sk_m_documentation*`).
+- `report.js`: „Ten ekran” i „Raport zbiorczy” bez części Dokumentacja; poprawka: przejście na zakładkę bez danych nie kasuje już wcześniej zapisanego stanu modułu w wydruku.
+- SW: asor-v52-fix8.
+
 ## Poprawki – historia zmian (przeniesiona z „O programie”, 11.11.2026)
+
+- '<li>**5.2 (testowa, 11.11.2026, cz. 5 – audyt, faza 2: scalenie menu):** ONS – zamiast 4 zakładek pomp ściąga z przyciskami „Otwórz w Pompach” (jeden kalkulator pomp; levosimendan dodany do Pomp SOR wg ChPL Simdax; worek 250 ml dobutaminy/dopaminy wg ChPL w ściądze); Telefony szpitalne = zakładka „Nasz szpital” w Książce; ICD-10 i ICD-9 w jednym module „ICD”; EUCAST jako przycisk w Sepsie, ZP i Lekach; „Wapń skorygowany” raz w Kalkulatorach; numery w Zatruciach i Neuroinfekcjach – przyciski do Książki (w Zatruciach zostaje telefon alarmowy toksykologa 24 h). Stare odnośniki przekierowują.
 W aplikacji („O programie” → Informacje) zostają 2 ostatnie wpisy; starsze poniżej (tekst bez zmian).
 - **5.2 (testowa, 11.11.2026, cz. 4 – audyt, faza 1: bezpieczeństwo dawek):** testy wszystkich silników dawek (Pompy SOR – 17 presetów, Antykoagulacja, DKA, Transfuzjologia, ONS, Grzyby, fomepizol, Neurologia, omdlenia) liczone niezależnie; alteplaza liczona w jednym miejscu – udar: Neurologia → Tromboliza (dodane INR/PLT i brakujące przeciwwskazania ChPL), ZP: Zatorowość płucna (w Antykoagulacji przyciski przejścia); granice RR w udarze wg ChPL (>185/>110; po leczeniu ≤180/105); glikemia >400 mg/dl = przeciwwskazanie.
 - **5.2 (testowa, 11.11.2026, cz. 3 – RODO i płeć):** usunięty numer identyfikacyjny pacjenta (pasek, moduły Troponina i Neurologia, wydruk, AI); stare zapisy czyszczone przy starcie. Wiek wpisywany ręcznie w pasku i przenoszony do modułów (puste = puste). Płeć wspólna dla paska i selektorów płci w modułach; M blokuje i odznacza wszystkie pola ciąży / połogu / karmienia (podpowiedź „niedostępne dla mężczyzny”). Pole CrCl/eGFR w Zapaleniu płuc: sama liczba, czarna, mieści 3 cyfry.

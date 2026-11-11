@@ -8,6 +8,8 @@ if(S.uv!==38){if(PT.crMg==null&&PT.crea!==''&&PT.crea!=null){var _c=C.num(PT.cre
 if(PT.crMg==null)PT.crMg='';delete PT.crea;
 cur='dashboard',muted=false,alarms={};
 // RODO (11.11.2026): numer identyfikacyjny pacjenta usunięty z aplikacji – jednorazowe czyszczenie zapisanych wcześniej danych (klucze i pola „pesel”, „pz”)
+// 11.11.2026: moduł „Dokumentacja SOR” usunięty – czyszczenie jego śladów (ostatni moduł, zakładka, ulubione)
+(function purgeDoc(){try{var L=window.localStorage;Object.keys(L).forEach(function(k){if(/^sk_m_documentation|^sor_wb|^wb_/.test(k))L.removeItem(k);});if(L.getItem('sk_mod')==='documentation')L.setItem('sk_mod','dashboard');var f=JSON.parse(L.getItem('sor_favorites')||'[]');if(Array.isArray(f)&&f.indexOf('documentation')>=0)L.setItem('sor_favorites',JSON.stringify(f.filter(function(x){return x!=='documentation';})));}catch(e){}})();
 (function purgeId(){function clean(o){var ch=false;if(o&&typeof o==='object'){Object.keys(o).forEach(function(k){if(/pesel/i.test(k)||k==='pz'){delete o[k];ch=true;}else if(o[k]&&typeof o[k]==='object'){if(clean(o[k]))ch=true;}});}return ch;}
  [window.localStorage,window.sessionStorage].forEach(function(S0){try{Object.keys(S0).forEach(function(k){if(/pesel/i.test(k)){S0.removeItem(k);return;}var v=S0.getItem(k);if(!v||!/pesel|"pz"/i.test(v))return;try{var o=JSON.parse(v);if(clean(o))S0.setItem(k,JSON.stringify(o));}catch(e){}});}catch(e){}});})();
 function saveS(){localStorage.setItem('sk_settings',JSON.stringify(S))}function saveP(){localStorage.setItem('sk_patient',JSON.stringify(PT))}
@@ -68,9 +70,9 @@ window.SKS.PID=function(){return{name:PID.name,adm:PID.adm};};
 var MODS=SKM.list,active=null;
 function side(){$('#side').innerHTML=MODS.map(function(m){return m.sep?'<hr>':'<button data-id="'+m.id+'" class="'+(m.id===cur?'on ':'')+(m.soon?'soon':'')+'">'+m.icon+' '+m.name+'</button>'}).join('');}
 // 11.11.2026 (audyt, faza 2): stare id modułów po scaleniu → nowy moduł + zakładka (zgodność linków i zakładek ulubionych)
-var MOD_ALIAS={telszp:['telefony','szpital'],icd10:['icd','icd10'],icd9:['icd','icd9'],eucast:['leki','']},TAB_ALIAS={'ahf:b1':'pompy','ahf:nor':'pompy','ahf:dob':'pompy','ahf:dop':'pompy'};
+var MOD_ALIAS={documentation:['dashboard',''],telszp:['telefony','szpital'],icd10:['icd','icd10'],icd9:['icd','icd9'],eucast:['leki','']},TAB_ALIAS={'ahf:b1':'pompy','ahf:nor':'pompy','ahf:dob':'pompy','ahf:dop':'pompy'};
 function unalias(id){var a=MOD_ALIAS[id];if(!a)return id;if(a[1])try{localStorage.setItem('sk_m_'+a[0]+'_tab',JSON.stringify({t:a[1]}));}catch(e){}return a[0];}
-var navS=[];function go(id){id=unalias(id);if(id===cur){show();return;}navS.push(cur);try{history.pushState({sk:id},'')}catch(e){}cur=id;localStorage.setItem('sk_mod',cur);show();}
+var navS=[];function go(id){capNow();id=unalias(id);if(id===cur){show();return;}navS.push(cur);try{history.pushState({sk:id},'')}catch(e){}cur=id;localStorage.setItem('sk_mod',cur);show();}
 function back(){if(!navS.length){if(cur!=='dashboard'){cur='dashboard';localStorage.setItem('sk_mod',cur);show();}return;}cur=navS.pop();localStorage.setItem('sk_mod',cur);show();}
 window.addEventListener('popstate',function(){back();});
 window.SKS.back=function(){if(navS.length)history.back();else back();};
@@ -116,10 +118,12 @@ window.SKS.openPompa=function(id){go('pompy');var f=$('#main iframe');if(!f)retu
 window.SKS.openPropofol=function(){go('pompy');var f=$('#main iframe');if(!f)return;var set=function(){try{f.contentWindow.location.hash='d/propofol';}catch(e){}};f.addEventListener('load',set);set();};
 window.SKS.active=function(){return active};
 // migawki modułów do raportu: po zmianie danych (z opóźnieniem) i przy wyjściu z modułu
-var capT=null;function capSoon(){clearTimeout(capT);capT=setTimeout(function(){if(window.SORReport&&active)SORReport.capture(active)},900);}
-['input','change','click'].forEach(function(ev){$('#main').addEventListener(ev,capSoon,true);});
+var capT=null;function capSoon(){clearTimeout(capT);capT=setTimeout(function(){capT=null;if(window.SORReport&&active)SORReport.capture(active)},900);}
+// 11.11.2026: kliknięcie (np. zmiana zakładki) lub zmiana modułu najpierw zapisuje oczekujący stan – dane wpisane tuż przed przełączeniem trafiają do wydruku
+function capNow(){if(capT){clearTimeout(capT);capT=null;try{if(window.SORReport&&active)SORReport.capture(active);}catch(e){}}}
+['input','change'].forEach(function(ev){$('#main').addEventListener(ev,capSoon,true);});$('#main').addEventListener('click',function(){capNow();capSoon();},true);
 window.SKS.capSoon=capSoon;
-function printParts(){var id=active&&active.id;if(id==='documentation')return['doc','done'];if(id==='fluid')return['fluid'];if(id==='pompy')return['pumps'];if(id==='treatment-log')return['done'];if(id==='trends')return['pw'];if(!id||['dashboard','settings','about','icd10','icd9'].indexOf(id)>=0)return null;return[{module:id}];}
+function printParts(){var id=active&&active.id;if(id==='fluid')return['fluid'];if(id==='pompy')return['pumps'];if(id==='treatment-log')return['done'];if(id==='trends')return['pw'];if(!id||['dashboard','settings','about','icd10','icd9'].indexOf(id)>=0)return null;return[{module:id}];}
 $('#printMod').onclick=function(){if(active&&active.id==='about'&&window.SORAbout){SORAbout.print(SORAbout.state.tab);return;}SORReport.print(printParts()||undefined);};
 $('#printAll').onclick=function(){SORReport.print();};
 // globalna zmiana jednostek: przelicza wpisane wartości (przechowywane w SI), etykiety i wyniki na żywo, bez przeładowania
@@ -134,7 +138,7 @@ function wipe(){window.SKS.pwMem=null;window.SKS.ordMem=null;try{window.SORClini
  Object.keys(localStorage).forEach(function(k){if(KEEP.indexOf(k)>=0||k.indexOf('discAccepted')===0||k.indexOf('sor_cfg')===0||k.indexOf('v52:ai_cfg')===0)return;localStorage.removeItem(k);});
  try{sessionStorage.clear();}catch(e){}
  localStorage.setItem('sk_mod','dashboard');location.reload();}
-window.SKS.nextPatient=function(){if(!confirm('Następny pacjent: wyczyścić WSZYSTKIE dane pacjenta we wszystkich modułach (dane identyfikacyjne, pasek pacjenta, wyniki, zlecenia, wykonane, dokumentacja, trendy, zapalenie płuc, elektrolity, alarmy)? Ustawienia i ulubione zostają.'))return;wipe();};
+window.SKS.nextPatient=function(){if(!confirm('Następny pacjent: wyczyścić WSZYSTKIE dane pacjenta we wszystkich modułach (dane identyfikacyjne, pasek pacjenta, wyniki, zlecenia, wykonane, rejestr leczenia, bilans płynów, trendy, zapalenie płuc, elektrolity, alarmy)? Ustawienia i ulubione zostają.'))return;wipe();};
 window.SKS.wipe=wipe;
 window.SKS.clearData=window.SKS.nextPatient; /* alias – UI ma tylko #nextPt */
 $('#nextPt').onclick=window.SKS.nextPatient;
