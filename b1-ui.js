@@ -144,11 +144,11 @@ repl(DKA);repl(ELY);
 // =========================== ALTEPLAZA (3 stany) + PROTAMINA ===========================
 function altForm(kind){
  if(kind==='stemi')return sub('STEMI – fibrynoliza, gdy PPCI niemożliwa w ≤120 min')+inp('hrs','Czas od początku objawów','h')+inp('dly','Przewidywany czas od rozpoznania do PPCI (z transportem)','min')+inp('sbp','SBP','mmHg')+ciHtml('stemi');
- if(kind==='stroke')return sub('Udar niedokrwienny – okno 4,5 h')+inp('hrs','Czas od ostatniego widzenia zdrowego','h')+inp('sbp','SBP','mmHg')+inp('dbp','DBP','mmHg')+inp('glu','Glikemia','@glu')+inp('inr','INR','')+inp('plt','PLT','×10⁹/l')+chk('noanticoag','INR niewymagany (brak VKA / koagulopatii)')+ciHtml('stroke');
+ if(kind==='stroke'||kind==='pe')return '';
  return sub('Zatorowość płucna wysokiego ryzyka')+chk('pehigh','ZP wysokiego ryzyka: wstrząs / hipotensja (SBP <90 przez >15 min lub spadek ≥40)')+chk('perescue','ratunkowa: pogorszenie hemodynamiczne mimo leczenia przeciwkrzepliwego')+chk('cprnow','zatrzymanie krążenia z powodu ZP')+ciHtml('pe');}
 function doseTable(ph){return tbl(['Faza','mg','czas','ml/h (1 mg/ml)'],ph.map(function(p){return [p.l,'<b>'+F(p.mg,1)+' mg</b> = '+F(p.ml,1)+' ml',p.min?p.min+' min':'bolus 1–2 min',p.mlh!=null?'<b>'+F(p.mlh,1)+' ml/h</b>':'ręcznie']}));}
 var RECON='<div class="mut">Rekonstytucja Actilyse: 50 mg proszku + 50 ml wody do wstrzykiwań = <b>1 mg/ml</b> (ChPL). Wlew przez pompę strzykawkową/pompę objętościową; nie mieszać z heparyną w jednym zestawie.</div>';
-function altCalc(kind,g,P){var H='',lvl='ok',v=ciRead(kind,g);
+function altCalc(kind,g,P){var H='',lvl='ok',v=(kind==='stemi')?ciRead(kind,g):null;
  if(kind==='stemi'){var o=A.stemi({w:P.w,age:P.age,hours:g('hrs'),delayMin:g('dly'),sbp:g('sbp'),crcl:P.crcl,v:v});
   if(!o)return{H:box('orange','','Podaj czas od początku objawów (h) i przewidywany czas do PPCI (min). Brak wyniku bez danych.')+ciHeadsUp(),lvl:'ok'};
   lvl=o.lvl;H+=box(o.lvl==='ok'&&o.decision==='lysis'?'ok':o.lvl,o.decision==='lysis'?'FIBRYNOLIZA':o.decision==='pci'?'PPCI – bez fibrynolizy':o.decision==='transfer'?'Transport na PCI – bez fibrynolizy':'Poza oknem',h(o.txt)+srcl(A.SRC.ESCACS)+(o.decision==='transfer'?(window.SORTel&&SORTel.kprHtml?SORTel.kprHtml():''):''));
@@ -160,33 +160,9 @@ function altCalc(kind,g,P){var H='',lvl='ok',v=ciRead(kind,g);
     var a=o.adj;H+=box('','Leki towarzyszące (ESC 2017/2023)','<ul><li>'+a.aspirin+'</li><li>'+a.clopidogrel+'</li><li><b>Antykoagulant:</b> '+(a.enox?a.enox.txt:'podaj masę i wiek')+'</li>'+(a.ufh?'<li>'+a.ufh.txt+'</li>':'')+'<li>'+a.noP2Y12+'</li></ul>'+srcl(A.SRC.ESCSTEMI));
     H+=box('','Po fibrynolizie',h(o.after)+'<div class="mut">'+h(o.alt)+'</div>');}}
   return{H:H,lvl:lvl};}
- if(kind==='stroke'){var o=A.stroke({w:P.w,hours:g('hrs'),sbp:g('sbp'),dbp:g('dbp'),gluMmol:g('glu'),inr:g('inr'),plt:g('plt'),v:v,v_noAnticoag:g('noanticoag')});
-  if(!o)return{H:box('orange','','Podaj czas od ostatniego widzenia zdrowego (h). Nieznany czas (udar po przebudzeniu) → decyzja neurologa, nie podawać wg okna ChPL.'),lvl:'ok'};
-  lvl=o.lvl;
-  if(o.decision==='blocked'){H+=box('red','NIE PODAWAĆ ALTEPLAZY','<ul><li>'+o.block.map(h).join('</li><li>')+'</li></ul>'+srcl(A.SRC.AHAAIS));}
-  else if(o.missing.length){lvl='orange';H+=box('orange','Uzupełnij przed decyzją','Brak: '+o.missing.join(', ')+'. Dawki nie pokazano, dopóki RR, glikemia (i INR, jeśli wymagany) nie są wprowadzone.');}
-  else{H+=box(o.lvl,'Brak zaznaczonych przeciwwskazań bezwzględnych','Okno <b>'+F(g('hrs'),1)+' h</b> (≤4,5 h), RR ≤185/110, glikemia 50–400 mg/dl – wg danych wprowadzonych w kalkulatorze. Przed podaniem potwierdź pełną listę kryteriów (ChPL / neurolog); brak zaznaczenia nie oznacza, że przeciwwskazania wykluczono.'+srcl(A.SRC.AHAAIS));
-   if(!(P.w>0))H+=box('orange','','Podaj masę ciała (zmierzoną/oszacowaną) – dawka 0,9 mg/kg.');
-   else{var d=o.dose;H+=box('ok','Alteplaza – udar niedokrwienny','<div class="big">'+F(d.total,1)+' mg łącznie'+(d.capped?' (limit 90 mg)':'')+'</div>'+tbl(['Faza','mg','czas','ml/h (1 mg/ml)'],[['Bolus 10%','<b>'+F(d.bolus,1)+' mg</b> = '+F(d.bolus,1)+' ml','1 min','ręcznie'],['Wlew 90%','<b>'+F(d.infusion,1)+' mg</b> = '+F(d.infusion,1)+' ml','60 min','<b>'+F(d.mlh,1)+' ml/h</b>']])+'<div class="mut">'+d.txt+'</div>'+RECON+srcl(A.SRC.SMPC+'; 0,9 mg/kg maks. 90 mg'));}}
-  H+=ciBox(o);
-  H+=box('orange','Neurolog / transfer',h(o.refer));H+=box('','Po alteplazie',h(o.post));
-  return{H:H,lvl:lvl};}
- // pe
- var o=A.pe({w:P.w,high:g('pehigh'),rescue:g('perescue'),cpr:g('cprnow'),v:v});
- if(!(P.w>0))return{H:box('orange','','Podaj masę ciała – dawki alteplazy zależą od masy.')+ciBox({ci:A.ci('pe',v)}),lvl:'ok'};
- if(!o)return{H:box('orange','','Podaj masę ciała.'),lvl:'ok'};
- lvl=o.lvl;
- if(o.decision==='noind')H+=box('orange','Brak wskazania',h(o.txt)+srcl(A.SRC.ESCPE));
- else if(o.decision==='blocked')H+=box('red','Przeciwwskazania bezwzględne','<ul><li>'+o.block.map(h).join('</li><li>')+'</li></ul>'+srcl(A.SRC.ESCPE));
- else{H+=box(o.lvl,'Alteplaza – zatorowość płucna wysokiego ryzyka',
-   '<div class="big">'+F(o.std.bolus,0)+' mg bolus + '+F(o.std.infusion,1)+' mg w 2 h</div>'+tbl(['Schemat','Dawka','Czas','ml/h (1 mg/ml)'],[
-    {cls:'act',cells:['Standard (ChPL / ESC 2019)','<b>'+F(o.std.total,1)+' mg</b>'+(o.std.lowW?' (<65 kg: 1,5 mg/kg)':''),'bolus 10 mg + '+F(o.std.infusion,1)+' mg / 2 h','<b>'+F(o.std.mlh,1)+' ml/h</b>']},
-    {cls:'warn',cells:['Przyspieszony (ESC 2019) – poziom dowodów niski','<b>'+F(o.acc.total,1)+' mg</b> (0,6 mg/kg, maks. 50 mg)','15 min','<b>'+F(o.acc.mlh,0)+' ml/h</b>']}])+'<div class="o">'+h(o.accNote)+'</div>'+RECON+srcl(A.SRC.SMPC+'; '+A.SRC.ESCPE));
-  o.warn.forEach(function(w){H+=box('orange','',h(w))});
-  if(o.cpr)H+=box('orange','Zatrzymanie krążenia z powodu ZP',h(o.cpr.txt)+srcl(A.SRC.ERC));
-  H+=box('',  'Heparyna',h(o.heparin));H+=ciBox(o);}
- if(o.decision==='noind')H+=ciBox(o);
- return{H:H,lvl:lvl};}
+ // 11.11.2026: jedno źródło prawdy – alteplaza w udarze: Neurologia → Tromboliza; w ZP: Zatorowość płucna → Alteplaza
+ if(kind==='stroke')return{H:box('','Alteplaza w udarze – w module Neurologia','Kwalifikacja (okno, RR, glikemia, INR/PLT, przeciwwskazania) i dawka 0,9 mg/kg (maks. 90 mg; 10% w bolusie, reszta w 60 min) są liczone w jednym miejscu: <b>Neurologia → Tromboliza</b>.<div style="margin-top:8px"><button class="tg" data-go-tab="neuro:t" onclick="SKS.goTab(\'neuro\',\'t\')">→ Otwórz: Neurologia – Tromboliza</button></div>'),lvl:'ok'};
+ return{H:box('','Alteplaza w zatorowości płucnej – w module Zatorowość płucna','Standard ChPL (10 mg + wlew 2 h; <65 kg łącznie maks. 1,5 mg/kg) i wariant przyspieszony (0,6 mg/kg/15 min, maks. 50 mg) są liczone w jednym miejscu: <b>Zatorowość płucna → Alteplaza: standard / szybki</b>.<div style="margin-top:8px"><button class="tg" data-go-tab="pe:lysis" onclick="SKS.goTab(\'pe\',\'lysis\')">→ Otwórz: Zatorowość płucna – Alteplaza</button></div>'),lvl:'ok'};}
 function ciHeadsUp(){return '';}
 // protamina z czasem
 function protForm(){return sub('Heparyna niefrakcjonowana')+inp('bol','Bolus UFH','j.')+inp('bm','Bolus ile minut temu','min')+inp('rate','Wlew UFH','j./h')+inp('run','Wlew trwał','h')+inp('stp','Wlew zakończono (min temu; 0 = trwa)','min','0')+sub('Enoksaparyna / HDCz')+inp('enx','Ostatnia dawka enoksaparyny','mg')+inp('he','Ile godzin temu','h');}

@@ -1,0 +1,31 @@
+// PORT z /workspace/asystent-sor-v4.2/tests/pompy51.cjs (11.11.2026).
+// Audyt receptur pomp vs polska ChPL – zaktualizowano do Pompy SOR v2 (26.10.2026). Uruchom: node tests/pompy51.cjs
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const base=path.resolve(__dirname,'../..'),rd=f=>fs.readFileSync(path.join(base,f),'utf8');
+const EN=require(path.join(base,'mod/pompy/engine.js'));
+const DB=JSON.parse(rd('mod/pompy/drugs.json')),drug=id=>DB.drugs.find(d=>d.id===id);
+const JS=(()=>{const w={};new Function('window',rd('mod/pompy/drugs.js'))(w);return w.DRUGS_DB;})();
+let n=0;const test=(name,fn)=>{fn();n++;console.log('OK',name);};
+const near=(a,b,e=1e-9)=>assert.ok(Math.abs(a-b)<=e,a+' != '+b);
+const ACTIVE=['dobutamina','heparyna','noradrenalina_c','propofol','urapidyl'];
+const RPL=/^https:\/\/rejestry\.ezdrowie\.gov\.pl\/api\/rpl\/medicinal-products\/\d+\/characteristic$/;
+test('drugs.js i drugs.json identyczne',()=>assert.deepStrictEqual(JS,DB));
+test('Zgodne z ChPL dokładnie: '+ACTIVE.join(', '),()=>assert.deepStrictEqual(DB.drugs.filter(d=>d.status==='chpl').map(d=>d.id).sort(),ACTIVE.slice().sort()));
+test('Zgodne z ChPL: link do ChPL w RPL, preparat, dostęp, monitorowanie, receptura 20 i 50 ml',()=>{for(const id of ACTIVE){const d=drug(id);assert.match(d.url,RPL,id);assert.ok(d.product&&d.access&&d.monitor,id);assert.deepStrictEqual(Object.keys(d.rec).sort(),['20','50']);}});
+test('Standard lokalny (12): adrenalina, noradrenalina C 80 i P 20 µg/ml (C80 i P zatwierdzone przez lekarza), amiodaron, dopamina, furosemid, insulina, midazolam, morfina, nitrogliceryna, pantoprazol, salbutamol',()=>assert.deepStrictEqual(DB.drugs.filter(d=>d.status!=='chpl').map(d=>d.id).sort(),['adrenalina','amiodaron','dopamina','furosemid','insulina','midazolam','morfina','nitrogliceryna','noradrenalina_c80','noradrenalina_p','pantoprazol','salbutamol']));
+test('Wyłączone nadal (poza listą pomp): fentanyl, oktreotyd, noradrenalina 80 µg/ml – z powodem; plik audytu zachowany',()=>{assert.deepStrictEqual(DB.excluded.map(x=>x.id).sort(),['fentanyl','noradrenalina','oktreotyd']);for(const x of DB.excluded)assert.ok(x.reason.length>20);assert.equal(JSON.parse(rd('mod/pompy/audyt_wylaczone.json')).disabled.length,12);});
+test('Rozcieńczalnik: brak domyślnego NaCl 0,9% w app.js',()=>assert.ok(!/NaCl 0,9%/.test(rd('mod/pompy/app.js'))));
+test('Amiodaron: nigdy NaCl (ChPL: tylko glukoza 5%)',()=>{const a=drug('amiodaron');assert.deepStrictEqual(a.diluents,['Glukoza 5%']);assert.match(a.why,/NIGDY NaCl/);});
+test('Noradrenalina centralnie: Noradrenaline Kabi 2 mg/50 ml = 40 µg/ml; 0,1 µg/kg/min × 80 kg = 12 ml/h; 10–20 ml/h = 0,4–0,8 mg/h',()=>{const d=drug('noradrenalina_c'),c=EN.recipe(d,50).conc;near(c*1000,40);near(EN.toMlh(d,c,'ug/kg/min',0.1,80),12);near(EN.perHour(c,10),0.4);near(EN.perHour(c,20),0.8);assert.match(d.access,/CENTRALNY/);assert.match(d.url,/43461/);});
+test('Noradrenalina obwodowo: 1 mg/50 ml = 20 µg/ml (ChPL Levonor), > 0,1 µg/kg/min ostrzeżenie',()=>{const d=drug('noradrenalina_p');near(EN.recipe(d,50).conc*1000,20);assert.ok(EN.assess(d,'ug/kg/min',0.11,0).out);assert.ok(!EN.assess(d,'ug/kg/min',0.1,0).out);assert.match(d.access,/OBWODOWY/);});
+test('Dobutamina: 250 mg/50 ml = 5 mg/ml; 5 µg/kg/min × 70 kg = 4,2 ml/h jak w tabeli ChPL',()=>{const d=drug('dobutamina'),c=EN.recipe(d,50).conc;near(c,5);near(EN.toMlh(d,c,'ug/kg/min',5,70),4.2);near(EN.toMlh(d,c,'ug/kg/min',2.5,50),1.5);near(EN.toMlh(d,c,'ug/kg/min',10,90),10.8);});
+test('Heparyna: 500 j./ml w obu strzykawkach; zakres 1000–2000 j./h',()=>{const d=drug('heparyna');for(const s of [50,20])assert.equal(EN.recipe(d,s).conc,500);const u=EN.rangeFor(d,'j/h');assert.equal(u.lo,1000);assert.equal(u.hi,2000);assert.ok(EN.assess(d,'j/h',2500,2500).out);});
+test('Propofol: nierozcieńczony 10 mg/ml, 0,3–4 mg/kg/h (ChPL OIT)',()=>{const d=drug('propofol');near(EN.recipe(d,50).conc,10);assert.equal(d.diluted,false);assert.ok(EN.assess(d,'mg/kg/h',4.1,0).overMax);assert.ok(EN.assess(d,'mg/kg/h',0.2,0).out);});
+test('Urapidyl: 100 mg/50 ml = 2 mg/ml (≤4 mg/ml); 9 mg/h = 4,5 ml/h',()=>{const d=drug('urapidyl'),c=EN.recipe(d,50).conc;near(c,2);assert.ok(c<=4);near(EN.toMlh(d,c,'mg/h',9,1),4.5);});
+test('app.js: transfer i zapis tylko przez bramkę (zatwierdzenie lokalne, rozcieńczalnik)',()=>{const s=rd('mod/pompy/app.js');assert.match(s,/recordCalc'\)\.onclick=function\(\)\{try\{vgate\(\)/);assert.match(s,/savePump'\)\.onclick=function\(\)\{try\{vgate\(\)/);assert.match(s,/Wybierz rozcieńczalnik/);});
+test('Kalkulator B1 (AHF ampułki → ml/h): transfer do rejestru zablokowany, brak NaCl jako domyślnego',()=>{const s=rd('b1-ui.js');assert.match(s,/var eligible=false;/);assert.ok(!/diluent:'NaCl 0,9%'/.test(s));});
+test('AHF nor/dob/dop: wymagany wybór rozcieńczalnika i receptura ChPL (noradrenalina C 80/40, P 20 µg/ml – Levonor, Dobutamine TZF 0,5–1 mg/ml, dopamina 100–800 mg/250 ml)',()=>{const s=rd('clinical-ui.js');assert.match(s,/\['','— wybierz —'\],\['NaCl 0,9%'/);assert.match(s,/const eligible=!!g\('diluent'\)/);assert.match(s,/Math.abs\(cc-40\)<1e-6/);assert.match(s,/Math.abs\(cc-20\)<1e-6/);assert.match(s,/cc>=500-1e-9&&cc<=1000/);assert.match(s,/g\('volume'\)===250/);});
+test('UFH: przeniesienie tylko przy 1–1000 j.m./ml (ChPL Heparinum WZF)',()=>assert.match(rd('clinical-ui.js'),/ufhOk=r\.concentration>=1&&r\.concentration<=1000/));
+test('Alteplaza: schemat przyspieszony (poza ChPL Actilyse) bez transferu',()=>assert.match(rd('clinical-ui.js'),/gate\(g\)&&!rapid;/));
+test('Odtrutki: fomepizol (brak PL ChPL) i NAC (niezweryfikowany preparat) – transfer zablokowany',()=>{assert.match(rd('clinical-ui.js'),/Fomepizol nie ma polskiej ChPL/);assert.match(rd('c-ui.js'),/var en=false;/);});
+console.log('\nPASS: '+n+' testów audytu pomp (ChPL).');

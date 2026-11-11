@@ -98,3 +98,9 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - `node tests/etap2-node.test.js` – silniki etapu 2 (SE, hiponatremia, tiamina, anafilaksja, posiewy, neuroinfekcje).
 - `node tests/etap3-node.test.js`, `node tests/etap4-node.test.js` – etap 3 i kalkulatory (przykłady z publikacji).
 - Testy przeglądarkowe (puppeteer) – opis w raporcie wdrożenia.
+
+## Audyt modułów – faza 1 (11.11.2026): bezpieczeństwo dawek
+- Testy silników dawek: `tests/silniki-niezalezne-node.test.js` (każda wartość z ręcznego wyliczenia i niezależnego wzoru), porty testów 4.2 w `tests/port/*.port.cjs`, e2e `tests/e2e-audyt-puppeteer.js`.
+- Alteplaza – jedno źródło: udar `calc/neuro.js` (Neurologia → Tromboliza), ZP `calc/clinical.js` (Zatorowość płucna); w Antykoagulacji zostaje STEMI i przyciski przejścia.
+- Neurologia: pola INR/PLT (INR >1,7, PLT <100 tys./µl = przeciwwskazanie; INR >1,3 przy VKA – ostrzeżenie), dodane przeciwwskazania ChPL (udar + cukrzyca w wywiadzie, NIHSS >25, ciężka choroba wątroby/trzustki, <16 lat; względne: >80 lat, cukrzyca); RR >185/>110 (ChPL), po leczeniu ≤180/105; glikemia >400 mg/dl czerwona.
+- SW `asor-v52-fix5`.

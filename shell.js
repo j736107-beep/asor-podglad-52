@@ -107,6 +107,8 @@ function sync(f,m){var d;try{d=f.contentWindow.document}catch(e){return}if(!d||!
 // ---------- start ----------
 applyS();patBar();show();
 window.SKS.show=function(id){go(id);};
+// 11.11.2026: przejście do zakładki modułu (tabbed: [data-t], kliniczne: [data-clin-tab])
+window.SKS.goTab=function(id,tab){go(id);var n=0;(function f(){var b=document.querySelector('#main [data-t="'+tab+'"],#main [data-clin-tab="'+tab+'"],#main .tabs button[data-tab="'+tab+'"]');if(b){b.click();return;}if(++n<20)setTimeout(f,50);})();};
 window.SKS.openPompa=function(id){go('pompy');var f=$('#main iframe');if(!f)return;var set=function(){try{f.contentWindow.location.hash='d/'+id;}catch(e){}};f.addEventListener('load',set);set();};
 window.SKS.openPropofol=function(){go('pompy');var f=$('#main iframe');if(!f)return;var set=function(){try{f.contentWindow.location.hash='d/propofol';}catch(e){}};f.addEventListener('load',set);set();};
 window.SKS.active=function(){return active};

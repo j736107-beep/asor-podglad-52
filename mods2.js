@@ -18,7 +18,7 @@ function NOACC(g,w){var H='',lvl='ok';if(!g('nb'))return{H:bx('orange','','Brak 
  if(!H)H=bx('','','Zaznacz lek.');return{H:H,lvl:lvl};}
 SKM.util.NOACF=NOACF;SKM.util.NOACC=NOACC;
 
-var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar'],['alt3','Alteplaza: ZP'],['prot','Protamina']],
+var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar → Neurologia'],['alt3','Alteplaza: ZP → Zatorowość'],['prot','Protamina']],
  function(t){return t==='ufh'?chk('acs','ACS (zamiast ŻChZZ/ZP)'):t==='enox'?chk('proph','profilaktyka (zamiast leczenia)'):t==='vka'?inp('inr','INR','')+chk('bleed','krwawienie zagrażające życiu / pilny zabieg'):t==='noac'?NOACF():t==='alt1'?SKB1.altForm('stemi'):t==='alt2'?SKB1.altForm('stroke'):t==='alt3'?SKB1.altForm('pe'):
   SKB1.protForm();},
  function(t,g,P){var H='',lvl='ok',w=P.w;
