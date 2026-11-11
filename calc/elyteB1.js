@@ -49,7 +49,7 @@ function hypoNa(i){if(!(nz(i.na)&&i.na>=80&&i.na<=180))return null;var o={lvl:'o
  o.target=5;
  o.steps.push({t:'Limity korekcji',d:'Cel +5 mmol/l/24 h; LIMIT: ≤'+o.limit+' mmol/l w 1. dobie'+(o.highRisk?' (wysokie ryzyko ODS)':'')+', następnie ≤8 mmol/l na każdą kolejną dobę do Na⁺ 130 mmol/l. Czynniki ryzyka ODS: Na⁺ ≤105, hipokaliemia, alkoholizm, niedożywienie, choroba wątroby.',k:'red'});
  o.steps.push({t:'Kontrola',d:'Na⁺ po 1, 6 i 12 h, potem co dobę (ESE); w czasie 3% NaCl co 4 h (co 20 min w bolusach). Diureza wodna (>100 ml/h rozcieńczonego moczu) = ryzyko przekroczenia limitu.',k:'ok'});
- o.overcorrection='Przekroczenie limitu: przerwij leczenie podnoszące Na⁺, rozważ „re-lowering”: 10 ml/kg wody wolnej od elektrolitów (np. glukoza 5%) w 1 h ze ścisłą kontrolą diurezy i bilansu + desmopresyna 2 µg i.v. (nie częściej niż co 8 h) – ESE 2014; DO DECYZJI LEKARZA / konsultacja nefrologa lub intensywisty.';
+ o.overcorrection='Przekroczenie limitu: przerwij leczenie podnoszące Na⁺, rozważ „re-lowering”: 10 ml/kg wody wolnej od elektrolitów (np. glukoza 5%) w 1 h ze ścisłą kontrolą diurezy i bilansu + desmopresyna 2 µg i.v. (nie częściej niż co 8 h) – ESE 2014; standard lokalny zatwierdzony przez lekarza 11.11.2026; konsultacja nefrologa lub intensywisty.';
  return finish(o);}
 function finish(o){if(o.stop.length&&o.lvl==='ok')o.lvl='orange';return o;}
 // plan 3% NaCl na cel (Adrogué–Madias): ml i ml/h, z limitem
