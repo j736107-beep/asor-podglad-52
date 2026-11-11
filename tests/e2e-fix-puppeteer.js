@@ -25,7 +25,7 @@ const BASE=process.env.BASE||'http://localhost:8765/';let n=0,fail=0;function ok
  const typ=async(id,v)=>zf.evaluate((id,v)=>{const e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},id,v);
  await typ('age','70');await zf.evaluate(()=>document.querySelector('[data-sex="m"]').click());await typ('w','80');await typ('crea','1,2');await sleep(300);
  let c=await zf.evaluate(()=>({live:document.getElementById('crclLive').textContent,ph:document.getElementById('crclManual').placeholder}));
- ok(/CrCl: 65 ml\/min/.test(c.live)&&/\(140 − 70\) × 80 kg \/ \(72 × 1,2 mg\/dl\)/.test(c.live)&&c.ph==='auto: 65','ZP: CrCl na żywo 70 l./M/80 kg/kr 1,2 mg/dl = 65 ml/min ze wzorem',JSON.stringify(c));
+ ok(/CrCl: 65 ml\/min/.test(c.live)&&/\(140 − 70\) × 80 kg \/ \(72 × 1,2 mg\/dl\)/.test(c.live)&&c.ph==='65','ZP: CrCl na żywo 70 l./M/80 kg/kr 1,2 mg/dl = 65 ml/min ze wzorem',JSON.stringify(c));
  await zf.evaluate(()=>document.querySelector('[data-cu="umol"]').click());await typ('crea','106');await sleep(300);
  c=await zf.evaluate(()=>document.getElementById('crclLive').textContent);ok(/CrCl: 65 ml\/min/.test(c),'ZP: kreatynina 106 µmol/l → 65 ml/min',c);
  await zf.evaluate(()=>document.querySelector('[data-cu="mgdl"]').click());await typ('crea','2,4');await sleep(300);await zf.evaluate(()=>document.querySelector('[data-al="none"]').click());await sleep(200);await zf.evaluate(()=>document.querySelector('[data-pl="ward"]').click());await sleep(300);

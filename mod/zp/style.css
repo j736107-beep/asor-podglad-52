@@ -72,3 +72,4 @@ textarea#copyOut{width:100%;min-height:120px;font-size:12.5px;border-radius:10px
 
 .pl button.rec{outline:3px solid #1b7a3a;outline-offset:-3px}
 .pl button.rec::after{content:' ★ rekomendacja';font-size:11px;font-weight:600}
+#crclManual::placeholder{color:#000;opacity:1;font-weight:900}#crclManual::-webkit-input-placeholder{color:#000;opacity:1}#crclManual{min-width:120px;text-overflow:clip}
