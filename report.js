@@ -95,12 +95,11 @@
     var title=parts.length>=4?'Raport zbiorczy – Asystent lekarza SOR':'Wydruk – Asystent lekarza SOR';
     return '<h1>'+title+'</h1><div class="sub">Wydruk: '+esc(now())+' (Europe/Warsaw) · Narzędzie pomocnicze – niecertyfikowane</div>'+section('Dane pacjenta',patientHtml())+out+(any&&root.SORSources?'<div class="rp-srcwrap">'+root.SORSources.footerHtml(mids)+'</div>':'')+
       '<div class="sig"><div>Lekarz: .......................................</div><div>Podpis i pieczątka<br><br>.......................................</div></div><div class="foot">Asystent lekarza SOR – narzędzie pomocnicze, niecertyfikowane. Wartości i dawki weryfikuje lekarz; wydruk nie zastępuje dokumentacji medycznej szpitala.</div>';}
-  var HOSP='Podhalański Szpital Specjalistyczny im. Jana Pawła II w Nowym Targu',SOR='Szpitalny Oddział Ratunkowy',LOGO='img/pszs-logo.svg';
+  var HOSP='Podhalański Szpital Specjalistyczny im. Jana Pawła II w Nowym Targu',SOR='Szpitalny Oddział Ratunkowy';
   var FOOT='Dokument wygenerowany pomocniczo poza systemem szpitalnym – zatwierdzam: ............................................ (pieczątka i podpis lekarza)';
-  try{if(typeof Image!=='undefined'){var _pre=new Image();_pre.src=LOGO;}}catch(e){}
   function pidAge(){var p=root.SKS&&root.SKS.P?root.SKS.P():{};var a=isFinite(p.age)?' · wiek: <b>'+Math.round(p.age)+' lat</b>':'';var x={m:'M',f:'K'}[p.sex];return a+(x?' · płeć: <b>'+x+'</b>':'');}
   function pidLine(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():null;if(!I)return '';return '<div class="pid-h">Pacjent: <b>'+esc(I.name||'— (nie wpisano)')+'</b>'+pidAge()+(I.adm?' · przyjęcie: '+esc(String(I.adm).replace('T',' ')):'')+'</div>';}
-  function brandHead(){return '<div class="brand-h"><img src="'+LOGO+'" alt="Logo PSZS"><div><b>'+esc(HOSP)+'</b><span>'+esc(SOR)+'</span></div><div class="bt">Data i godzina wydruku:<br><b>'+esc(now())+'</b></div></div>'+pidLine();}
+  function brandHead(){return '<div class="brand-h"><div><b>'+esc(HOSP)+'</b><span>'+esc(SOR)+'</span></div><div class="bt">Data i godzina wydruku:<br><b>'+esc(now())+'</b></div></div>'+pidLine();}
   function brandFoot(){return '<div class="brand-f">'+esc(FOOT)+'</div>';}
   function brand(a){if(!a)return a;a.querySelectorAll('.brand-h,.brand-f,.pid-h').forEach(function(x){x.remove();});a.insertAdjacentHTML('afterbegin',brandHead());a.insertAdjacentHTML('beforeend',brandFoot());return a;}
   if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeprint',function(){brand(document.getElementById('printArea'));});

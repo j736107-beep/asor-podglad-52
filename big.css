@@ -9,11 +9,7 @@
 .mut{color:#222!important}
 header .tg,header small,.brand small,label,.pill,.seg button,.tgs .tg{font-size:15px!important}
 .module-tile b{font-size:17px!important}
-/* pw19: nagłówek szpitala – tekst wyżej (obok logo), nieco mniejszy */
+/* pw19: nagłówek szpitala (11.11.2026: logo usunięte z UI) */
 .hosp-card{flex-direction:row!important;align-items:center!important;gap:12px!important}
-.hosp-card img{max-width:150px!important;width:42%!important;flex:0 0 auto}
 .hc-t b{font-size:15px!important;line-height:1.25!important}
 .hc-t span{font-size:14px!important}
-/* pw20: tylko godło szpitala (bez drobnego napisu), większe – wypełnia miejsce obok tytułu */
-.hosp-card img{max-width:none!important;width:96px!important;height:auto!important}
-@media(min-width:761px){.hosp-card img{width:110px!important}}

@@ -129,6 +129,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 ## Poprawki 11.11.2026 (6) – słowniczek
 - Ze słowniczka (gloss.js) usunięto hasła MoCA, MMSE i CDR (za zgodą lekarza) – skale wcześniej usunięte z Neurologii. SW asor-v52-fix9.
 - Hiponatremia (zgoda lekarza 11.11.2026): blokada kolejnego bolusa do wpisania wyniku Na⁺ oraz desmopresyna 2 µg i.v. nie częściej niż co 8 h (opcja przy zbyt szybkiej korekcie, ESE 2014 7.5) – aktywne, oznaczone jako STANDARD LOKALNY; usunięte z listy „do decyzji”. Testy HN-19, HN-20.
+- Logo szpitala / SOR (img/pszs-logo.svg, img/pszs-emblem.svg) usunięte z UI: karta na Pulpicie i nagłówek wydruku zostają z samą nazwą szpitala i oddziału; pliki usunięte z repo i z listy SW. Ikony PWA (icon*.png – czerwony krzyż) bez zmian.
 
 ## Poprawki 11.11.2026 (5) – usunięcie modułu „Dokumentacja SOR”
 
