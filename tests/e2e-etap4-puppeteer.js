@@ -84,11 +84,12 @@ await go('kalk');await page.type('#kk-q','wells');await sleep(200);const n=await
 await go('cap');await page.evaluate(()=>document.querySelector('[data-clin-tab="scores"]').click());await sleep(500);
 await page.evaluate(()=>{const set=(id,v)=>{const e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));};set('rr','24');set('sbp','125');set('dbp','75');set('hr','98');set('temp','38.6');set('spo2','93');set('urea','30');});await sleep(500);
 const capTxt=await page.evaluate(()=>{const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||''};});
-rec('ZP: wydruk zawiera antybiotykoterapię',/Proponowane|Propozycja/.test(capTxt.sub),capTxt.name+' | '+capTxt.sub.slice(0,120));
+rec('ZP (11.11): bez wyboru lekarza wydruk NIE podaje domyślnego schematu – „uzupełnij”',!/Proponowane/.test(capTxt.sub)&&/uzupełnij|Uzupełnij/.test(capTxt.sub),capTxt.name+' | '+capTxt.sub.slice(0,160));
+await page.evaluate(()=>localStorage.setItem('zp1state',JSON.stringify({allergy:'none',place:'ward',o:{}})));// = wybór lekarza w zakładce „Antybiotykoterapia – dobór”
 // symulacja: ramka antybiotykoterapii nigdy nie załadowana (usunięta z DOM) → treść z silnika
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
-rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
+rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika z wyborów lekarza (alergia, miejsce)',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix1/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix2/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();

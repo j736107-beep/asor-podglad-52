@@ -57,7 +57,7 @@
       if(!mod.frame){var fr=[].slice.call(rootEl.querySelectorAll('iframe'));fr.forEach(function(f){try{var b=f.contentDocument&&f.contentDocument.body;if(!b)return;var rr=snapText(b);if(rr.text){sub+=(sub?'\n\n':'')+rr.text;subName=f.title||subName;}}catch(e){}});
         if(!fr.length&&prev&&prev.sub&&!prev.subAuto){sub=prev.sub;subName=prev.subName||'';}}
       // 5.2 etap 4 (zaakceptowane 09.11.2026): wydruk zapalenia płuc ZAWSZE z antybiotykoterapią – gdy ramka nie była otwierana, wylicz ze wspólnego silnika
-      var subAuto=false;if(mod.id==='cap'&&!sub&&r.filled>0&&root.SORZpPrint){try{sub=root.SORZpPrint.text();}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}
+      var subAuto=false;if(mod.id==='cap'&&!sub&&r.filled>0&&root.SORZpPrint){try{sub=root.SORZpPrint.text({full:true});}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}
       // pilot AI (10.11.2026): epikryza AI (tylko blok do wklejenia, bez UWAG) – w wydruku A4; nagłówek pacjenta (imię/PESEL) dodaje lokalnie wydruk
       var ai=(mod.id==='cap'&&root.SORAIUI&&root.SORAIUI.printText)?root.SORAIUI.printText():'';if(ai)r.filled=Math.max(r.filled,1);
       if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';if(subAuto)all[mod.id].subAuto=true;}if(ai)all[mod.id].ai=ai.slice(0,8000);}else delete all[mod.id];

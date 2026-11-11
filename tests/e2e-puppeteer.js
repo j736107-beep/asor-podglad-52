@@ -47,13 +47,17 @@ rec('ZP-1 Skale SpO₂ 70%: OIT, bez alarmu blokady wypisu (mechanizm usunięty)
 // ramka antybiotykoterapii
 await clickTab('abx51');const zf=await frameOf('mod/zp');await sleep(900);
 const zr=async()=>zf.evaluate(()=>({place:(document.getElementById('zpPlace')||{}).textContent,dom:(()=>{const b=document.querySelector('[data-pl="home"]');return b&&{dis:b.disabled,blk:b.classList.contains('blk'),title:b.title};})(),res:document.getElementById('res').textContent,quick:document.getElementById('quick').textContent,psiBtn:document.querySelectorAll('[data-psi]').length,minor:!!document.getElementById('minor'),psi:(document.getElementById('zpPsi')||{}).textContent}));
+const zrec=async(f)=>(f||zf).evaluate(()=>({rec:(document.getElementById('zpRec')||{}).textContent||'',need:(document.getElementById('zpNeed')||{}).textContent||'',on:[...document.querySelectorAll('[data-pl].on')].map(b=>b.dataset.pl),recBtn:[...document.querySelectorAll('[data-pl].rec')].map(b=>b.dataset.pl),quick:document.getElementById('quick').textContent}));
+let zz=await zrec();
+rec('ZP-1a ramka: rekomendacja OIT z danych, BEZ preselekcji miejsca i alergii, brak schematu do wyboru lekarza',/OIOM \/ OIT/.test(zz.rec)&&zz.on.length===0&&zz.recBtn.join()==='icu'&&/miejsce leczenia/.test(zz.need)&&/alergia/.test(zz.need)&&zz.quick==='',JSON.stringify(zz).slice(0,400));
+await zf.evaluate(()=>{document.querySelector('[data-al="none"]').click();});await sleep(300);await zf.evaluate(()=>{document.querySelector('[data-pl="icu"]').click();});await sleep(400);
 let z=await zr();
-rec('ZP-1 ramka: rekomendacja OIT, Dom dostępny (bez blokady), ceftriakson/cefotaksym+makrolid, bez amoksycyliny/ampicyliny',/OIOM \/ OIT/.test(z.place)&&!z.dom.dis&&!z.dom.blk&&/Ceftriakson|ceftriakson/.test(z.quick)&&/klarytromycyna|azytromycyna|Klarytromycyna|Azytromycyna/i.test(z.quick)&&!/amoksycylin|ampicylin/i.test(z.quick),JSON.stringify({place:z.place,dom:z.dom,quick:z.quick.slice(0,300)}));
+rec('ZP-1 ramka: lekarz wybiera OIT, Dom dostępny (bez blokady), ceftriakson/cefotaksym+makrolid, bez amoksycyliny/ampicyliny',/OIOM \/ OIT/.test(z.place)&&!z.dom.dis&&!z.dom.blk&&/Ceftriakson|ceftriakson/.test(z.quick)&&/klarytromycyna|azytromycyna|Klarytromycyna|Azytromycyna/i.test(z.quick)&&!/amoksycylin|ampicylin/i.test(z.quick),JSON.stringify({place:z.place,dom:z.dom,quick:z.quick.slice(0,300)}));
 rec('PSI automatyczny, brak ręcznych PSI/małych kryteriów',z.psiBtn===0&&!z.minor&&/automatycznie/.test(z.psi||''),z.psi);
 // ZP-9: lekarz wybiera Dom mimo rekomendacji OIT – wybór przyjęty, uwaga z rekomendacją
 await zf.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(300);z=await zr();
 rec('ZP-9 klik „Dom” → wybór lekarza przyjęty + uwaga z rekomendacją',/Leczenie domowe/.test(z.place)&&/wybór lekarza/.test(z.place)&&/rekomendacja silnika/.test(z.res),z.place);
-await zf.evaluate(()=>document.querySelector('[data-pl=""]').click());await sleep(300);
+await zf.evaluate(()=>document.querySelector('[data-pl="icu"]').click());await sleep(300);
 // ZP-11: alergia natychmiastowa
 await zf.evaluate(()=>document.querySelector('[data-al="imm"]').click());await sleep(400);z=await zr();
 rec('ZP-11 alergia natychmiastowa: bez β-laktamów, fluorochinolon',/lewofloksacyna|moksyfloksacyna/i.test(z.quick)&&!/ceftriakson|cefotaksym|amoksycylin|ampicylin|piperacylin|meropenem|cefepim|ceftazydym/i.test(z.quick),z.quick.slice(0,300));
@@ -64,18 +68,19 @@ await clickTab('scores');await setScores(Object.assign({},NORM,{temp:37.5}));awa
 let s2=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent}));
 rec('ZP-2 Skale: dom możliwy',/leczenie domowe/i.test(s2.eng),JSON.stringify(s2).slice(0,300));
 await clickTab('abx51');const zf2=await frameOf('mod/zp');await sleep(900);
+zz=await zrec(zf2);rec('ZP-2a ramka: rekomendacja „leczenie domowe” wyliczona z danych',/leczenie domowe/.test(zz.rec)&&zz.recBtn.join()==='home',JSON.stringify(zz).slice(0,300));
+await zf2.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(400);
 z=await zf2.evaluate(()=>({place:document.getElementById('zpPlace').textContent,quick:document.getElementById('quick').textContent,dom:document.querySelector('[data-pl="home"]').disabled}));
 rec('ZP-2 ramka: dom, amoksycylina 1 g p.o. co 8 h',/domowe/.test(z.place)&&/Amoksycylina[^+]*1 g[^+]*p\.o\.[^+]*8 h/i.test(z.quick)&&!z.dom,JSON.stringify(z).slice(0,300));
-// ZP-8: lekarz klika Dom (dozwolone), potem Następny pacjent
-await zf2.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(300);
+// ZP-8: jawny wybór lekarza zapamiętany tylko dla bieżącego pacjenta (Następny pacjent czyści – ZP-8)
 const ls1=await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('zp1state')||'{}');return {place:s.place||''};});
-rec('ZP-8a „Dom” nie jest zapamiętywany',ls1.place==='',JSON.stringify(ls1));
+rec('ZP-8a jawny wybór „Dom” zapisany dla bieżącego pacjenta',ls1.place==='home',JSON.stringify(ls1));
 // ZP-12: zmiana SpO2 w Skalach przy otwartej ramce (druga karta z modułem ZP)
 const p2=await br.newPage();await p2.goto(BASE+'mod/zp/index.html',{waitUntil:'networkidle0'});await sleep(500);
-const pl2a=await p2.$eval('#zpPlace',e=>e.textContent);
+const pl2a=await p2.$eval('#zpRec',e=>e.textContent);
 await clickTab('scores');await setScores({spo2:91});await sleep(800);
-const pl2b=await p2.$eval('#zpPlace',e=>e.textContent);
-rec('ZP-12 ramka odświeża się bez przeładowania',/domowe/.test(pl2a)&&/Hospitalizacja – oddział/i.test(pl2b),pl2a+' → '+pl2b);
+const pl2b=await p2.$eval('#zpRec',e=>e.textContent);
+rec('ZP-12 ramka odświeża się bez przeładowania (rekomendacja przeliczona)',/domowe/.test(pl2a)&&/hospitalizacja – oddział/i.test(pl2b),pl2a.slice(0,80)+' → '+pl2b.slice(0,80));
 // ZP-10 (UI): SpO2 91 → oddział + alarm
 let s10=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,lamp:document.getElementById('lamp').classList.contains('on')}));
 rec('ZP-10 Skale: SpO₂ 91 → oddział, bez alarmu',/oddział/.test(s10.eng)&&!s10.lamp,JSON.stringify(s10).slice(0,200));
@@ -102,7 +107,7 @@ const leftover=after.keys.filter(k=>/^(zp1state|zp_handoff|el1state:|se4state:|s
 rec('Następny pacjent: pełny reset (także zp1state/zp_handoff/el1state:)',leftover.length===0&&!after.name&&!after.pesel&&!after.age,JSON.stringify(after).slice(0,400));
 await go('cap');await clickTab('abx51');const zf3=await frameOf('mod/zp');await sleep(800);
 const z8=await zf3.evaluate(()=>({on:[...document.querySelectorAll('[data-pl].on')].map(b=>b.dataset.pl),spo2:document.getElementById('spo2').value,age:document.getElementById('age').value}));
-rec('ZP-8 po „Następny pacjent”: pusty stan, tryb Auto',z8.on.length===1&&z8.on[0]===''&&z8.spo2===''&&z8.age==='',JSON.stringify(z8));
+rec('ZP-8 po „Następny pacjent”: pusty stan, brak wybranego miejsca',z8.on.length===0&&z8.spo2===''&&z8.age==='',JSON.stringify(z8));
 // storage prefix
 const pref=await page.evaluate(()=>{localStorage.setItem('probe','1');return window.SK_PREFIX;});
 const p3=await br.newPage();await p3.goto(BASE+'manifest.webmanifest');const rawKeys=await p3.evaluate(()=>Object.keys(localStorage));await p3.close();

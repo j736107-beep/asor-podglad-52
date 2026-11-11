@@ -65,9 +65,9 @@ function mgso4(i){if(!(i.g>0&&i.vol>0&&i.min>0))return null;var o={warn:[],bad:f
  if(o.mgmin>300+1e-9&&!i.tdp){o.bad=true;o.warn.push('> 300 mg/min – powyżej szybkości wstrzyknięcia z ChPL Kalceks (1,5 ml/min 20%).');}
  return o;}
 // STANDARD LOKALNY – zatwierdzony przez lekarza (27.10.2026): bolus hipertoniczny
-// 5 amp. NaCl 10% Polpharma (RPL 3080: amp. 10 ml) = 50 ml (5 g NaCl ≈ 85,5 mmol Na) + 100 ml G5% = 150 ml ≈ 3,3% (≈570 mmol/l).
+// 5 amp. NaCl 10% Polpharma (RPL 3080: amp. 10 ml) = 50 ml (5 g NaCl ≈ 85,6 mmol Na) + 100 ml G5% = 150 ml ≈ 3,3% (≈570 mmol/l).
 // Ampułki 10 ml potwierdzone w ChPL 6.5. Adrogué–Madias: Na_płynu = 570 mmol/l.
-var NACL_LOK={ml10:50,amps:5,g:5,mmolNa:50*P.nacl10,g5:100,total:150,pct:50*0.10/150*100,mmolPerL:50*P.nacl10/0.150};
+var NACL_LOK={ml10:50,amps:5,g:5,mmolNa:5000/58.44,g5:100,total:150,pct:50*0.10/150*100,mmolPerL:50*P.nacl10/0.150};
 function naclLok(){return{ml10:NACL_LOK.ml10,amps:NACL_LOK.amps,g:NACL_LOK.g,mmolNa:NACL_LOK.mmolNa,g5:NACL_LOK.g5,total:NACL_LOK.total,pct:NACL_LOK.pct,mmolPerL:NACL_LOK.mmolPerL,label:'STANDARD LOKALNY – zatwierdzony przez lekarza'};}
 function nacl3mix(vol){ // legacy (bilans masy 3%) – zostawione do testów porównawczych, nie używane w UI
  var x=vol*(0.03-0.009)/(0.10-0.009);return{ml10:x,ml09:vol-x,mmolNa:vol*P.nacl3};}
@@ -75,6 +75,64 @@ function nacl3mix(vol){ // legacy (bilans masy 3%) – zostawione do testów por
 function tbwF(sex,age){var old=age>=65;return sex==='f'?(old?0.45:0.5):sex==='m'?(old?0.5:0.6):(old?0.45:0.5);}
 function adrogue(na,inf,tbw){return(inf-na)/(tbw+1);} // zmiana Na⁺ po 1 l płynu
 function waterDef(na,tbw){return tbw*(na/140-1);}
+// ---------- 11.11.2026: hiponatremia – prowadzony protokół bolusów (STANDARD LOKALNY SOR) ----------
+// ESE/ESICM/ERBP 2014 (7.1–7.2, 7.4–7.6): 150 ml hipertonicznego NaCl w 20 min; cel +5 mmol/l; łącznie do 3 bolusów (objawy ciężkie),
+// objawy umiarkowane – jednorazowo 150 ml; limit 10 mmol/l w 1. dobie (8 przy ryzyku ODS), potem 8/dobę. Kontrola Na⁺ przed
+// kolejnym bolusem – praktyka lokalna (ESE sugeruje kolejny bolus równolegle z pobraniem; ankieta ESE 2025: 84% czeka na wynik).
+// SALSA (Baek, JAMA Intern Med 2021): bolusy przerywane = skuteczne, mniej ponownego obniżania niż wlew ciągły.
+function hm(t){if(!(t>0))return'—';var d=new Date(t);return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function hmd(t){if(!(t>0))return'—';var d=new Date(t);return('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+' '+hm(t);}
+function naProto(p){var f=fmt,ods=!!p.ods,limit=ods?8:10,stopAt=ods?4:5,maxBol=p.sympt==='severe'?3:p.sympt==='mod'?1:0,ctlMin=p.sympt==='mod'?60:20;
+ var o={limit:limit,stopAt:stopAt,maxBol:maxBol,ctlMin:ctlMin,bol:0,log:[],canBolus:false,state:'need',action:'',why:[],plan:false,rise:0,maxRise:0,need:[]};
+ if(!(p.base>=90&&p.base<=180)){o.need.push('Na⁺ wyjściowe');}
+ if(['severe','mod','none'].indexOf(p.sympt)<0)o.need.push('nasilenie objawów (ciężkie / umiarkowane / brak–łagodne)');
+ var bol=(p.bol||[]).filter(function(t){return t>0;}).sort(function(a,b){return a-b;}),nas=(p.nas||[]).filter(function(x){return x&&x.v>=90&&x.v<=180;}).slice().sort(function(a,b){return a.t-b.t;});
+ o.bol=bol.length;o.t0=p.t0>0?p.t0:(bol.length||nas.length)?Math.min(bol[0]||Infinity,(nas[0]||{}).t||Infinity):null;
+ if(o.need.length){var mr0=0;if(p.base>=90)nas.forEach(function(x){if(x.v-p.base>mr0)mr0=x.v-p.base;});o.maxRise=mr0;o.remaining=limit-mr0;
+  if(mr0>limit){o.state='over';o.plan=false;o.action='ZAKAZ bolusów – PRZEKROCZONY LIMIT: +'+f(mr0)+' mmol/l (limit '+limit+'/24 h) → plan obniżenia Na⁺; uzupełnij: '+o.need.join(', ');return o;}
+  o.action='Uzupełnij: '+o.need.join(', ')+' – bez tego brak rekomendacji';return o;}
+ var ev=bol.map(function(t,i){return{k:'b',t:t,n:i+1};}).concat(nas.map(function(x){return{k:'n',t:x.t,v:x.v,sym:x.sym};})).sort(function(a,b){return a.t-b.t||(a.k==='b'?-1:1);});
+ var bc=0,lastNa=null,lastB=null,maxRise=0;
+ function decide(){var rise=lastNa?lastNa.v-p.base:0,pend=lastB!=null&&(!lastNa||lastNa.t<lastB),d={rise:rise,pend:pend,can:false};
+  if(maxRise>limit){d.st='over';d.a='ZAKAZ bolusów – PRZEKROCZONY LIMIT: +'+f(maxRise)+' mmol/l (limit '+limit+'/24 h) → plan obniżenia Na⁺';return d;}
+  if(lastNa&&rise>=limit){d.st='limit';d.a='ZAKAZ bolusów – osiągnięty limit dobowy +'+f(rise)+'/'+limit+' mmol/l (ryzyko ODS)';return d;}
+  if(pend){d.st='wait';d.next=lastB+ctlMin*60e3;d.a='Bolus '+bc+'/'+maxBol+' podany o '+hm(lastB)+' – kontrola Na⁺ o '+hm(d.next)+' ('+ctlMin+' min po bolusie); kolejny bolus ZABLOKOWANY do wpisania wyniku';return d;}
+  if(lastNa&&lastNa.sym==='better'){d.st='stop_sym';d.a='STOP bolusom – objawy ustąpiły / wyraźna poprawa (ESE: zakończ hipertoniczny NaCl). Przyrost +'+f(rise)+' mmol/l';return d;}
+  if(lastNa&&rise>=stopAt){d.st='stop_target';d.a='STOP bolusom – cel osiągnięty: +'+f(rise)+' mmol/l od wartości wyjściowej (cel '+(ods?'4–6 przy ryzyku ODS':'+5')+')';return d;}
+  if(maxBol===0){d.st='not_ind';d.a='Bolus hipertoniczny NIE jest wskazany (brak objawów ciężkich / umiarkowanych) – leczenie przyczyny wg wolemii';return d;}
+  if(bc>=maxBol){d.st='max';d.a='ZAKAZ kolejnych bolusów – podano '+bc+'/'+maxBol+(p.sympt==='mod'?' (objawy umiarkowane: ESE – jednorazowo 150 ml)':' (maks. 3 bolusy wg ESE)');return d;}
+  if(p.bolusRise>0&&rise+p.bolusRise>limit){d.st='pred';d.a='ZAKAZ kolejnego bolusa – przewidywany przyrost po bolusie ≈ +'+f(p.bolusRise)+' → łącznie ≈ +'+f(rise+p.bolusRise)+' > limit '+limit+' mmol/l';return d;}
+  d.st='give';d.can=true;d.a=(bc===0?'PODAJ bolus 1/'+maxBol+' teraz':'SUGEROWANY kolejny bolus '+(bc+1)+'/'+maxBol+': przyrost +'+f(rise)+' (<'+stopAt+'), objawy utrzymują się')+' – 150 ml w 20 min, potem Na⁺ po '+ctlMin+' min';return d;}
+ ev.forEach(function(e){if(e.k==='b'){bc++;lastB=e.t;var d0=decide();o.log.push({t:e.t,txt:'Bolus '+bc+'/'+(maxBol||'—')+' podany (150 ml w 20 min) → kontrola Na⁺ o '+hm(e.t+ctlMin*60e3),st:'b'});}
+  else{lastNa=e;var r=e.v-p.base;if(r>maxRise)maxRise=r;var d=decide();o.log.push({t:e.t,txt:'Na⁺ '+f(e.v)+' ('+(r>=0?'+':'')+f(r)+' od wyjściowego), objawy: '+(e.sym==='better'?'ustąpiły / poprawa':e.sym==='same'?'utrzymują się':'nie oceniono')+' → '+d.a,st:d.st});}});
+ var D=decide();o.state=D.st;o.action=D.a;o.canBolus=D.can;o.next=D.next||null;o.rise=D.rise;o.maxRise=maxRise;o.lastNa=lastNa;o.lastB=lastB;
+ o.plan=['stop_sym','stop_target','max','not_ind','limit','over','pred'].indexOf(D.st)>=0;
+ o.persist=lastNa&&lastNa.sym!=='better'&&(D.st==='stop_target'||D.st==='max');
+ o.remaining=limit-maxRise;o.until=o.t0?o.t0+24*3600e3:null;o.hours=o.t0&&p.now?(p.now-o.t0)/3600e3:null;
+ return o;}
+function naPlan(p,o){var f=fmt,W=p.W,L=[],t=(o.lastNa&&o.lastNa.t)||p.now||null;
+ L.push('STOP hipertonicznego NaCl – koniec fazy bolusów'+(o.bol?' (podano '+o.bol+' × 150 ml)':'')+'.');
+ L.push('Linia i.v.: NaCl 0,9% w minimalnej możliwej objętości (KVO) do ustalenia przyczyny i rozpoczęcia leczenia przyczynowego (ESE 2014, 7.1.2.2).');
+ if(p.sympt==='mod')L.push('Kontrola Na⁺ po 1 h, 6 h i 12 h'+(t?' (≈ '+hm(t+3600e3)+', '+hm(t+6*3600e3)+', '+hm(t+12*3600e3)+')':'')+' (ESE 2014, 7.2.1.7), potem co 6 h do stabilizacji (ESE 7.4.1.5).');
+ else if(p.sympt==='none')L.push('Kontrola Na⁺ co 6 h do stabilizacji przy hiponatremii umiarkowanej / głębokiej (ESE 2014, 7.4.1.5)'+(t?' – najbliższa ≈ '+hm(t+6*3600e3):'')+'.');
+ else L.push('Kontrola Na⁺ po 6 h i 12 h'+(t?' (≈ '+hm(t+6*3600e3)+' i '+hm(t+12*3600e3)+')':'')+', potem codziennie do stabilizacji (ESE 2014, 7.1.2.5); częściej przy diurezie wodnej lub ryzyku ODS – DO DECYZJI LEKARZA.');
+ L.push('Limit łącznego przyrostu: ≤'+o.limit+' mmol/l'+(o.until?' do '+hmd(o.until)+' (24 h od godz. 0 = '+hmd(o.t0)+')':' w pierwszych 24 h')+', potem ≤8 mmol/l na każdą kolejną dobę do Na⁺ 130 (ESE 2014, 7.1.2.4). Teraz: +'+f(o.maxRise)+' mmol/l; pozostało ≤'+f(Math.max(0,o.remaining))+' mmol/l.'+(p.ods?' Ryzyko ODS: cel 4–6 mmol/l/dobę, limit 8.':''));
+ if(p.vol==='hypo')L.push('Hipowolemia: 0,9% NaCl lub płyn zbilansowany 0,5–1 ml/kg/h'+(W>0?' (= '+f(0.5*W)+'–'+f(W)+' ml/h)':' (wpisz masę)')+' z kontrolą Na⁺ (ESE 2014, 7.4.4.1); niestabilność hemodynamiczna: resuscytacja płynowa ma pierwszeństwo przed ryzykiem zbyt szybkiej korekty (ESE 7.4.4.3); po wyrównaniu wolemii możliwa diureza wodna i gwałtowny wzrost Na⁺.');
+ else if(p.vol==='eu')L.push('Euwolemia / SIADH: ograniczenie płynów jako leczenie pierwszego rzutu (ESE 2014, 7.4.3.1); odstaw leki wywołujące (tiazydy, SSRI, karbamazepina i in.); 0,9% NaCl nie jest leczeniem SIADH (przy zagęszczonym moczu może obniżyć Na⁺); 2. linia (równorzędnie): mocznik 0,25–0,5 g/kg/dobę lub małe dawki diuretyku pętlowego + NaCl p.o. (ESE 7.4.3.2) – DO DECYZJI LEKARZA.');
+ else if(p.vol==='hyper')L.push('Hiperwolemia (niewydolność serca, marskość, zespół nerczycowy): ograniczenie płynów (ESE 2014, 7.4.2.2); diuretyk pętlowy przy przewodnieniu / zastoju wg leczenia choroby podstawowej – DO DECYZJI LEKARZA; ESE 7.4.2.3–4: NIE waptany, NIE demeklocyklina.');
+ else L.push('Uzupełnij: wolemia (hipo- / eu- / hiperwolemia) – bez niej brak planu leczenia przyczynowego.');
+ L.push('Diureza godzinowa (cewnik / zbiórka): >100 ml/h rozcieńczonego moczu = diureza wodna → ryzyko nadmiernej korekty: częstsza kontrola Na⁺ (np. co 2 h) – próg ostrzegawczy przyjęty w module, DO DECYZJI LEKARZA.');
+ L.push('Potas: KCl i.v./p.o. podnosi Na⁺ jak NaCl (Adrogué–Madias: w liczniku Na⁺ + K⁺ podawanego płynu) – wliczaj do limitu; hipokaliemia zwiększa ryzyko ODS.');
+ L.push('Przy przekroczeniu limitu: zatrzymaj leczenie podnoszące Na⁺; rozważ glukozę 5% 10 ml/kg'+(W>0?' (= '+f(10*W)+' ml)':'')+' w 1 h i desmopresynę 2 µg i.v. nie częściej niż co 8 h, ścisły bilans i diureza, Na⁺ co 1–2 h – konsultacja (ESE 2014, 7.5.1.1–4) – DO DECYZJI LEKARZA.');
+ if(o.persist)L.push('Objawy utrzymują się mimo '+(o.state==='max'?'3 bolusów':'przyrostu Na⁺')+': szukaj innej przyczyny objawów; ESE 7.1.3.1–4 – ewentualny dalszy wlew hipertonicznego NaCl celem +1 mmol/l/h do poprawy objawów, łącznego +10 mmol/l lub Na⁺ 130, Na⁺ co 4 h – DO DECYZJI LEKARZA / konsultacja.');
+ L.push('Przekazanie na oddział: z kartą przebiegu (godziny bolusów, wyniki Na⁺, łączny przyrost, następna kontrola).');
+ return L;}
+function naHandover(p,o,plan){var f=fmt,L=['Hiponatremia – protokół SOR (pierwsze 24 h). DO DECYZJI LEKARZA.'];
+ L.push('Na⁺ wyjściowe: '+f(p.base)+' mmol/l'+(o.t0?' (godz. 0: '+hmd(o.t0)+')':'')+'; objawy: '+({severe:'ciężkie',mod:'umiarkowane',none:'brak / łagodne'}[p.sympt]||'nie oceniono')+'; wolemia: '+({hypo:'hipowolemia',eu:'euwolemia',hyper:'hiperwolemia'}[p.vol]||'nie oceniono')+'; ryzyko ODS: '+(p.ods?'TAK (limit 8 mmol/l/24 h)':'nie (limit 10 mmol/l/24 h)')+'.');
+ L.push('Bolus (STANDARD LOKALNY): 5 amp. NaCl 10% (50 ml) + 100 ml G5% = 150 ml ≈ 3,3% (≈570 mmol/l, ≈85,6 mmol Na⁺) i.v. w 20 min.');
+ o.log.forEach(function(x){L.push(hm(x.t)+' – '+x.txt);});
+ L.push('Decyzja: '+o.action+'.');L.push('Łączny przyrost Na⁺: +'+f(o.maxRise)+' / limit '+o.limit+' mmol/l'+(o.until?' do '+hmd(o.until):'')+'.');
+ (plan||[]).forEach(function(x,i){L.push((i+1)+'. '+x);});return L.join('\n');}
 // ---------- wapń ----------
 function caCorr(caMmol,albGl){return albGl>0?caMmol+0.02*(40-albGl):caMmol;} // = mg/dl: Ca + 0,8×(4 − alb g/dl)
 // ---------- główne obliczenie ----------
@@ -123,27 +181,26 @@ function compute(st){var w=st.w,wc=checkWeight(w),W=(wc==='ok'||wc==='amber')?w:
   R.ods={risk:odsW.length>0,why:odsW};R.limit=R.ods.risk?8:10;R.limitNext=8;R.target=R.ods.risk?'4–6 mmol/l/dobę':'+5 mmol/l w pierwszych godzinach (do ustąpienia objawów)';
   if(W>0){R.naclInf=P.naclLok;R.d3=adrogue(ne,P.naclLok,tbw);R.d09=adrogue(ne,154,tbw);R.bolusRise=R.d3*0.15;R.mix=naclLok();}
   var mix=R.mix||naclLok();
-  var bolus={name:'Bolus hipertoniczny NaCl (STANDARD LOKALNY)',main:'5 amp. NaCl 10% (50 ml) + 100 ml G5% = 150 ml ≈ 3,3% (≈570 mmol/l, '+f(mix.mmolNa)+' mmol Na) w 20 min = 450 ml/h'+(W>0?'; przewidywany wzrost ≈ +'+f(R.bolusRise)+' mmol/l (Adrogué–Madias przy 570 mmol/l)':''),lok:true,calc:{ml:150,min:20,mlh:450,mmol:mix.mmolNa,pct:mix.pct,mmolPerL:mix.mmolPerL,ml10:mix.ml10,amps:mix.amps,g5:mix.g5},rows:[['Przygotowanie – STANDARD LOKALNY','5 amp. Inj. Natrii chlorati 10% Polpharma (RPL 3080: amp. 10 ml) = 50 ml (5 g NaCl ≈ '+f(mix.mmolNa)+' mmol Na⁺) + 100 ml glukozy 5% = 150 ml; stężenie ≈ '+f(mix.pct)+'% (≈'+f(mix.mmolPerL)+' mmol/l) – zatwierdzony przez lekarza'],['Czas','150 ml w 20 min = 450 ml/h (ESE 2014; ChPL NaCl 10% mówi ≤100 ml/h przy zatruciu wodnym – lokalnie przyjęto schemat ESE)'],['Alternatywa masy','2 ml/kg'+(W>0?' = '+f(2*W)+' ml':'')+' (nietypowa masa ciała, ESE) – DO DECYZJI LEKARZA'],['Dostęp','obwodowo dopuszczalne (wytyczne); NaCl 10% nigdy nierozcieńczony (ChPL)'],['Powtórzenie','objawy ciężkie: do 2× (łącznie 3 bolusy w 1. h) do +5 mmol/l (ESE)']],
+  var bolus={name:'Bolus hipertoniczny NaCl (STANDARD LOKALNY)',main:'5 amp. NaCl 10% (50 ml) + 100 ml G5% = 150 ml ≈ 3,3% (≈570 mmol/l, '+f(mix.mmolNa)+' mmol Na) w 20 min = 450 ml/h'+(W>0?'; przewidywany wzrost ≈ +'+f(R.bolusRise)+' mmol/l (Adrogué–Madias przy 570 mmol/l)':''),lok:true,calc:{ml:150,min:20,mlh:450,mmol:mix.mmolNa,pct:mix.pct,mmolPerL:mix.mmolPerL,ml10:mix.ml10,amps:mix.amps,g5:mix.g5},rows:[['Przygotowanie – STANDARD LOKALNY','5 amp. Inj. Natrii chlorati 10% Polpharma (RPL 3080: amp. 10 ml) = 50 ml (5 g NaCl ≈ '+f(mix.mmolNa)+' mmol Na⁺) + 100 ml glukozy 5% = 150 ml; stężenie ≈ '+f(mix.pct)+'% (≈'+f(mix.mmolPerL)+' mmol/l) – zatwierdzony przez lekarza'],['Czas','150 ml w 20 min = 450 ml/h (ESE 2014; ChPL NaCl 10% mówi ≤100 ml/h przy zatruciu wodnym – lokalnie przyjęto schemat ESE)'],['Alternatywa masy','2 ml/kg'+(W>0?' = '+f(2*W)+' ml':'')+' (nietypowa masa ciała, ESE) – DO DECYZJI LEKARZA'],['Dostęp','obwodowo dopuszczalne (wytyczne); NaCl 10% nigdy nierozcieńczony (ChPL)'],['Powtórzenie','objawy ciężkie: łącznie do 3 bolusów do +5 mmol/l (ESE 7.1.1); lokalnie Na⁺ 20 min po KAŻDYM bolusie, przed kolejnym (ESE dopuszcza kolejny bolus równolegle z pobraniem); objawy umiarkowane: jednorazowo (ESE 7.2.1.4)'],['Dowody 2021+','SALSA (Baek, JAMA Intern Med 2021; doi 10.1001/jamainternmed.2020.5519): szybkie bolusy przerywane vs powolny wlew ciągły hipertonicznego NaCl – podobne ryzyko nadmiernej korekty, rzadziej potrzebna terapia obniżająca Na⁺; przemawia za schematem bolusowym'],['Skład','Na⁺ 85,6 mmol / 150 ml; dla porównania 150 ml 3% NaCl = 77 mmol (0,513 mmol/ml) – bolus lokalny ≈ 11% więcej sodu']],
    src:[G('ESE','ciężkie objawy: 150 ml hipertonicznego NaCl w 20 min, Na⁺ po 20 min, powtórz 2× do +5 mmol/l; limit 10 mmol/l w 1. dobie, potem 8/dobę.'),C('NACL','amp. 10 ml; 3% NaCl = 0,51 mmol/ml; ChPL: ≤100 ml/h (zatrucie wodne); wzrost ≤12 mmol/l/24 h.')]};
-  if(o.sympt==='severe')R.steps.push({t:'Objawy ciężkie (drgawki, GCS ≤8, wymioty, zaburzenia oddychania)',k:'red',items:[bolus]});
-  else if(o.sympt==='mod')R.steps.push({t:'Objawy umiarkowane – jednorazowo 150 ml 3% w 20 min (ESE)',k:'orange',items:[bolus]});
-  else R.steps.push({t:'Bez objawów ciężkich – lecz przyczynę wg wolemii',k:'ok',text:o.vol==='hypo'?'Hipowolemia: 0,9% NaCl / płyn zbilansowany 0,5–1 ml/kg/h'+(W>0?' (= '+f(0.5*W)+'–'+f(W)+' ml/h)':'')+' (ESE); 1 l 0,9% NaCl zmieni Na⁺ o ≈ '+(W>0?f(R.d09):'—')+' mmol/l. Po wyrównaniu wolemii możliwa diureza wodna – szybki wzrost Na⁺.':o.vol==='eu'?'Euwolemia (SIADH): NIE sól; ograniczenie płynów, odstaw leki (ESE).':o.vol==='hyper'?'Hiperwolemia: NIE sól; ograniczenie płynów/Na, leczenie przyczyny.':'Oceń wolemię – bez tego nie podawaj soli.'});
+  // 11.11.2026: brak wartości domyślnych – bez oceny objawów brak rekomendacji bolusa, bez wolemii brak planu przyczynowego
+  R.symptOk=['severe','mod','none'].indexOf(o.sympt)>=0;R.volOk=['hypo','eu','hyper'].indexOf(o.vol)>=0;
+  if(!R.symptOk)R.steps.push({t:'Uzupełnij: nasilenie objawów',k:'orange',id:'naNeed',text:'Zaznacz: objawy ciężkie / umiarkowane / brak–łagodne. Bez tego program nie rekomenduje bolusa ani planu (puste pole ≠ „brak objawów”).'});
+  else if(o.sympt==='severe')R.steps.push({t:'Objawy ciężkie (drgawki, GCS ≤8, wymioty, zaburzenia oddychania, zatrzymanie krążenia-oddychania) – bolusy wg protokołu powyżej (maks. 3)',k:'red',items:[bolus]});
+  else if(o.sympt==='mod')R.steps.push({t:'Objawy umiarkowane (nudności bez wymiotów, splątanie, ból głowy) – JEDNORAZOWO 150 ml w 20 min (ESE 7.2.1.4)',k:'orange',items:[bolus]});
+  else R.steps.push({t:'Brak objawów ciężkich / umiarkowanych – bolus hipertoniczny NIE jest wskazany',k:'ok',text:'Leczenie przyczyny wg wolemii (plan poniżej). ESE 2014: unikaj gwałtownej korekty przewlekłej hiponatremii.'});
+  if(!R.volOk)R.steps.push({t:'Uzupełnij: wolemia',k:'orange',id:'volNeed',text:'Zaznacz hipo- / eu- / hiperwolemię – bez tego brak planu leczenia przyczynowego.'});
   R.steps.push({t:'Ryzyko ODS (zespół osmotycznej demielinizacji): '+(R.ods.risk?'TAK':'NIE'),k:R.ods.risk?'red':'ok',id:'odsBox',text:R.ods.risk?'TAK, bo: '+R.ods.why.join(', ')+'.':'Brak czynników: Na⁺ >105, K⁺ ≥3,5 lub nieoznaczony, bez alkoholizmu, niedożywienia i marskości.'+((L.k>0)?'':' Wpisz K⁺ – hipokaliemia zwiększa ryzyko.')});
   R.steps.push({t:'CEL korekty',k:'ok',id:'targetBox',text:'Cel: '+R.target+'; potem leczenie przyczyny (ESE 2014'+(R.ods.risk?'; Verbalis 2013 – 4–6 mmol/l/dobę przy wysokim ryzyku ODS':'')+').'});
   R.steps.push({t:'LIMIT – nie przekraczać',k:'red',lok:true,id:'limitBox',text:'≤'+R.limit+' mmol/l w pierwszych 24 h'+(R.ods.risk?' (ryzyko ODS)':'')+' i ≤8 mmol/l w każdej następnej dobie (ESE/ESICM/ERA-EDTA 2014). ChPL NaCl 10% podaje ≤12 mmol/l/24 h – obowiązuje limit wytycznych.'});
-  // śledzenie bolusów i kolejnych wyników Na⁺
-  var tr=st.track||{},bol=(tr.bolus||[]).slice(),nas=(tr.na||[]).filter(function(x){return x&&x.v>=90&&x.v<=180;});
-  var last=nas.length?nas[nas.length-1]:null,rise=last?last.v-na:0;R.track={bolus:bol.length,na:nas,rise:rise,base:na};
-  if(o.sympt==='severe'||bol.length){var msg='',cls='orange';
-   if(last&&rise>R.limit){cls='red';msg='PRZEKROCZONY LIMIT: +'+f(rise)+' mmol/l (limit '+R.limit+') → korekta w dół (karta poniżej).';R.over=true;}
-   else if(last&&rise>=5){cls='ok';msg='STOP bolusom: Na⁺ +'+f(rise)+' mmol/l od wartości wyjściowej (cel +5 osiągnięty). Dalej leczenie przyczyny; Na⁺ po 6 i 12 h.';R.stopBolus=true;}
-   else if(bol.length>=3){cls='red';msg='Podano już 3 bolusy (maks. wg ESE) – kolejne tylko po decyzji lekarza / konsultacji.';R.stopBolus=true;}
-   else msg='Bolusy: '+bol.length+'/3. Po każdym bolusie Na⁺ na analizatorze SOR po 20 min; powtarzaj do +5 mmol/l lub ustąpienia objawów (ESE 2014: łącznie do 3 bolusów).';
-   if(last&&rise>=R.limit-2&&rise<=R.limit)msg+=' UWAGA: przyrost +'+f(rise)+' zbliża się do limitu '+R.limit+' mmol/l.';
-   R.steps.push({t:'Licznik bolusów i Na⁺ (przyrost od '+f(na)+')',k:cls,id:'naTrack',text:msg,list:nas.map(function(x,i){return (x.t?new Date(x.t).toTimeString().slice(0,5)+' ':'')+'Na⁺ '+f(x.v)+' ('+(x.v-na>=0?'+':'')+f(x.v-na)+')';})});}
-  else if(last&&rise>R.limit){R.over=true;}
-  if(last&&rise>R.limit)R.steps.push({t:'Korekta w dół – przekroczony limit (ESE 2014)',k:'red',id:'relower',text:'1) ZATRZYMAJ hipertoniczny NaCl i inne płyny podnoszące Na⁺. 2) Glukoza 5% 10 ml/kg'+(W>0?' = '+f(10*W)+' ml w 1 h ('+f(10*W)+' ml/h)':'')+'. 3) Desmopresyna 2 µg i.v. nie częściej niż co 8 h. 4) Na⁺ co 1–2 h. DO DECYZJI LEKARZA / konsultacja (nefrolog / OIT).'});
-  else R.steps.push({t:'Przekroczenie limitu (ODS) – postępowanie',k:'orange',text:'Zatrzymaj leczenie podnoszące Na⁺; 10 ml/kg'+(W>0?' (= '+f(10*W)+' ml)':'')+' G5% w 1 h + desmopresyna 2 µg i.v. nie częściej niż co 8 h, Na⁺ co 1–2 h (ESE 2014) – DO DECYZJI LEKARZA / konsultacja.'});
+  // prowadzony protokół
+  var tr=st.track||{};var pin={base:na,t0:tr.t0,sympt:R.symptOk?o.sympt:'',vol:R.volOk?o.vol:'',ods:R.ods.risk,W:W,bolusRise:R.bolusRise,bol:tr.bolus||[],nas:tr.na||[],now:st.now||Date.now()};
+  var pr=naProto(pin);R.proto=pr;R.track={bolus:pr.bol,na:(tr.na||[]),rise:pr.rise,base:na};R.stopBolus=!pr.canBolus&&pr.state!=='wait'&&pr.state!=='need';R.over=pr.state==='over';
+  if(R.symptOk&&(o.sympt!=='none'||pr.bol||(tr.na||[]).length)){var cls={give:'orange',wait:'orange',stop_sym:'ok',stop_target:'ok',max:'red',not_ind:'ok',limit:'red',over:'red',pred:'red'}[pr.state]||'orange';
+   var msg=pr.action+'.';if(pr.state==='give'||pr.state==='wait')msg+=' Bolusy: '+pr.bol+'/'+pr.maxBol+'.';if(pr.state!=='over'&&pr.maxRise>=pr.limit-2&&pr.maxRise<=pr.limit)msg+=' UWAGA: przyrost +'+f(pr.maxRise)+' zbliża się do limitu '+pr.limit+' mmol/l.';
+   R.steps.push({t:'Licznik bolusów i Na⁺ (przyrost od '+f(na)+')',k:cls,id:'naTrack',text:msg,list:pr.log.map(function(x){return hm(x.t)+' – '+x.txt;})});}
+  if(pr.state==='over')R.steps.push({t:'Korekta w dół – przekroczony limit (ESE 2014)',k:'red',id:'relower',text:'1) ZATRZYMAJ hipertoniczny NaCl i inne płyny podnoszące Na⁺ (także KCl). 2) Glukoza 5% 10 ml/kg'+(W>0?' = '+f(10*W)+' ml w 1 h ('+f(10*W)+' ml/h)':'')+'. 3) Desmopresyna 2 µg i.v. nie częściej niż co 8 h. 4) Na⁺ co 1–2 h, ścisła diureza i bilans. DO DECYZJI LEKARZA / konsultacja (nefrolog / OIT).'});
+  if(R.symptOk&&pr.plan){R.plan24=naPlan(pin,pr);R.handover=naHandover(pin,pr,R.plan24);R.steps.push({t:'Plan dalszy – pierwsze 24 h na SOR (do przekazania na oddział)',k:pr.state==='over'||pr.state==='limit'?'red':'ok',id:'naPlan24',list:R.plan24});}
   R.thiamine=(o.alco||o.malnut)?{alco:true,wern:!!o.wern}:null;
   R.mon=['Na⁺ po 20 min po każdym bolusie, potem po 6 i 12 h oraz co 4–6 h','diureza godzinowa (>100 ml/h rozcieńczonego moczu = ryzyko zbyt szybkiej korekty)','GCS, objawy neurologiczne'];R.ctl=['Na⁺ po 6, 12 h, potem co 4–6 h / codziennie (ESE)','K⁺, glikemia, osmolalność surowicy i moczu, Na w moczu'];
   R.formula='Δ Na⁺ po 1 l = (Na płynu − Na⁺) / (TBW + 1); TBW = masa × '+tbwF(st.sex,st.age)+(W>0?' = '+f(tbw)+' l':'')+'; bolus lokalny: Na płynu = 570 mmol/l';}
@@ -204,4 +261,4 @@ var DECISIONS=[
  'Glycophos poza ChPL w hipofosfatemii (gdy hiperK/NN).',
  'Digoksyna + wapń i.v. – tempo podania.',
  'Alternatywa 2 ml/kg dla bolusa hipertonicznego przy nietypowej masie ciała.'];
-return{S:S,P:P,MW:MW,DIS:DIS,LOCAL:LOCAL,DECISIONS:DECISIONS,NACL_LOK:NACL_LOK,toMmol:toMmol,toMgdl:toMgdl,fmt:fmt,both:both,checkWeight:checkWeight,mlh:mlh,perH:perH,kcl:kcl,kclFromMlh:kclFromMlh,mgso4:mgso4,nacl3mix:nacl3mix,naclLok:naclLok,tbwF:tbwF,adrogue:adrogue,waterDef:waterDef,caCorr:caCorr,compute:compute};});
+return{hmd:hmd,naProto:naProto,naPlan:naPlan,naHandover:naHandover,hm:hm,S:S,P:P,MW:MW,DIS:DIS,LOCAL:LOCAL,DECISIONS:DECISIONS,NACL_LOK:NACL_LOK,toMmol:toMmol,toMgdl:toMgdl,fmt:fmt,both:both,checkWeight:checkWeight,mlh:mlh,perH:perH,kcl:kcl,kclFromMlh:kclFromMlh,mgso4:mgso4,nacl3mix:nacl3mix,naclLok:naclLok,tbwF:tbwF,adrogue:adrogue,waterDef:waterDef,caCorr:caCorr,compute:compute};});

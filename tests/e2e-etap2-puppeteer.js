@@ -41,7 +41,7 @@ await setNa('118');await f.evaluate(()=>document.querySelector('[data-o="sympt:s
 od=await f.evaluate(()=>({o:(document.getElementById('odsBox')||{}).textContent,l:(document.getElementById('limitBox')||{}).textContent}));
 rec('EL: Na 118 bez ryzyka → ODS NIE, limit 10',/NIE/.test(od.o)&&/≤10/.test(od.l),JSON.stringify(od));
 const bol=async()=>{await f.evaluate(()=>document.getElementById('bolGive').click());await sleep(250);};
-const addNa=async v=>{await f.evaluate(v=>{const e=document.getElementById('naNext');e.value=v;document.getElementById('naAdd').click();},v);await sleep(250);};
+const addNa=async v=>{await f.evaluate(v=>{const e=document.getElementById('naNext');e.value=v;document.getElementById('naSame').click();},v);await sleep(250);};
 await bol();await addNa('121');let tr=await f.evaluate(()=>document.getElementById('naTrack').textContent);
 const ok1=!/STOP/.test(tr);await bol();await addNa('124');tr=await f.evaluate(()=>document.getElementById('naTrack').textContent);
 rec('EL: 118→121→124 → STOP bolusom po 2. bolusie (+6)',ok1&&/STOP/.test(tr)&&/\+6/.test(tr),tr);
@@ -103,6 +103,7 @@ await page.emulateMediaType('print');let pdf=await page.pdf({format:'A4',printBa
 pd=await page.evaluate(()=>document.getElementById('printArea').textContent);rec('Antykoagulacja: wydruk zakładki 1 strona A4 z nazwiskiem',pages===1&&/Anna Testowa/.test(pd),'stron '+pages);
 // ===== Zapalenie płuc: wydruk zawiera antybiotykoterapię
 await go('cap');await page.evaluate(()=>document.querySelector('[data-clin-tab="abx51"]').click());await sleep(600);const zf=await frameOf('mod/zp');await sleep(1200);
+await zf.evaluate(()=>{document.querySelector('[data-al="none"]').click();});await sleep(300);await zf.evaluate(()=>{document.querySelector('[data-pl="ward"]').click();});await sleep(500);
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 pd=await page.evaluate(()=>document.getElementById('printArea').textContent);
 await page.emulateMediaType('print');pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap_etap2.pdf',pdf);

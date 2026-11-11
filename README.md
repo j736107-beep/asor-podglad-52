@@ -79,9 +79,16 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **Zapalenie płuc**: CrCl Cockcroft–Gault na żywo ze wzorem (kreatynina mg/dl lub µmol/l, przecinek, wiek/płeć z PESEL) → korekta dawek; miejsce leczenia = rekomendacja z powodami (CURB-65 0–1 zwykle dom; 2 krótka hospitalizacja lub dom ze ścisłą kontrolą 48–72 h; 3 oddział; 4–5 rozważ OIT; modyfikatory PSI, SpO₂, nacieki wielopłatowe, choroby współistniejące, warunki opieki, tolerancja p.o.) – bez blokad, lekarz wybiera.
 - Testy: `tests/pw-node.test.js` (regresja 5.1→5.2 na tych samych wklejkach, `tests/data/pw51_baseline.json`), `tests/e2e-pw-puppeteer.js`, `tests/e2e-fix-puppeteer.js`, `tests/e2e-smoke-puppeteer.js` (wszystkie moduły, zakładki, listy i przełączniki; błędy JS = FAIL; porównanie z 5.1 przez `B51=`).
 
+## Poprawki 11.11.2026 (2) – antybiotykoterapia ZP i hiponatremia
+- **Zapalenie płuc – antybiotykoterapia** (`calc/cap-severity.js`, `mod/zp/*`): brak rekomendacji miejsca leczenia, dopóki nie ma minimum danych (składowe CURB-65 + SpO₂) – zamiast tego „Uzupełnij: …”; puste pole nie liczy się jako norma; brak preselekcji miejsca i alergii (wybór lekarza, zapamiętany do „Następny pacjent”). Modyfikatory zmieniają schemat: zachłyśnięcie (amoks./klaw. p.o. lub i.v. / ampicylina+sulbaktam), ropień płuca i ropniak (hospitalizacja; amoks./klaw. i.v. lub amp./sulb.; alergia: ceftriakson + metronidazol / klindamycyna / moksyfloksacyna; czas w tygodniach), MRSA, Pseudomonas; dawki wg CrCl i ChPL (RPL). Wydruk nie podaje schematu bez wyboru lekarza.
+- **Hiponatremia – protokół bolusów** (`mod/el/*`): bolus lokalny 5 amp. NaCl 10% + 100 ml G5% = 150 ml ≈3,3% (≈85,6 mmol Na⁺) w 20 min; Na⁺ 20 min po każdym bolusie przed kolejnym; automatyczna decyzja po każdym wyniku (kolejny bolus / STOP / ZAKAZ – z powodem i godzinami), maks. 3 (objawy umiarkowane – 1, Na⁺ po 1 h), limit 10 (ryzyko ODS 8, cel 4–6) mmol/l/24 h z zegarem, plan 24 h po zakończeniu bolusów (KVO 0,9%, Na⁺ 6/12 h, leczenie wg wolemii, diureza, K⁺, nadmierna korekta: G5% 10 ml/kg w 1 h + desmopresyna 2 µg i.v. ≤ co 8 h – ESE 2014 7.5) i tekst do przekazania. Bez oceny objawów / wolemii brak rekomendacji.
+- Testy: `tests/zp-matrix-node.test.js`, `tests/e2e-zp2-puppeteer.js`, `tests/hipona-node.test.js`, `tests/e2e-hipona-puppeteer.js`.
+
 ## Testy
 - `node tests/zp-node.test.js` – przypadki ZP-1…ZP-16 i CrCl (silnik).
 - `node tests/pw-node.test.js` – Przegląd wyników: regresja względem 5.1 i jednostki.
+- `node tests/hipona-node.test.js` – protokół bolusów w hiponatremii.
+- `node tests/zp-matrix-node.test.js` – macierz miejsce × alergia × modyfikator (ZP).
 - `node tests/etap2-node.test.js` – silniki etapu 2 (SE, hiponatremia, tiamina, anafilaksja, posiewy, neuroinfekcje).
 - `node tests/etap3-node.test.js`, `node tests/etap4-node.test.js` – etap 3 i kalkulatory (przykłady z publikacji).
 - Testy przeglądarkowe (puppeteer) – opis w raporcie wdrożenia.

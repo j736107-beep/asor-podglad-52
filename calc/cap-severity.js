@@ -63,13 +63,20 @@ function assess(raw){var i=norm(raw),c=curb(i),p=psi(i),s=severeCap(i),R=[],M=[]
  if(i.social===true)up('ward','brak warunków opieki domowej / czynniki społeczne');
  if(c.score===2){if(comorb||i.multilobar===true)up('ward','CURB-65 2/5 z '+(comorb?'chorobami współistniejącymi':'')+(comorb&&i.multilobar===true?' i ':'')+(i.multilobar===true?'naciekami wielopłatowymi':'')+' – zalecana krótka hospitalizacja');
   else up('obs','CURB-65 2/5 – rozważ krótką hospitalizację LUB leczenie domowe ze ścisłą kontrolą po 48–72 h, jeśli lekarz uzna (BTS / NPOA 2016)');}
+ // 11.11.2026: modyfikatory etiologiczne podnoszą poziom rekomendacji
+ if(i.abscess===true)up('ward','ropień płuca → hospitalizacja (antybiotyk i.v., ocena drenażu / bronchoskopii)');
+ if(i.empyema===true)up('ward','ropniak opłucnej / zakażony płyn → hospitalizacja i drenaż (BTS 2023)');
+ if(i.mrsa===true||i.pseudo===true){if(place==='home')up('obs','MRSA / Pseudomonas w wywiadzie – rozważ hospitalizację i posiewy (ATS/IDSA 2019)');else R.push('MRSA / Pseudomonas w wywiadzie – pokrycie wg ATS/IDSA 2019');}
  if(place==='home'){if(i.multilobar===true)up('obs','nacieki wielopłatowe – rozważ hospitalizację');if(comorb)M.push('choroby współistniejące – niższy próg hospitalizacji, kontrola po 48–72 h');}
  var miss=[];if(!c.complete)miss.push('CURB-65: '+c.missing.join(', '));if(!p.complete)miss.push('PSI: '+p.missing.join(', '));if(!fin(i.spo2)&&!fin(i.pao2))miss.push('SpO₂');
  if(place==='home'){if(p.cls==='III')up('obs','PSI klasa III ('+p.score+' pkt) – krótka obserwacja / ocena warunków opieki przed decyzją o domu');
   else if(p.complete||p.step1)R.push('PSI klasa '+p.cls+(p.step1?' (reguła pierwszego etapu)':' ('+p.score+' pkt)')+', CURB-65 '+c.score+'/5 – niskie ryzyko; zwykle leczenie domowe, jeśli są warunki opieki');
   else if(c.complete)R.push('CURB-65 '+c.score+'/5 – niskie ryzyko; zwykle leczenie domowe, jeśli są warunki opieki');}
- if(miss.length){if(place==='home')up('obs','dane niepełne – rekomendacja wstępna (krótka obserwacja do czasu uzupełnienia; nie blokuje decyzji lekarza); uzupełnij: '+miss.join('; '));else M.push('dane niepełne – rekomendacja wstępna; uzupełnij: '+miss.join('; '));}
- return{place:place,label:LABEL[place],homeBlocked:false,icuSuggest:place==='icu',icuMandatory:s.major.length>0,reasons:R.concat(M),modifiers:M,missing:miss,curb:c,psi:p,severe:s,complete:c.complete&&p.complete&&s.complete,input:i};}
+ // 11.11.2026 (lekarz): BEZ rekomendacji domyślnej. Minimum: wszystkie składowe CURB-65 + SpO₂ (lub PaO₂). Puste pole ≠ wynik prawidłowy.
+ var missMin=c.missing.slice();if(!fin(i.spo2)&&!fin(i.pao2))missMin.push('SpO₂');var ready=missMin.length===0;
+ if(!ready){var sig=R.slice();return{place:null,ready:false,missingMin:missMin,label:'Uzupełnij: '+missMin.join(', '),homeBlocked:false,icuSuggest:false,icuMandatory:s.major.length>0,reasons:sig.length?['sygnały wstępne (bez rekomendacji do czasu uzupełnienia): '+sig.join('; ')]:[],signals:sig,modifiers:M,missing:miss,curb:c,psi:p,severe:s,complete:false,input:i};}
+ if(!p.complete)M.push('PSI niepełny (uzupełnij w zakładce „Skale”: '+p.missing.join(', ')+') – rekomendacja z CURB-65, SpO₂ i modyfikatorów');
+ return{place:place,ready:true,missingMin:[],label:LABEL[place],homeBlocked:false,icuSuggest:place==='icu',icuMandatory:s.major.length>0,reasons:R.concat(M),modifiers:M,missing:miss,curb:c,psi:p,severe:s,complete:c.complete&&p.complete&&s.complete,input:i};}
 // lekarz zawsze wybiera miejsce leczenia (bez blokad)
 function allowed(manual,auto){return true;}
 return{assess:assess,allowed:allowed,curb:curb,psi:psi,severeCap:severeCap,norm:norm,RANK:RANK,LABEL:LABEL,MIN:MIN,MAJ:MAJ,SPO2_ICU:SPO2_ICU,SPO2_WARD:SPO2_WARD,psiFlags:psiFlags,psiNumbers:psiNumbers};});

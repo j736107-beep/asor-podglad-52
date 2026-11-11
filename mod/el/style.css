@@ -52,3 +52,9 @@ table.dt th{width:auto}
 /* 5.2 etap 2 */
 .thia{border:2px solid #2a6;border-radius:12px;padding:8px 12px;margin:8px 0;background:#f2fbf5}.thia .thr{margin:4px 0;padding:4px;border-radius:8px}.thia .thr.on{background:#d9f3e2;border:1px solid #2a6}.thia .tha{font-size:13px}.thia .ths{font-size:12px;color:#555}.thia .thp{color:#a00;font-weight:700;font-size:13px;margin-top:6px}
 #naTrk .fr{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#naTrk button{padding:7px 10px;border-radius:9px;border:1px solid #b9a8e6;background:#fff;font-weight:700;cursor:pointer}
+#naTrk button[disabled]{opacity:.45;cursor:not-allowed}
+#naTrk #bolGive:not([disabled]){background:#8a5800;color:#fff;border-color:#8a5800}
+#naTrk #bolWhy{font-size:12.5px;font-weight:700}
+#naTrk textarea{font:12px/1.35 ui-monospace,monospace;margin-top:4px}
+#naTrk input{width:110px!important;font-size:20px!important;padding:4px 6px!important}

@@ -84,7 +84,7 @@ function severeCap(i){
 function capDisposition(i){
  // 5.2: jeden silnik (calc/cap-severity.js) – ten sam co w module antybiotykoterapii
  const CSV=(typeof CAPSEV!=='undefined')?CAPSEV:(typeof require==='function'?require('./cap-severity.js'):null);
- if(CSV){const a=CSV.assess(i),admit=a.place==='ward'||a.place==='icu';return{curb:a.curb,psi:a.psi,severe:a.severe,admit,reasons:a.reasons,level:a.place==='icu'?'red':admit||a.place==='obs'?'orange':'ok',message:a.label,complete:a.complete,place:a.place,assess:a};}
+ if(CSV){const a=CSV.assess(i),admit=a.place==='ward'||a.place==='icu';return{curb:a.curb,psi:a.psi,severe:a.severe,admit,reasons:a.reasons,level:!a.ready?'orange':a.place==='icu'?'red':admit||a.place==='obs'?'orange':'ok',ready:a.ready,message:a.label,complete:a.complete,place:a.place,assess:a};}
  const c=curb(i),p=psi(i),s=severeCap(i),reasons=[];
  if(s.severe)reasons.push('ciężkie PZP: kryterium duże lub ≥3 małe ATS/IDSA');
  if(finite(i.spo2)&&i.spo2<90)reasons.push('SpO₂ <90%');

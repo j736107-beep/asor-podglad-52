@@ -9,7 +9,7 @@ function v(x){return isFinite(x)?String(x).replace('.',','):'';}
 var LAB={hiperK:[['k','K⁺ [mmol/l]'],['glu','Glikemia [mmol/l]'],['be','BE [mmol/l]']],hipoK:[['k','K⁺ [mmol/l]']],hipoNa:[['na','Na⁺ wyjściowe [mmol/l]'],['k','K⁺ [mmol/l]'],['glu','Glikemia [mmol/l]']],hiperNa:[['na','Na⁺ [mmol/l]']],
  hipoMg:[['mg','Mg','mgu']],hiperMg:[['mg','Mg','mgu']],hipoCa:[['ca','Ca','cau'],['alb','Albumina','albu']],hiperCa:[['ca','Ca','cau'],['alb','Albumina','albu']],hipoP:[['p','Fosforany','pu']]};
 var OPT={hiperK:[['ecg','zmiany EKG'],['arrest','NZK'],['acid','kwasica'],['dig','digoksyna']],hipoK:[['ecg','EKG/niedowład'],['cvc','cewnik centralny'],['dka','DKA/HHS']],
- hipoNa:[['sympt:severe','objawy ciężkie'],['sympt:mod','umiarkowane'],['vol:hypo','hipowolemia'],['vol:eu','euwolemia'],['vol:hyper','hiperwolemia'],['alco','alkoholizm'],['malnut','niedożywienie'],['cirr','marskość / ciężka ch. wątroby'],['wern','podejrzenie Wernickego'],['odsRisk','inne ryzyko ODS']],
+ hipoNa:[['sympt:severe','objawy ciężkie'],['sympt:mod','umiarkowane'],['sympt:none','brak / łagodne'],['vol:hypo','hipowolemia'],['vol:eu','euwolemia'],['vol:hyper','hiperwolemia'],['alco','alkoholizm'],['malnut','niedożywienie'],['cirr','marskość / ciężka ch. wątroby'],['wern','podejrzenie Wernickego'],['odsRisk','inne ryzyko ODS']],
  hiperNa:[['acute','ostra <48 h'],['shock','wstrząs']],hipoMg:[['tdp','TdP'],['sympt','objawy/arytmia']],hiperMg:[['sympt','objawy']],hipoCa:[['sympt','objawy'],['ion','Ca zjonizowany']],hiperCa:[['sympt','objawy']],hipoP:[['complex','złożona/długotrwała']]};
 var UN={mgu:[['mgdl','mg/dl'],['mmol','mmol/l']],cau:[['mgdl','mg/dl'],['mmol','mmol/l']],pu:[['mgdl','mg/dl'],['mmol','mmol/l']],albu:[['gdl','g/dl'],['gl','g/l']]};
 function optOn(k){var p=k.split(':');return p.length>1?st.opt[p[0]]===p[1]:!!st.opt[k];}
@@ -26,7 +26,20 @@ function mOut(){var i=edM(),o=E.mgso4(i);if(!o)return'<div class="mx">Uzupełnij
 function calcBox(t){if(t==='kcl'){var i=edK();return'<div class="calc"><b>Kalkulator KCl (obie strony)</b><div class="fr"><label>K⁺ [mmol]<input data-ed="kcl.mmol" value="'+v(i.mmol)+'" inputmode="decimal"></label><label>Objętość [ml]<input data-ed="kcl.vol" value="'+v(i.vol)+'" inputmode="decimal"></label><label>Szybkość [mmol/h]<input data-ed="kcl.rate" value="'+v(i.rate)+'" inputmode="decimal"></label></div><div id="kout">'+kOut()+'</div><div class="fr"><label>Pompa [ml/h] → mmol/h<input id="krev" inputmode="decimal"></label><span id="krevout"></span></div></div>';}
  if(t==='mg'){var m=edM();return'<div class="calc"><b>Kalkulator MgSO₄ 20%</b><div class="fr"><label>MgSO₄ [g]<input data-ed="mg.g" value="'+v(m.g)+'" inputmode="decimal"></label><label>Objętość [ml]<input data-ed="mg.vol" value="'+v(m.vol)+'" inputmode="decimal"></label><label>Czas [min]<input data-ed="mg.min" value="'+v(m.min)+'" inputmode="decimal"></label></div><div id="mout">'+mOut()+'</div></div>';}return'';}
 function R(){return E.compute({w:st.w,sex:st.sex,age:st.age,dis:st.dis,lab:st.lab,opt:st.opt,track:st.track});}
-function trackBox(r){if(st.dis!=='hipoNa'||!r.val)return '';return '<div class="calc" id="naTrk"><b>Bolusy i kolejne Na⁺</b><div class="fr"><button id="bolGive" type="button">✔ Podano bolus 150 ml ('+((st.track&&st.track.bolus||[]).length)+'/3)</button><label>Kolejny wynik Na⁺ <input id="naNext" inputmode="decimal"></label><button id="naAdd" type="button">➕ zapisz</button><button id="trkClr" type="button">wyczyść</button></div></div>';}
+function tod(x){var m=/^(\d{1,2})[:.](\d{2})$/.exec(String(x||'').trim());if(!m||+m[1]>23||+m[2]>59)return null;var d=new Date();d.setHours(+m[1],+m[2],0,0);var t=d.getTime();if(t>Date.now()+5*60e3)t-=864e5;return t;}
+function hm2(t){return E.hm?E.hm(t):'';}
+function trackBox(r){if(st.dis!=='hipoNa'||!r.val)return '';var pr=r.proto||{},tr=st.track||{},nb=(tr.bolus||[]).length,mx=pr.maxBol||0;
+ var cls={give:'orange',wait:'orange',stop_sym:'ok',stop_target:'ok',not_ind:'ok',max:'red',limit:'red',over:'red',pred:'red',need:'orange'}[pr.state]||'orange';
+ var h='<div class="calc" id="naTrk"><b>Protokół bolusów hipertonicznego NaCl (ESE 2014 + standard lokalny)</b>';
+ h+='<div class="rr" style="font-size:12px">Bolus = 5 amp. NaCl 10% à 10 ml (50 ml) + 100 ml glukozy 5% = <b>150 ml NaCl ≈3,3%</b> (≈570 mmol/l; 5 g NaCl ≈ 85,6 mmol Na⁺) i.v. w <b>20 min</b> (450 ml/h). Na⁺ kontrolne '+(pr.ctlMin||20)+' min po każdym bolusie – PRZED kolejnym. Maks.: objawy ciężkie 3 bolusy, umiarkowane 1. Limit: ≤'+(pr.limit||10)+' mmol/l/24 h'+(pr.limit===8?' (ryzyko ODS; cel 4–6)':'')+'.</div>';
+ h+='<div class="sev '+cls+'" id="naDecision">'+esc(pr.action||'Uzupełnij dane')+'</div>';
+ h+='<div class="fr"><label>Godz. 0 (pobranie Na⁺ wyjściowego) <input id="naT0" placeholder="hh:mm" value="'+(tr.t0?hm2(tr.t0):'')+'" inputmode="numeric" style="width:90px"></label></div>';
+ var lab=pr.canBolus?'💉 Zarejestruj podanie bolusu nr '+(nb+1)+' z '+mx+' (teraz)':'💉 Bolus niedostępny';
+ h+='<div class="fr"><button id="bolGive" type="button"'+(pr.canBolus?'':' disabled')+'>'+esc(lab)+'</button>'+(pr.canBolus?'':'<span class="mx" id="bolWhy">'+esc(pr.action||'')+'</span>')+'</div>';
+ h+='<div class="fr"><label>Kolejny wynik Na⁺ <input id="naNext" inputmode="decimal" style="width:90px"></label><label>godz. <input id="naTime" placeholder="teraz" inputmode="numeric" style="width:90px"></label><button id="naSame" type="button">zapisz – objawy utrzymują się</button><button id="naBetter" type="button">zapisz – objawy ustąpiły / poprawa</button></div>';
+ h+='<div class="fr"><button id="trkUndo" type="button"'+(nb||(tr.na||[]).length?'':' disabled')+'>↶ cofnij ostatni wpis</button><button id="trkClr" type="button">wyczyść protokół</button><span class="mx">Bolusy: '+nb+'/'+(mx||'—')+' · łączny przyrost: +'+f(pr.maxRise||0)+' / '+(pr.limit||10)+' mmol/l'+(pr.until?' do '+(E.hmd?E.hmd(pr.until):''):'')+'</span></div>';
+ if(r.handover)h+='<div id="naHandBox"><b>Tekst do przekazania / epikryzy</b><textarea id="naHand" rows="8" style="width:100%" readonly>'+esc(r.handover)+'</textarea><button id="naCopy" type="button">📋 kopiuj</button></div>';
+ return h+'</div>';}
 function item(x){var h='<div class="it">'+(x.lok?'<div class="lok">STANDARD LOKALNY – zatwierdzony przez lekarza</div>':'')+'<div class="nm">'+esc(x.name)+'</div><div class="mk">'+esc(x.main)+'</div>';
  if(x.rows)h+='<table class="rows">'+x.rows.map(function(r){return'<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'}).join('')+'</table>';
  if(x.edit)h+=calcBox(x.edit);if(x.disc)h+='<div class="rr caution">DO DECYZJI LEKARZA: '+esc(x.disc.replace(/ – DO DECYZJI LEKARZA\.?$/,''))+'</div>';if(x.src)h+=src(x.src);return h+'</div>';}
@@ -54,8 +67,15 @@ $('#res').addEventListener('input',function(e){var t=e.target;
  if(t.dataset.l){st.lab[t.dataset.l]=num(t.value);save();out();return;}
  if(t.dataset.ed){var p=t.dataset.ed.split('.');st.ed[p[0]]=st.ed[p[0]]||{};st.ed[p[0]][p[1]]=num(t.value);save();if(p[0]==='kcl'){$('#kout').innerHTML=kOut();$('#krevout').innerHTML=kRev();}else $('#mout').innerHTML=mOut();return;}
  if(t.id==='krev')$('#krevout').innerHTML=kRev();});
+$('#res').addEventListener('change',function(e){var t=e.target;if(t.id==='naT0'){var x=tod(t.value);st.track=st.track||{bolus:[],na:[]};if(x)st.track.t0=x;else if(!t.value.trim())delete st.track.t0;save();out();}});
 $('#res').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
- if(b.id==='bolGive'||b.id==='naAdd'||b.id==='trkClr'){st.track=st.track||{bolus:[],na:[]};if(b.id==='bolGive')st.track.bolus.push(Date.now());else if(b.id==='naAdd'){var x=num(($('#naNext')||{}).value);if(x>=90&&x<=180)st.track.na.push({t:Date.now(),v:x});}else st.track={bolus:[],na:[]};save();out();return;}
+ if(b.id==='naCopy'){var ta=$('#naHand');if(ta){ta.select();try{navigator.clipboard.writeText(ta.value);}catch(e){try{document.execCommand('copy');}catch(e2){}}b.textContent='✓ skopiowano';}return;}
+ if(['bolGive','naSame','naBetter','trkUndo','trkClr'].indexOf(b.id)>=0){var T=st.track=st.track||{bolus:[],na:[]};T.bolus=T.bolus||[];T.na=T.na||[];var now=Date.now();
+  if(b.id==='bolGive'){var r0=R();if(!(r0.proto&&r0.proto.canBolus))return;if(!T.t0)T.t0=now;T.bolus.push(now);}
+  else if(b.id==='naSame'||b.id==='naBetter'){var x=num(($('#naNext')||{}).value);if(!(x>=90&&x<=180)){alert('Wpisz wynik Na⁺ 90–180 mmol/l');return;}var tt=tod(($('#naTime')||{}).value)||now;if(!T.t0)T.t0=Math.min(now,tt);T.na.push({t:tt,v:x,sym:b.id==='naBetter'?'better':'same'});}
+  else if(b.id==='trkUndo'){var lb=T.bolus.length?T.bolus[T.bolus.length-1]:-1,ln=T.na.length?T.na[T.na.length-1].t:-1;if(lb<0&&ln<0)return;if(lb>ln)T.bolus.pop();else T.na.pop();}
+  else{if(!confirm('Wyczyścić protokół bolusów i wyniki Na⁺?'))return;st.track={bolus:[],na:[]};}
+  save();out();return;}
  if(b.dataset.u){var uk=b.dataset.u,old=st.lab[uk],nv=b.dataset.v,ion={mgu:'mg',cau:'ca',pu:'p',albu:'alb'}[uk],x=st.lab[ion];if(old!==nv&&isFinite(x)){if(ion==='alb')x=nv==='gl'?x*10:x/10;else x=nv==='mgdl'?E.toMgdl(ion,x):E.toMmol(ion,x,'mgdl');st.lab[ion]=Math.round(x*100)/100;}st.lab[uk]=nv;save();result();return;}
  if(b.dataset.o){var p=b.dataset.o.split(':');if(p.length>1)st.opt[p[0]]=st.opt[p[0]]===p[1]?'':p[1];else st.opt[p[0]]=!st.opt[p[0]];if(p[0]==='ecg'||p[0]==='arrest'||p[0]==='cvc')delete st.ed.kcl;save();result();}});
 render();})();

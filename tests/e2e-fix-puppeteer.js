@@ -28,7 +28,7 @@ const BASE=process.env.BASE||'http://localhost:8765/';let n=0,fail=0;function ok
  ok(/CrCl: 65 ml\/min/.test(c.live)&&/\(140 − 70\) × 80 kg \/ \(72 × 1,2 mg\/dl\)/.test(c.live)&&c.ph==='auto: 65','ZP: CrCl na żywo 70 l./M/80 kg/kr 1,2 mg/dl = 65 ml/min ze wzorem',JSON.stringify(c));
  await zf.evaluate(()=>document.querySelector('[data-cu="umol"]').click());await typ('crea','106');await sleep(300);
  c=await zf.evaluate(()=>document.getElementById('crclLive').textContent);ok(/CrCl: 65 ml\/min/.test(c),'ZP: kreatynina 106 µmol/l → 65 ml/min',c);
- await zf.evaluate(()=>document.querySelector('[data-cu="mgdl"]').click());await typ('crea','2,4');await sleep(300);
+ await zf.evaluate(()=>document.querySelector('[data-cu="mgdl"]').click());await typ('crea','2,4');await sleep(300);await zf.evaluate(()=>document.querySelector('[data-al="none"]').click());await sleep(200);await zf.evaluate(()=>document.querySelector('[data-pl="ward"]').click());await sleep(300);
  c=await zf.evaluate(()=>({live:document.getElementById('crclLive').textContent,res:document.getElementById('res').innerText}));ok(/CrCl: 32 ml\/min/.test(c.live)&&/CrCl: 32 ml\/min/.test(c.res),'ZP: kreatynina 2,4 → 32 ml/min, schemat liczony z tym CrCl',c.live);
  // PESEL → wiek i płeć → CrCl
  await fresh();await page.evaluate(()=>{const e=document.getElementById('pbPesel');e.value='44051401359';e.dispatchEvent(new Event('input',{bubbles:true}));const w=document.getElementById('pw');w.value='80';w.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(300);
@@ -42,7 +42,7 @@ const BASE=process.env.BASE||'http://localhost:8765/';let n=0,fail=0;function ok
  await tab('Antybiotykoterapia');zf=page.frames().find(f=>/mod\/zp/.test(f.url()));await sleep(500);
  let z=await zf.evaluate(()=>({rec:(document.getElementById('zpRec')||{}).textContent||'',home:(()=>{const b=document.querySelector('[data-pl="home"]');return{dis:b.disabled,blk:b.classList.contains('blk')};})(),curb:(document.getElementById('curbOut')||{}).textContent}));
  ok(/^2/.test(z.curb.trim())&&/ścisłą kontrolą/.test(z.rec)&&!z.home.dis&&!z.home.blk,'ZP: CURB-65 = 2 → rekomendacja (krótka hospitalizacja / dom ze ścisłą kontrolą), „Dom” aktywny',JSON.stringify(z));
- await zf.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(400);
+ await zf.evaluate(()=>document.querySelector('[data-al="none"]').click());await sleep(200);await zf.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(400);
  z=await zf.evaluate(()=>({place:document.getElementById('zpPlace').textContent,res:document.getElementById('res').innerText}));
  ok(/Leczenie domowe/.test(z.place)&&/Amoksycylina/i.test(z.res)&&/48–72 h/.test(z.res),'ZP: lekarz wybiera „Dom” przy CURB-65 = 2 → schemat domowy z dawkami i kontrolą 48–72 h',z.place);
  ok(!/ZABLOKOWAN|zablokowan/.test(z.res),'ZP: brak komunikatów o blokadzie',z.res.match(/.{40}zablokowan.{40}/i));

@@ -5,24 +5,24 @@ const P=(o)=>Object.assign({},N,o);
 const ks=o=>o.regs.map(r=>r.items.filter(Boolean).map(x=>x.k)).flat();
 let pass=0,fail=0;const R=[];
 function t(id,fn){try{const m=fn();if(m===true){pass++;R.push([id,'PASS']);}else{fail++;R.push([id,'FAIL '+m]);}}catch(e){fail++;R.push([id,'FAIL '+e.message]);}}
-t('ZP-1',()=>{const i=P({age:40,sex:'m',spo2:70});const a=C.assess(i);const o=Z.plan(Object.assign({},i,{allergy:'none'}));const k=ks(o);
+t('ZP-1',()=>{const i=P({age:40,sex:'m',spo2:70});const a=C.assess(i);const o=Z.plan(Object.assign({},i,{allergy:'none',place:'icu'}));const k=ks(o);
  if(a.place!=='icu')return 'place '+a.place;if(a.homeBlocked)return 'home hard-blocked';if(o.p!=='icu')return 'plan p '+o.p;
  if(k.some(x=>/^amox$|^amp$/.test(x)))return 'amox/amp present '+k;if(!(k.includes('cftx')||k.includes('cfx')))return 'no cftx/cfx';if(!k.some(x=>/clari|azi/.test(x)))return 'no macrolide';
  if(!CL.capDisposition(i).admit)return 'clinical admit false';return true;});
 t('ZP-2',()=>{const i=P({age:30,sex:'f',temp:37.5});const a=C.assess(i);if(!a.psi.step1||a.psi.cls!=='I')return 'psi '+a.psi.cls;if(a.curb.score!==0)return 'curb '+a.curb.score;if(a.place!=='home')return 'place '+a.place+' '+a.reasons;
- const o=Z.plan(Object.assign({},i,{allergy:'none'}));const amox=o.regs.flatMap(r=>r.items).filter(Boolean).find(x=>x.k==='amox');if(!amox)return 'no amox '+ks(o);return /1 g/.test(amox.dose)&&/8 h/.test(amox.q)&&/p\.o/.test(amox.route)?true:'amox '+amox.dose+' '+amox.q+' '+amox.route;});
+ const o=Z.plan(Object.assign({},i,{allergy:'none',place:'home'}));const amox=o.regs.flatMap(r=>r.items).filter(Boolean).find(x=>x.k==='amox');if(!amox)return 'no amox '+ks(o);return /1 g/.test(amox.dose)&&/8 h/.test(amox.q)&&/p\.o/.test(amox.route)?true:'amox '+amox.dose+' '+amox.q+' '+amox.route;});
 t('ZP-3',()=>{const a=C.assess(P({age:70,sex:'m',heart:true}));return a.psi.score===80&&a.psi.cls==='III'&&a.curb.score===1&&a.place==='obs'&&!a.homeBlocked?true:JSON.stringify([a.psi.score,a.psi.cls,a.curb.score,a.place]);});
 t('ZP-4',()=>{const a=C.assess(P({age:85,sex:'m',cancer:true,ph:7.30}));return a.psi.score===145&&a.psi.cls==='V'&&RANKOK(a.place,'ward')&&!a.homeBlocked?true:JSON.stringify([a.psi.score,a.psi.cls,a.place]);});
 function RANKOK(p,min){return C.RANK[p]>=C.RANK[min];}
 t('ZP-5',()=>{const a=C.assess(P({age:45,sex:'m',rr:32,multilobar:true,confusion:true}));return a.severe.minor.length>=3&&a.place==='icu'&&!a.homeBlocked?true:JSON.stringify([a.severe.minor,a.place]);});
 t('ZP-6',()=>{const a=C.assess(P({age:45,sex:'m',vasopressor:true}));return a.place==='icu'&&a.icuMandatory&&!a.homeBlocked?true:a.place;});
-t('ZP-7',()=>{const i=P({});delete i.urea;const a=C.assess(i);const o=Z.plan(Object.assign({},i,{allergy:'none'}));return a.place==='obs'&&!a.homeBlocked&&a.missing.length&&a.reasons.some(r=>/dane niepełne/.test(r)&&/nie blokuje/.test(r))&&o.p==='home'?true:JSON.stringify([a.place,a.missing,o.p]);});
+t('ZP-7 (11.11) brak mocznika/wieku → BEZ rekomendacji, „Uzupełnij”',()=>{const i=P({});delete i.urea;const a=C.assess(i);const o=Z.plan(Object.assign({},i,{allergy:'none'}));return a.place===null&&!a.ready&&/^Uzupełnij: /.test(a.label)&&/mocznik/.test(a.label)&&/wiek/.test(a.label)&&o.need.some(n=>/miejsce leczenia/.test(n))&&!o.regs.length?true:JSON.stringify([a.place,a.label,o.need]);});
 t('ZP-9',()=>{const i=P({age:30,sex:'f',spo2:91,place:'home',allergy:'none'});const o=Z.plan(i);return o.p==='home'&&!o.manualRejected&&C.allowed('home','ward')&&o.warn.some(w=>/rekomendacja silnika: hospitalizacja/.test(w))&&o.regs.length>0?true:JSON.stringify([o.p,o.manualRejected,o.warn]);});
 t('ZP-10',()=>{const a=C.assess(P({age:30,sex:'f',temp:37.5,spo2:91}));return a.place==='ward'&&!a.homeBlocked?true:a.place;});
-t('ZP-11',()=>{const o=Z.plan(P({age:40,sex:'m',spo2:70,allergy:'imm'}));const k=ks(o);const bl=['amox','amoxclav_po','amoxclav_iv','amp','cftx','cftx1','cfx','cfur','ptz','cfep','cftz','mero'];if(k.some(x=>bl.includes(x)))return 'beta-lactam '+k;return k.some(x=>/levo|moxi/.test(x))?true:'no FQ '+k;});
+t('ZP-11',()=>{const o=Z.plan(P({age:40,sex:'m',spo2:70,allergy:'imm',place:'icu'}));const k=ks(o);const bl=['amox','amoxclav_po','amoxclav_iv','amp','cftx','cftx1','cfx','cfur','ptz','cfep','cftz','mero'];if(k.some(x=>bl.includes(x)))return 'beta-lactam '+k;return k.some(x=>/levo|moxi/.test(x))?true:'no FQ '+k;});
 t('ZP-13',()=>{const a=C.assess(P({age:50,sex:'f'}));return a.psi.step1&&a.psi.cls==='I'&&a.psi.score===40&&a.place==='home'?true:JSON.stringify([a.psi.step1,a.psi.cls,a.psi.score,a.place]);});
 // dodatkowe: frame-only (minimal data) SpO2 70 → OIT, bez amoksycyliny
-t('ZP-1b (ramka, dane minimalne)',()=>{const o=Z.plan({age:40,sex:'m',spo2:70,allergy:'none'});const k=ks(o);return o.p==='icu'&&!k.some(x=>/^amox$|^amp$/.test(x))?true:o.p+' '+k;});
+t('ZP-1b (ramka, dane minimalne: brak CURB-65 → brak rekomendacji; lekarz wybiera OIT)',()=>{const o=Z.plan({age:40,sex:'m',spo2:70,allergy:'none',place:'icu'});const k=ks(o);return o.p==='icu'&&o.pAuto===null&&!o.place.ready&&!k.some(x=>/^amox$|^amp$/.test(x))&&o.warn.some(w=>/niewyliczona/.test(w))?true:o.p+' '+o.pAuto+' '+k;});
 t('Skale=ramka (jeden silnik)',()=>{const i=P({age:70,sex:'m',heart:true,spo2:91});return CL.capDisposition(i).place===C.assess(i).place&&Z.plan(Object.assign({},i,{allergy:'none'})).pAuto===C.assess(i).place?true:'mismatch';});
 
 // 11.11.2026: CURB-65 = 2 – rekomendacja, NIE blokada; dom wybieralny z dopasowanym schematem i kontrolą 48–72 h
@@ -39,6 +39,6 @@ const cg=(age,w,crMg,sex)=>Math.round((140-age)*w/(72*crMg)*(sex==='f'?0.85:1));
  t('CrCl '+age+' l. '+sex+' '+w+' kg kr '+cr+' '+u,()=>{const c=Z.crcl({age,w,crea:cr,creaU:u,sex});const crMg=(u==='umol'||Number(String(cr).replace(',','.'))>25)?Number(String(cr).replace(',','.'))/88.42:Number(String(cr).replace(',','.'));
   return c.v===exp&&c.v===cg(age,w,crMg,sex)&&/140/.test(c.f||'')?true:JSON.stringify([c.v,exp,cg(age,w,crMg,sex),c.f]);});});
 t('CrCl brak płci → lista braków (bez zgadywania)',()=>{const c=Z.crcl({age:70,w:80,crea:1.2});return isNaN(c.v)&&/płeć/.test(c.src)?true:c.src;});
-t('CrCl steruje dawką (CrCl 20 vs 90: klarytromycyna i.v. 250 mg co 12 h)',()=>{const a=Z.plan(P({age:40,sex:'m',spo2:89,crclManual:90,allergy:'none'})),b=Z.plan(P({age:40,sex:'m',spo2:89,crclManual:20,allergy:'none'}));const f=o=>o.regs.flatMap(r=>r.items).filter(Boolean).find(x=>x.k==='clari_iv');
+t('CrCl steruje dawką (CrCl 20 vs 90: klarytromycyna i.v. 250 mg co 12 h)',()=>{const a=Z.plan(P({age:40,sex:'m',spo2:89,crclManual:90,allergy:'none',place:'ward'})),b=Z.plan(P({age:40,sex:'m',spo2:89,crclManual:20,allergy:'none',place:'ward'}));const f=o=>o.regs.flatMap(r=>r.items).filter(Boolean).find(x=>x.k==='clari_iv');
  return /bez korekty/.test(f(a).renal)&&/250 mg co 12 h/.test(f(b).renal)?true:f(a).renal+' | '+f(b).renal;});
 R.forEach(r=>console.log(r[0].padEnd(28),r[1]));console.log('PASS',pass,'FAIL',fail);process.exit(fail?1:0);
