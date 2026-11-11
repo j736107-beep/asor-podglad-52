@@ -77,6 +77,7 @@ rec('F3 Karty EKG: krótkie kryterium z liczbami + rysunki (STEMI ≥2,5 mm M <4
 await page.evaluate(()=>{const f=document.querySelector('#main iframe');const e=f&&f.contentDocument.getElementById('ecg');e&&e.scrollIntoView();});await sleep(300);await shot('f3-1-ekg-karty.png');
 await page.evaluate(()=>SKS.show('neuro'));await sleep(800);const nt=await page.evaluate(()=>[...document.querySelectorAll('#main button')].map(b=>b.textContent).join('|'));
 rec('F3 Neurologia: brak zakładek MoCA/MMSE/CDR, zostają 4AT i AMTS',!/MoCA|MMSE|CDR/.test(nt)&&/4AT/.test(nt)&&/AMTS/.test(nt),nt.slice(0,400));
+{const gt=await page.evaluate(()=>fetch('gloss.js?'+Date.now()).then(r=>r.text()));rec('F5 Słowniczek: brak haseł MoCA/MMSE/CDR (zgoda lekarza 11.11.2026), Mini-Cog zostaje',!/'MoCA'|'MMSE'|'CDR'/.test(gt)&&/'Mini-Cog'/.test(gt),gt.length);}
 await page.evaluate(()=>SKS.goTab('neuro','d'));await sleep(600);t=await main();rec('F3 Neurologia → Majaczenie: 4AT i Mini-Cog działają, brak pól MoCA/MMSE',/4AT/.test(t)&&/Mini-Cog/i.test(t)&&!/MoCA|MMSE/.test(t),t.slice(0,300));await shot('f3-2-neurologia-bez-moca.png');
 await page.evaluate(()=>SKS.goTab('af','k'));await sleep(800);t=await main();const kc=(t.match(/wymaga tego samego zabezpieczenia/gi)||[]).length;
 rec('F3 AF → kardiowersja: uwaga o zabezpieczeniu przeciwzakrzepowym raz',kc===1,String(kc));await shot('f3-3-af-kardiowersja.png');

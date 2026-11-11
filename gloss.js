@@ -3,7 +3,7 @@
 'LKW':'ostatnio widziany zdrowy','LVO':'niedrożność dużego naczynia mózgu','LAMS':'skala przedszpitalna dużego naczynia','RACE':'skala zamknięcia dużego naczynia 0–9','NIHSS':'skala ciężkości udaru 0–42',
 'HINTS':'test 3 kroków przy zawrotach: impuls głowy, oczopląs, skew; centralny = udar pnia/móżdżku, obwodowy = błędnik','SAH':'krwotok podpajęczynówkowy','CVT':'zakrzepica zatok żylnych mózgu','ICH':'krwotok śródmózgowy','IVH':'krew w komorach mózgu',
 'mRS':'zmodyfikowana skala Rankina – niesprawność 0–6','ABCD²':'ryzyko udaru po TIA','TIA':'przemijający atak niedokrwienny','GCS':'skala śpiączki Glasgow 3–15','4AT':'test przesiewowy majaczenia','AMTS':'skrócony test sprawności umysłowej 0–10',
-'MoCA':'montrealska skala oceny funkcji poznawczych 0–30','MMSE':'krótka skala oceny stanu psychicznego 0–30','CDR':'skala klinicznej oceny otępienia','Mini-Cog':'test 3 słów + rysowanie zegara','AMT4':'4 pytania: wiek, data ur., miejsce, rok',
+'Mini-Cog':'test 3 słów + rysowanie zegara','AMT4':'4 pytania: wiek, data ur., miejsce, rok',
 'DWI-FLAIR':'sekwencje MR: dyfuzja / obrazy T2 z tłumieniem płynu','DWI':'dyfuzyjny MR – świeże niedokrwienie','FLAIR':'sekwencja MR T2 z tłumieniem płynu','CTA':'angio-TK','CTP':'perfuzja TK','NCCT':'TK bez kontrastu','MRV':'wenografia MR',
 'NOAC':'nowe doustne antykoagulanty','VKA':'antagoniści witaminy K','INR':'wskaźnik krzepnięcia (warfaryna/acenokumarol)','APTT':'czas częściowej tromboplastyny po aktywacji','UFH':'heparyna niefrakcjonowana','PCC':'koncentrat czynników zespołu protrombiny','FFP':'osocze świeżo mrożone',
 'SBP':'ciśnienie skurczowe','DBP':'ciśnienie rozkurczowe','MAP':'średnie ciśnienie tętnicze','HR':'tętno','SpO':'saturacja','CrCl':'klirens kreatyniny','UN':'nie do oceny',

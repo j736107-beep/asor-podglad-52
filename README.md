@@ -126,6 +126,9 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Pompy (decyzje lekarza 11.11.2026): dopamina – ampułka 4% (200 mg/5 ml): 50 ml = 3,75 ml + 46,25 ml = 3 mg/ml, 20 ml = 1,25 ml + 18,75 ml = 2,5 mg/ml (w zakresie ChPL 0,4–3,2 mg/ml; ml/h bez zmian). Oktreotyd aktywny (zatwierdzony): 10 µg/ml w NaCl 0,9% (receptury dla amp. 50/100/500 µg/ml), 25 µg/h = 2,5 ml/h, 50 µg/h = 5 ml/h = MAKS. (ChPL 4.4 – blok AV), bolus 50 µg i.v. wyłącznie „DO DECYZJI LEKARZA” (Baveno VII / AGA). Levosimendan – standard lokalny zatwierdzony (bez bramki; można przenieść do rejestru).
 - SW: asor-v52-fix7.
 
+## Poprawki 11.11.2026 (6) – słowniczek
+- Ze słowniczka (gloss.js) usunięto hasła MoCA, MMSE i CDR (za zgodą lekarza) – skale wcześniej usunięte z Neurologii. SW asor-v52-fix9.
+
 ## Poprawki 11.11.2026 (5) – usunięcie modułu „Dokumentacja SOR”
 
 - Za zgodą lekarza moduł usunięty w całości (workbench.js, wpis w menu, kafelek na Pulpicie, style `.wb-area/.wb-panel/.wb-hint/.document-editor`, część „Dokumentacja” w wydruku).
