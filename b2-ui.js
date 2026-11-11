@@ -1,5 +1,5 @@
 // ETAP B2 – warstwa UI: antybiotyki w PZP (korekta nerkowa), sepsa (kryteria, pakiet 1 h, antybiotyki wg ogniska, ponowna ocena, raport),
-// zatrucia grzybami (gatunki, próbki, leczenie, kontakty) i skale otępienia (AMTS, MoCA, MMSE, CDR).
+// zatrucia grzybami (gatunki, próbki, leczenie, kontakty) i skala AMTS (MoCA/MMSE/CDR usunięte 11.11.2026 – audyt, faza 3).
 // Silniki: calc/abxB2.js, mushB2.js, dementiaB2.js (testowane w Node: tests/etapB2.cjs). Dane: data/antybiotyki_renal.js.
 (function(){
 var C=SK.core,F=C.fmt,N=C.num,U=SKM.util,bx=U.bx,inp=U.inp,chk=U.chk,tabbed=U.tabbed,store=U.store,srcList=U.src;
@@ -302,36 +302,18 @@ function mushTabs(H){var number=H.number,select=H.select,group=H.group,tri=H.tri
 function itemsHtml(groups){return groups.map(function(gp){var h='<div class="b2h">'+esc(gp.g)+'</div>';gp.items.forEach(function(it){h+='<label class="b2it"><input type="checkbox" id="'+it[0]+'"> '+esc(it[1])+(it[2]?'<span class="ins">'+esc(it[2])+'</span>':'')+'</label>';});
  if(gp.sel){h+='<label class="b2it">'+esc(gp.sel.label)+' <select id="'+gp.sel.id+'"><option value="">— nie oceniono —</option>'+[0,1,2,3,4,5].slice(0,gp.sel.opts+1).map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('')+'</select></label>';}return h;}).join('');}
 function amtsIn(v){var o={};DM.AMTS.forEach(function(x){o[x[0]]=v[x[0]]===true;});return o;}
-function mocaIn(v){var o={};DM.mocaItemIds().forEach(function(id){o[id]=v[id]===true;});o.m_s7=v.m_s7===undefined||v.m_s7===''?undefined:+v.m_s7;return o;}
-function mmseIn(v){var o={};DM.mmseItemIds().forEach(function(id){o[id]=v[id]===true;});o.s_att=v.s_att===undefined||v.s_att===''?undefined:+v.s_att;return o;}
 function anyTrue(v){return Object.keys(v).some(function(k){if(k.indexOf('__')===0)return false;return v[k]===true||(typeof v[k]==='number'&&isFinite(v[k]))||(typeof v[k]==='string'&&v[k]!=='');});}
 function amtsRes(v){return anyTrue(v)?DM.amts(amtsIn(v)):null;}
-function mocaRes(v){return anyTrue(v)?DM.moca(mocaIn(v),v.edu===true):null;}
-function mmseRes(v){return anyTrue(v)?DM.mmse(mmseIn(v)):null;}
-function cdrIn(v){var b={};['M','O','J','C','H','P'].forEach(function(k){var x=v['c_'+k];b[k]=x===undefined||x===''?NaN:+x;});return b;}
-function dementiaSummary(){var ra=amtsRes(store('neuro_d2').get()),rm=mocaRes(store('neuro_d3').get()),rs=mmseRes(store('neuro_d4').get()),rc=DM.cdrGlobal(cdrIn(store('neuro_d5').get()));
- var any=ra||rm||rs||(rc&&rc.ok);if(!any)return '';
- var rows=[['AMTS',ra?ra.score+'/10 – '+ra.txt:'nie oceniano'],['MoCA',rm?(rm.partial?'co najmniej ':'')+rm.score+'/30'+(rm.eduAdded?' (z +1 pkt za ≤12 lat nauki)':'')+' – '+rm.txt:'nie oceniano'],['MMSE',rs?(rs.partial?'co najmniej ':'')+rs.score+'/30 – '+rs.cat:'nie oceniano'],['CDR (globalny)',rc.ok?F(rc.cdr,1)+' – '+rc.label:'nie oceniano / niepełny']];
+function dementiaSummary(){var ra=amtsRes(store('neuro_d2').get());
+ var any=ra;if(!any)return '';
+ var rows=[['AMTS',ra?ra.score+'/10 – '+ra.txt:'nie oceniano']];
  return bx('','Zestawienie wyników skal (trafia do raportu zbiorczego)',tbl(['Skala','Wynik'],rows.map(function(r){return [esc(r[0]),esc(r[1])];}))+'<div class="mut">Skrining ≠ rozpoznanie. Przy podejrzeniu majaczenia (4AT) testy poznawcze są niewiarygodne.</div>');}
 function dementiaForm(t){
  if(t==='d2')return '<p class="mut" style="width:100%">Zaznaczaj poprawnie wykonane elementy; w nawiasach kwadratowych polecenie dla pacjenta. Niezaznaczone = błąd / nie wykonano (0 pkt).</p>'+itemsHtml([{g:'AMTS – 10 pytań (1 pkt każde)',items:DM.AMTS}]);
- if(t==='d3')return '<p class="mut" style="width:100%">MoCA – maks. 30 pkt. Własne skrócone polecenia; oryginalny formularz i rysunki: mocacognition.com (licencja/szkolenie – '+DEC+'). Niezaznaczone = błąd / nie wykonano.</p>'+itemsHtml(DM.MOCA)+'<div class="b2h">Poprawka za wykształcenie</div><label class="b2it"><input type="checkbox" id="edu"> Pacjent miał ≤12 lat nauki <span class="ins">Jeśli pacjent miał ≤12 lat nauki, dodaj 1 punkt (jeśli wynik &lt;30).</span></label>';
- if(t==='d4')return '<p class="mut" style="width:100%">MMSE – maks. 30 pkt. Własne skrócone polecenia; oryginalny formularz © PAR – '+DEC+' (licencja). Niezaznaczone = błąd / nie wykonano.</p>'+itemsHtml(DM.MMSE);
- if(t==='d5'){var h='<p class="mut" style="width:100%">CDR: oceń każdą z 6 domen jako spadek względem zwykłego poziomu z powodu zaburzeń poznawczych (nie z powodu innych chorób/depresji). Wątpliwość między dwoma stopniami → wybierz wyższy. Globalny CDR liczy się automatycznie (algorytm Morrisa 1993).</p><div class="b1tw" style="width:100%"><table class="b2cdr"><thead><tr><th>Domena</th>'+['0','0.5','1','2','3'].map(function(k){return '<th>'+esc(DM.CDR_LAB[k])+'</th>';}).join('')+'</tr></thead><tbody>';
-  DM.CDR_DOM.forEach(function(d){h+='<tr><td><b>'+esc(d[1])+' ('+d[0]+')</b><input type="hidden" id="c_'+d[0]+'"></td>'+['0','0.5','1','2','3'].map(function(k){var ok=d[2].indexOf(+k)>=0;return '<td>'+(ok?'<label><input type="radio" name="cr_'+d[0]+'" value="'+k+'"> '+esc((DM.CDR_DESC[d[0]]||{})[k]||'')+'</label>':'<span class="mut">—</span>')+'</td>';}).join('')+'</tr>';});
-  return h+'</tbody></table></div>';}
  return '';}
 function dementiaCalc(t,g,P){var H='';
  if(t==='d2'){var v={};DM.AMTS.forEach(function(x){v[x[0]]=g(x[0]);});var r=amtsRes(v);
   H=r?bx(r.lvl,'AMTS','<span class="b2res">'+r.score+' / 10</span> – '+esc(r.txt)+'<div class="mut">'+esc(r.note)+'</div>')+srcl(esc(DM.SRC.amts)):bx('','AMTS','Zaznacz poprawne odpowiedzi – brak wyniku bez wprowadzonych danych.');}
- if(t==='d3'){var m={edu:g('edu')};DM.mocaItemIds().forEach(function(id){m[id]=g(id);});m.m_s7=g('m_s7');var r3=mocaRes(m);
-  H=r3?bx(r3.lvl,'MoCA','<span class="b2res">'+r3.score+' / 30</span> – '+esc(r3.txt)+(r3.partial?' <b>(co najmniej – nie wszystkie pozycje ocenione)</b>':'')+(r3.eduAdded?'<div>Surowy wynik '+r3.raw+' + 1 pkt (≤12 lat nauki).</div>':'')+'<div class="mut">Jeśli pacjent miał ≤12 lat nauki, dodaj 1 punkt (jeśli wynik &lt;30).</div><div class="mut">'+esc(r3.note)+'</div>')+srcl(esc(DM.SRC.moca)):bx('','MoCA','Zaznacz wykonane elementy – brak wyniku bez wprowadzonych danych.');}
- if(t==='d4'){var s={};DM.mmseItemIds().forEach(function(id){s[id]=g(id);});s.s_att=g('s_att');var r4=mmseRes(s);
-  H=r4?bx(r4.lvl,'MMSE','<span class="b2res">'+r4.score+' / 30</span> – '+esc(r4.cat)+(r4.partial?' <b>(co najmniej)</b>':'')+'<div class="mut">'+esc(r4.note)+'</div>')+srcl(esc(DM.SRC.mmse)):bx('','MMSE','Zaznacz wykonane elementy – brak wyniku bez wprowadzonych danych.');}
- if(t==='d5'){var cv={};['M','O','J','C','H','P'].forEach(function(k){var hid=document.getElementById('c_'+k);var val=hid?hid.value:'';cv['c_'+k]=val;
-   document.querySelectorAll('input[name="cr_'+k+'"]').forEach(function(r){r.checked=(r.value===val);r.onchange=function(){var h2=document.getElementById('c_'+k);h2.value=r.value;h2.dispatchEvent(new Event('input'));};});});
-  var rc=DM.cdrGlobal(cdrIn(cv));
-  H=rc.ok?bx(rc.lvl,'CDR globalny','<span class="b2res">'+F(rc.cdr,1)+'</span> – '+esc(rc.label)+'<div>Suma „boxów” (pomocnicza): '+F(rc.sum,1)+'</div><div class="mut">'+esc(rc.rule)+'</div><div class="mut">'+esc(rc.note)+'</div>')+srcl(esc(DM.SRC.cdr)):bx('','CDR','Oceń wszystkie 6 domen (brakuje: '+(rc.missing||[]).join(', ')+'). Brak wyniku bez kompletnych danych.');}
  return{H:H+dementiaSummary(),lvl:'ok'};}
 // ---------- rejestracja ----------
 function repl(m){var L=SKM.list;for(var i=0;i<L.length;i++)if(L[i].id===m.id){L[i]=m;return;}L.push(m);}

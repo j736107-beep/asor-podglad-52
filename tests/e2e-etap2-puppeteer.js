@@ -99,14 +99,14 @@ await go('acoag');const tabs=await page.evaluate(()=>[...document.querySelectorA
 for(const t of tabs){await page.evaluate(t=>document.querySelector('#main .tabs button[data-t="'+t+'"]').click(),t);await sleep(300);const x=await page.evaluate(()=>({s:(document.getElementById('ptStrip')||{}).textContent||'',b:!!document.querySelector('#main .tabPrint')}));if(/Anna Testowa/.test(x.s)&&x.b)okA.push(t);}
 rec('Antykoagulacja: pasek pacjenta + wydruk w każdej zakładce ('+tabs.length+')',okA.length===tabs.length&&tabs.length===8,okA.join(','));
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'acoag'}]);});
-await page.emulateMediaType('print');let pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');let pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;
+await page.emulateMediaType('print');let pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');let pages=(Buffer.from(pdf).toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;
 pd=await page.evaluate(()=>document.getElementById('printArea').textContent);rec('Antykoagulacja: wydruk zakładki 1 strona A4 z nazwiskiem',pages===1&&/Anna Testowa/.test(pd),'stron '+pages);
 // ===== Zapalenie płuc: wydruk zawiera antybiotykoterapię
 await go('cap');await page.evaluate(()=>document.querySelector('[data-clin-tab="abx51"]').click());await sleep(600);const zf=await frameOf('mod/zp');await sleep(1200);
 await zf.evaluate(()=>{document.querySelector('[data-al="none"]').click();});await sleep(300);await zf.evaluate(()=>{document.querySelector('[data-pl="ward"]').click();});await sleep(500);
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 pd=await page.evaluate(()=>document.getElementById('printArea').textContent);
-await page.emulateMediaType('print');pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap_etap2.pdf',pdf);
+await page.emulateMediaType('print');pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');pages=(Buffer.from(pdf).toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap_etap2.pdf',pdf);
 rec('ZP: wydruk zawiera treść antybiotykoterapii (1–2 str.)',/antybiotykoterapia/i.test(pd)&&/Proponowane/.test(pd)&&pages<=2,'stron '+pages+' · '+pd.slice(pd.search(/Proponowane/),pd.search(/Proponowane/)+160));
 rec('Brak błędów JS (etap 2)',errs.length===0,JSON.stringify(errs).slice(0,800));
 console.log(`\n${R.length-fails} PASS, ${fails} FAIL`);await br.close();process.exit(fails?1:0);})().catch(e=>{console.error(e);process.exit(2);});

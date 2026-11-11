@@ -22,9 +22,10 @@ window.SKN={print:function(){if(!LAST){alert('Otwórz zakładkę „Algorytm: po
   '<h2>Uwagi lekarza</h2><div class="lines"></div><div class="sig"><div>Godzina: ..............</div><div>Podpis i pieczątka lekarza<br><br>.......................................</div></div><div class="foot">Asystent lekarza SOR – narzędzie pomocnicze, niecertyfikowane. Decyzję podejmuje lekarz.</div>';
  var a=document.getElementById('printArea');if(!a){a=document.createElement('div');a.id='printArea';document.body.appendChild(a);}a.innerHTML=h;if(window.SKG)SKG.run(a);window.print();}};
 var MOT={'5a':1,'5b':1,'6a':1,'6b':1,'7':1};
-var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia'},'Neurologia – udar',[['a','Algorytm: podejrzenie udaru'],['n','NIHSS'],['t','Tromboliza'],['i','Krwotok (ICH)'],['p','Rokowanie / TIA / GCS'],['d','Majaczenie / 4AT (SOR)'],['d2','▸ AMTS (rozszerzone)'],['d3','▸ MoCA (nie SOR)'],['d4','▸ MMSE (nie SOR)'],['d5','▸ CDR (nie SOR)']],
+var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia'},'Neurologia – udar',[['a','Algorytm: podejrzenie udaru'],['n','NIHSS'],['t','Tromboliza'],['i','Krwotok (ICH)'],['p','Rokowanie / TIA / GCS'],['d','Majaczenie / 4AT (SOR)'],['d2','▸ AMTS (rozszerzone)']],
  function(t){
-  if(t==='d2'||t==='d3'||t==='d4'||t==='d5'){var gate=(t==='d3'||t==='d4'||t==='d5')?'<div class="notice" style="border-color:#e98a00;background:#fff8e8"><b>Skala rozszerzona – nie typowa dla SOR</b> (MoCA / MMSE / CDR). Na dyżurze wystarczy 4AT / AMTS. Wynik nie zastępuje oceny majaczenia. <span class="dw">DO DECYZJI LEKARZA</span>.</div>':'<div class="notice"><b>AMTS</b> – skala rozszerzona; w SOR preferuj 4AT (zakładka „Majaczenie / 4AT”).</div>';return gate+(window.SORB2?SORB2.dementiaForm(t):'');}
+  // 11.11.2026 (audyt, faza 3): MoCA / MMSE / CDR (skale otępienia spoza SOR) usunięte; zostają 4AT, AMTS, Mini-Cog.
+  if(t==='d2'){return '<div class="notice"><b>AMTS</b> – skala rozszerzona; w SOR preferuj 4AT (zakładka „Majaczenie / 4AT”).</div>'+(window.SORB2?SORB2.dementiaForm(t):'');}
   if(t==='a'){var G=function(h,x){return '<div style="width:100%"><b>'+h+'</b> '+x+'</div>'};
    var rs=function(id,lab,o){return sel(id,lab,[['','— auto']].concat(o))};
    return '<div style="width:100%"><button class="tg np" onclick="SKS.nextPatient()">🆕 Następny pacjent</button> <button class="tg" onclick="SKN.print()">🖨 Drukuj protokół udarowy</button></div>'+
@@ -46,10 +47,9 @@ var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia'},'Neurologia – udar',
   if(t==='p')return sel('mrs','mRS',N.MRS.map(function(m,k){return [k,m]}))+'<br><b>ABCD² (TIA)</b> '+inp('sbp','SBP','mmHg')+inp('dbp','DBP','mmHg')+sel('clin','Objawy',[['','inne'],['s','zab. mowy bez niedowładu'],['w','niedowład jednostronny']])+inp('dur','Czas trwania','min')+chk('dm','cukrzyca')+
    '<br>'+SKGCS.field(true);
   return '<b>AMTS</b> '+inp('amts','Punkty','0–10')+' <b>Mini-Cog</b> '+sel('mcr','Odtworzone słowa',[['','—'],[0,'0'],[1,'1'],[2,'2'],[3,'3']])+chk('mcc','zegar prawidłowy')+
-   '<br><b>MoCA</b> '+inp('moca','Punkty','0–30')+chk('edu','wykształcenie ≤12 lat')+' <b>MMSE</b> '+inp('mmse','Wynik','0–30')+sel('cdr','CDR globalnie',[['','—']].concat(N.CDR))+
-   '<br><b>4AT</b> '+chk('fa','zaburzona czujność')+sel('fm','AMT4',[[0,'0 bez błędów'],[1,'1 błąd'],[2,'≥2 / nie do oceny']])+sel('ft','Miesiące wstecz',[[0,'≥7 poprawnie'],[1,'<7 / odmowa'],[2,'nie do oceny']])+chk('fc','ostra zmiana / fluktuacje')+'<span class="mut" style="width:100%">'+(SK.dementiaB2?SK.dementiaB2.ACUTE:'')+'</span><span class="mut" style="width:100%">Skale AMTS, MoCA, MMSE i CDR z punktacją pozycji – osobne zakładki obok.</span>';},
+   '<br><b>4AT</b> '+chk('fa','zaburzona czujność')+sel('fm','AMT4',[[0,'0 bez błędów'],[1,'1 błąd'],[2,'≥2 / nie do oceny']])+sel('ft','Miesiące wstecz',[[0,'≥7 poprawnie'],[1,'<7 / odmowa'],[2,'nie do oceny']])+chk('fc','ostra zmiana / fluktuacje')+'<span class="mut" style="width:100%">'+(SK.dementiaB2?SK.dementiaB2.ACUTE:'')+'</span><span class="mut" style="width:100%">AMTS z punktacją pozycji – osobna zakładka obok.</span>';},
  function(t,g,P,X){var w=P.w,H='',lvl='ok';
-  if(t==='d2'||t==='d3'||t==='d4'||t==='d5')return window.SORB2?SORB2.dementiaCalc(t,g,P):{H:'',lvl:'ok'};
+  if(t==='d2')return window.SORB2?SORB2.dementiaCalc(t,g,P):{H:'',lvl:'ok'};
   if(t==='a'){var gm=isFinite(g('glu'))?g('glu')*18.016:NaN,$i=function(id){return document.getElementById(id)};
    // pacjent
    var adm=$i('adm');if(adm&&!adm.value){var d=new Date();adm.value=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);setTimeout(function(){adm.dispatchEvent(new Event('input'))},0);}
@@ -95,13 +95,10 @@ var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia'},'Neurologia – udar',
    var a2=N.abcd2({age:P.age,sbp:g('sbp'),dbp:g('dbp'),clin:g('clin'),dur:g('dur'),dm:g('dm')});H+=bx(a2.lvl,'ABCD²'+sl('Johnston 2007'),'<span class="big">'+a2.score+' / 7</span> – ryzyko '+a2.risk+(isFinite(P.age)?'':'<div class="o">Podaj wiek w pasku</div>')+'<div class="mut">Diagnostyka pilna niezależnie od wyniku (AHA/ESO)</div>');
    var gc=N.gcs(+g('ge')||NaN,+g('gv')||NaN,+g('gm')||NaN);H+=gc?bx(gc.lvl,'GCS'+sl('Teasdale 1974'),'<span class="big">'+gc.score+'</span> – '+gc.txt):bx('','GCS','Wybierz E, V, M.');
    H+=bx('','CHA₂DS₂-VA / VASc',lnk('af','moduł AF'));lvl=gc&&gc.lvl==='red'?'red':'ok';}
-  if(t==='d'){var r1=N.amts(g('amts')),mcr=document.getElementById('mcr').value,r2=mcr===''?null:N.minicog(+mcr,g('mcc')),r3=N.moca(g('moca'),g('edu')),r5=N.mmse(g('mmse')),cd=document.getElementById('cdr').value,r4=N.fourAT({alert:g('fa'),amt4:+g('fm'),att:+g('ft'),acute:g('fc')});
+  if(t==='d'){var r1=N.amts(g('amts')),mcr=document.getElementById('mcr').value,r2=mcr===''?null:N.minicog(+mcr,g('mcc')),r4=N.fourAT({alert:g('fa'),amt4:+g('fm'),att:+g('ft'),acute:g('fc')});
    H+=bx(r4.lvl,'4AT – majaczenie'+sl('Bellelli 2014'),'<span class="big">'+r4.score+' / 12</span> – '+r4.txt);
    if(r1)H+=bx(r1.lvl,'AMTS'+sl('Hodkinson 1972'),'<span class="big">'+r1.score+' / 10</span> – '+(r1.abn?'nieprawidłowy (≤6)':'prawidłowy'));
    if(r2)H+=bx(r2.lvl,'Mini-Cog'+sl('Borson 2000'),'<span class="big">'+r2.score+' / 5</span> – '+(r2.pos?'dodatni (<3) – dalsza ocena':'ujemny'));
-   if(r3)H+=bx(r3.lvl,'MoCA'+sl('Nasreddine 2005'),'<span class="big">'+r3.score+' / 30</span>'+(r3.score!==r3.raw?' (surowy '+r3.raw+' +1)':'')+' – '+(r3.abn?'poniżej normy (<26)':'w normie (≥26)'));
-   if(r5)H+=bx(r5.lvl,'MMSE'+sl('Folstein 1975'),'<span class="big">'+r5.score+' / 30</span> – '+r5.cat+'<div class="mut">© PAR – tylko wpis wyniku z licencjonowanego formularza</div>');
-   if(cd)H+=bx(+cd>=1?'orange':'ok','CDR'+sl('Morris 1993'),'<b>'+N.CDR.filter(function(c){return c[0]===cd})[0][1]+'</b>');
    H+=bx('','','Skrining ≠ rozpoznanie. Przy majaczeniu testy otępienne niewiarygodne.');}
   return{H:H,lvl:lvl};},
  '<h3>Źródła</h3>'+src(N.SRC)+'<p>'+dw()+': stężenie tenekteplazy (Metalyse 25 mg/5 ml vs 50 mg/10 ml) i protokół szpitala; okno 4,5–9 h / wake-up wg kwalifikacji neurologa; progi Mini-Cog (<3) i AMTS (≤6) różnią się w literaturze.</p>');

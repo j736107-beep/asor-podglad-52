@@ -75,6 +75,6 @@ var GI=tabbed({id:'gib',icon:'🩸',name:'Krwawienie z GI'},'Krwawienie z górne
    H+=bx('ok','Przetoczenie KKCz','Hb ≤'+hb.t+' g/dl → cel <b>'+hb.target+'</b>');
    if(g('var')){H+=bx(g('card')?'red':'orange','Terlipresyna (Glypressin)',(te?'<span class="big">'+te.txt+'</span>':'Podaj masę')+(g('card')?'<div class="r">⚠ Choroba wieńcowa – ostrożnie/przeciwwskazanie (ChPL)</div>':''));
     H+=bx('ok','Antybiotyk','Ceftriakson 1 g i.v. co 24 h (Baveno VII)');if(g('card'))lvl='red';}
-   H+=bx('','','Kwas traneksamowy – niezalecany (HALT-IT). Endoskopia ≤24 h; ≤12 h przy żylakach – ale pracownia w Nowym Targu pracuje tylko 8:00–15:00 (zakładka „Endoskopia: kiedy i gdzie”).');}
+   H+=bx('','','Kwas traneksamowy – niezalecany (HALT-IT). Endoskopia ≤24 h; ≤12 h przy żylakach (godziny pracowni: zakładka „Endoskopia: kiedy i gdzie”).');}
   return{H:H,lvl:lvl};},info('gi','<p>Terlipresyna wg ChPL: <50 kg 1 mg, 50–70 kg 1,5 mg, >70 kg 2 mg co 4 h; Baveno VII: 2 mg co 4 h, po kontroli 1 mg co 4 h, 2–5 dni.</p>'));
 var L=SKM.list;[ANA,SEP,TOX,AF,GI].forEach(function(m){for(var i=0;i<L.length;i++)if(L[i].id===m.id)L[i]=m;});})();

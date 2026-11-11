@@ -70,6 +70,32 @@ rec('F2 Neuroinfekcje: lista oddziałów zakaźnych zastąpiona przyciskiem do K
 await page.evaluate(()=>document.querySelector('#main [data-zak-link] [data-book]').click());await sleep(1000);t=await main();
 rec('F2 Neuroinfekcje → Książka: „zakaźne” pokazuje oddziały zakaźne',/zakaźn/i.test(t)&&/📞/.test(t),t.slice(0,200));
 }
-if(PHASE>=3){}
+if(PHASE>=3){
+await page.evaluate(()=>SKS.show('trop'));await sleep(1500);
+const ek=await page.evaluate(()=>{const f=document.querySelector('#main iframe');const d=f&&f.contentDocument;const e=d&&d.getElementById('ecg');return e?{t:e.innerText,svg:e.querySelectorAll('svg').length}:null;});
+rec('F3 Karty EKG: krótkie kryterium z liczbami + rysunki (STEMI ≥2,5 mm M <40 lat, RV ≥0,5 mm V3R–V4R)',!!ek&&/≥2,5 mm M <40 lat/.test(ek.t)&&/≥0,5 mm w V3R–V4R/.test(ek.t)&&ek.svg>=10,JSON.stringify(ek&&{svg:ek.svg,t:ek.t.slice(0,200)}));
+await page.evaluate(()=>{const f=document.querySelector('#main iframe');const e=f&&f.contentDocument.getElementById('ecg');e&&e.scrollIntoView();});await sleep(300);await shot('f3-1-ekg-karty.png');
+await page.evaluate(()=>SKS.show('neuro'));await sleep(800);const nt=await page.evaluate(()=>[...document.querySelectorAll('#main button')].map(b=>b.textContent).join('|'));
+rec('F3 Neurologia: brak zakładek MoCA/MMSE/CDR, zostają 4AT i AMTS',!/MoCA|MMSE|CDR/.test(nt)&&/4AT/.test(nt)&&/AMTS/.test(nt),nt.slice(0,400));
+await page.evaluate(()=>SKS.goTab('neuro','d'));await sleep(600);t=await main();rec('F3 Neurologia → Majaczenie: 4AT i Mini-Cog działają, brak pól MoCA/MMSE',/4AT/.test(t)&&/Mini-Cog/i.test(t)&&!/MoCA|MMSE/.test(t),t.slice(0,300));await shot('f3-2-neurologia-bez-moca.png');
+await page.evaluate(()=>SKS.goTab('af','k'));await sleep(800);t=await main();const kc=(t.match(/wymaga tego samego zabezpieczenia/gi)||[]).length;
+rec('F3 AF → kardiowersja: uwaga o zabezpieczeniu przeciwzakrzepowym raz',kc===1,String(kc));await shot('f3-3-af-kardiowersja.png');
+await page.evaluate(()=>SKS.goTab('af','ec'));await sleep(800);t=await main();rec('F3 AF → sedacja: dawki zostają (bez kolumny „Źródło”) + odnośnik do Leków',/Leki – karty/.test(t)&&/mg\/kg/.test(t)&&/Rachunek wg masy/.test(t),t.slice(0,300));await shot('f3-3b-af-sedacja.png');
+await page.evaluate(()=>SKS.goTab('gib','e'));await sleep(800);t=await main();rec('F3 GI → Endoskopia: okno 24 h w tabeli ESGE + skrót w planie (bez powtórzonego opisu)',/w ciągu 24 h/.test(t)&&/tabela powyżej/.test(t)&&!/stabilne po resuscytacji: endoskopia w ciągu 24 h/.test(t),t.slice(0,300));await shot('f3-4-gi-endoskopia.png');
+await page.evaluate(()=>SKS.goTab('pe','lysis'));await sleep(800);const pl=await page.evaluate(()=>{const b=[...document.querySelectorAll('#main .box, #main section')].find(x=>/Przeciwwskazania: konieczna pełna ocena/.test(x.textContent));return b?b.querySelectorAll('li').length:-1;});
+rec('F3 ZP → Alteplaza: przeciwwskazania jako lista (7 punktów)',pl===7,String(pl));await shot('f3-5-zp-przeciwwskazania-lista.png');
+await page.evaluate(()=>SKS.show('leki'));await sleep(1000);await page.evaluate(()=>{const q=document.querySelector('#main #lk-q');q.value='atorwastatyna';q.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(1200);
+const lk=await page.evaluate(()=>{const m=document.getElementById('main');const d=[...m.querySelectorAll('details.lk-more')];return{t:m.innerText,ch:!!m.querySelector('a.lk-chpl'),more:d.length,open:d.some(x=>x.open)};});
+rec('F3 Leki → atorwastatyna (przewlekły): dawka + nerki + link ChPL na wierzchu, reszta zwinięta',/10 mg \(start\)/.test(lk.t)&&/Bez modyfikacji/.test(lk.t)&&lk.ch&&lk.more>=1&&!lk.open,JSON.stringify({ch:lk.ch,more:lk.more,open:lk.open}));await shot('f3-6-leki-przewlekly.png');
+await page.evaluate(()=>{const q=document.querySelector('#main #lk-q');q.value='ceftriakson';q.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(1200);t=await main();
+rec('F3 Leki → ceftriakson (nie przewlekły): pełna karta bez zmian (przeciwwskazania na wierzchu)',/Przeciwwskazania \(wybrane\)/.test(t)&&!(await page.evaluate(()=>!!document.querySelector('#main details.lk-more'))),t.slice(0,200));
+await page.evaluate(()=>SKS.show('about'));await sleep(800);const ab=await page.evaluate(()=>{const h=[...document.querySelectorAll('#main h3')].find(x=>/Zmiany w wersji/.test(x.textContent));const b=h&&h.parentElement;return b?[...b.querySelectorAll('li')].map(l=>l.textContent.slice(0,140)):null;});
+rec('F3 O programie: 2 ostatnie wpisy zmian (cz. 6, cz. 5) + odsyłacz do README',!!ab&&ab.length===3&&/cz\. 6/.test(ab[0])&&/cz\. 5/.test(ab[1])&&/README/.test(ab[2]),JSON.stringify(ab));await shot('f3-7-o-programie.png');
+const pump=async id=>{await page.evaluate(id=>SKS.openPompa(id),id);await sleep(2000);return page.evaluate(()=>{const f=document.querySelector('#main iframe');return f?f.contentDocument.body.innerText:'';});};
+t=await pump('oktreotyd');rec('F3 Pompy → oktreotyd aktywny (zatwierdzony): 10 µg/ml, 25 µg/h = 2,5 ml/h, 50 µg/h = 5 ml/h MAKS., bolus „DO DECYZJI LEKARZA” + blok AV, bez bramki',/zatwierdzony przez lekarza/.test(t)&&/stężenie: 10 µg\/ml/.test(t)&&/2,5 ml\/h/.test(t)&&/50 µg\/h = 5 ml\/h – MAKSYMALNIE/.test(t)&&/DO DECYZJI LEKARZA \(Baveno VII/.test(t)&&/blok AV/.test(t)&&!/przed przeniesieniem nastawy zatwierdź/.test(t),t.slice(0,500));await shot('f3-8-pompy-oktreotyd.png');
+t=await pump('dopamina');rec('F3 Pompy → dopamina amp. 4% (200 mg/5 ml): 3,75 ml leku = 150 mg / 50 ml = 3 mg/ml',/WZF 4% \(200 mg\/5 ml\)/.test(t)&&/3,75 ml leku/.test(t)&&/stężenie: 3 mg\/ml/.test(t),t.slice(0,500));await shot('f3-9-pompy-dopamina-4proc.png');
+t=await pump('levosimendan');rec('F3 Pompy → levosimendan zatwierdzony (bez bramki), 70 kg × 0,1 µg/kg/min = 8,4 ml/h',/zatwierdzony przez lekarza/.test(t)&&!/przed przeniesieniem nastawy zatwierdź/.test(t)&&/8,4 ml\/h/.test(t),t.slice(0,400));
+await page.evaluate(()=>SKS.show('documentation'));await sleep(800);rec('F3 Dokumentacja SOR zostaje (zależności: Pulpit, PW, SORClearCase, wydruk „doc”)',!!(await page.evaluate(()=>document.querySelector('#main #wb-document')))&&(await page.evaluate(()=>typeof SORClearCase==='function')),'');
+}
 rec('Brak błędów JS',!errs.length,errs.join(' | '));
 await br.close();console.log((n-fail)+'/'+n+(fail?' FAIL':' PASS'));process.exit(fail?1:0);})();

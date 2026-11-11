@@ -12,7 +12,7 @@ function tbl(head,rows){return '<div class="b1tw"><table class="b1t"><thead><tr>
 function srcl(a){a=[].concat(a);return '<details class="ccsrc"><summary>Źródła tej sekcji</summary><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>';}
 function nt(t){return '<div class="b2nt">'+rich(t)+'</div>';}
 function tri(v){return v==='yes'?true:v==='no'?false:undefined;}
-function go(id,t){return '<button type="button" class="tg" onclick="SKS.show(\''+id+'\')">→ '+t+'</button>';}
+function go(id,t){return '<button type="button" class="tg" data-nav="1" onclick="SKS.show(\''+id+'\')">→ '+t+'</button>';}
 function opt(v,t){return '<option value="'+v+'">'+t+'</option>';}
 function sel(id,label,opts){return '<label>'+label+' <select id="'+id+'">'+opts.map(function(o){return opt(o[0],o[1]);}).join('')+'</select></label>';}
 function sysU(){return window.SKS&&SKS.S&&SKS.S.units==='si'?'si':'conv';}
@@ -114,10 +114,10 @@ var AFX={
  ec:function(g,P){var rh=g('o_rh');var pl=E.ecPlan({rhythm:rh});var H=cvBox();H+='<p><button type="button" class="tg" id="goPropofol" onclick="SKS.openPropofol()">→ Propofol – bolus do sedacji (Pompy SOR)</button></p>';
   if(!pl.ok)H+=bx('orange','Energia – brak wyniku','Wybierz rytm: migotanie / trzepotanie.');
   else{H+=bx('red','Kardiowersja elektryczna – energia: <span class="b2res">'+pl.seq.join(' → ')+' J</span>',rich(pl.energy)+ul(pl.steps)+srcl(pl.src));}
-  var sp=E.sedationPlan(P.w);H+=bx('orange','Sedacja do kardiowersji – leki i dawki (ESC 2024: midazolam, propofol lub etomidat)',(sp.ok?'<div class="mut">Masa: '+F(P.w,0)+' kg</div>':'<div class="o">Podaj masę ciała w pasku – dawki mg/kg nie zostały wyliczone.</div>')+tbl(['Lek','Dawka','Rachunek wg masy','Źródło'],sp.drugs.map(function(d){return [ '<b>'+esc(d.drug)+'</b>',esc(d.dose),esc(d.calc||'—'),esc(d.src)];}))+ul(sp.notes)+srcl(sp.src));
+  var sp=E.sedationPlan(P.w);H+=bx('orange','Sedacja do kardiowersji – leki i dawki (ESC 2024: midazolam, propofol lub etomidat)',(sp.ok?'<div class="mut">Masa: '+F(P.w,0)+' kg</div>':'<div class="o">Podaj masę ciała w pasku – dawki mg/kg nie zostały wyliczone.</div>')+tbl(['Lek','Dawka','Rachunek wg masy'],sp.drugs.map(function(d){return [ '<b>'+esc(d.drug)+'</b>',esc(d.dose),esc(d.calc||'—')];}))+ul(sp.notes)+'<p>'+go('leki','Leki – karty (midazolam i in.)')+'</p>'+srcl(sp.src));
   return{H:H,lvl:'ok'};},
  k:function(g,P){var w=P.w,H=cvBox();
-  H+=nt('Kardiowersja FARMAKOLOGICZNA wymaga tego samego zabezpieczenia przeciwzakrzepowego co elektryczna (≥3 tyg. OAC lub TOE, gdy AF >24 h / czas nieznany) – ESC 2024. '+DEC+' przy rozbieżnościach.');
+  H+=nt('Kardiowersja FARMAKOLOGICZNA wymaga tego samego zabezpieczenia przeciwzakrzepowego co elektryczna (≥3 tyg. OAC lub TOE, gdy AF >24 h / czas nieznany – ESC 2024; PAMW 2023: >24–48 h) → inaczej ryzyko udaru / zatoru po konwersji. '+DEC+' przy rozbieżnościach.');
   var sc=E.pharmaScreen({hfref:g('k_hf'),cad:g('k_cad'),lvh:g('k_lvh'),valve:g('k_valve'),avb:g('k_avb'),qrs:g('k_qrs'),qt:g('k_qt'),sss:g('k_sss')});
   H+=!sc.ok?bx('orange','Choroby strukturalne / EKG – brak oceny','Zaznacz występujące (lub brak) – bez tego nie ma oceny przeciwwskazań.'):bx(sc.shd.length||sc.ecg.length?'red':'ok','Ocena wstępna',esc(sc.txt));
   var avoid=sc.ok&&(sc.shd.length>0||sc.ecg.length>0);
@@ -193,7 +193,7 @@ function giE(g){var pl=E.giEndoPlan({variceal:g('k_var'),unstable:g('k_uns'),whe
   ['Niestabilne krwawienie mimo resuscytacji','brak ustalonego w źródłach okna; endoskopia ≤6 h nie jest zalecana (gorsze wyniki, zwłaszcza u chorych niestabilnych lub z dużym ryzykiem anestezjologicznym) – eskalacja (endoskopia / radiologia zabiegowa / chirurgia): <span class="dw">DO DECYZJI LEKARZA</span>','ESGE 2021'],
   ['Krwawienie niezależne od żylaków, stabilne po resuscytacji','w ciągu 24 h (silna rekomendacja, wysoka jakość); pilna ≤12 h NIE zalecana (wyniki nie lepsze)','ESGE 2021'],
   ['INR / leki przeciwzakrzepowe','nie powinny wyznaczać terminu endoskopii','ESGE 2021']])+
-  '<div class="o">Wg ESGE „bezwzględna, natychmiastowa” gastroskopia nie jest wskazana w krwawieniu niezależnym od żylaków. Jedyne ustalone w źródłach okno czasowe dotyczy żylaków (≤12 h po stabilizacji). '+rich(DEC)+' w pozostałych sytuacjach.</div>'+srcl([E.SRC.esge21,E.SRC.esgev22]));
+  '<div class="o">Natychmiastowa gastroskopia bez żylaków nie jest wskazana (ESGE); jedyne okno w źródłach: żylaki ≤12 h po stabilizacji. '+rich(DEC)+' w pozostałych sytuacjach.</div>'+srcl([E.SRC.esge21,E.SRC.esgev22]));
  H+=bx('','Ocena dla tego pacjenta (zaznacz) – zakładka „Endoskopia”','Zaznacz w formularzu: podejrzenie żylaków lub niestabilność – pojawi się ocena względem godzin pracowni.');
  if(pl.ok&&(g('k_var')||g('k_uns')||true)){H+=bx(pl.items.some(function(x){return x.lvl==='red';})?'red':pl.items.some(function(x){return x.lvl==='orange';})?'orange':'ok','Czas a godziny pracowni',pl.items.map(function(x){return '<div class="'+(x.lvl==='red'?'r':x.lvl==='orange'?'o':'')+'">'+rich(pn(x.t))+'</div>';}).join('')+'<div class="mut">Stan: '+({Mon:'pn',Tue:'wt',Wed:'śr',Thu:'czw',Fri:'pt',Sat:'sob',Sun:'niedz'}[pl.status.wd]||'')+' '+esc(pl.status.time)+' (Europe/Warsaw).</div>');}
  return{H:H,lvl:pl.items.some(function(x){return x.lvl==='red';})?'red':'ok'};}

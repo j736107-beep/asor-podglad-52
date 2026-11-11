@@ -1,7 +1,7 @@
 (function(r,f){var m=f();if(typeof module==='object'&&module.exports)module.exports=m;else{r.SK=r.SK||{};r.SK.neuro=m;}})(this,function(){
 function nz(x){return typeof x==='number'&&isFinite(x);}
 var SRC=['AHA/ASA 2019 – Guidelines for Early Management of Acute Ischemic Stroke (Powers, Stroke 2019)','AHA/ASA 2026 – Guideline for the Early Management of Patients With Acute Ischemic Stroke','ESO 2021 – trombolityczne leczenie udaru (Berge, Eur Stroke J 2021)','ESO 2023 – tenekteplaza w udarze (Alamowitch, Eur Stroke J 2023)','AHA/ASA 2022 – krwotok śródmózgowy (Greenberg, Stroke 2022)','ESO 2025 – krwotok śródmózgowy / ESO 2014–2021','ChPL Actilyse (alteplaza) · ChPL Metalyse (tenekteplaza)','AHA/ASA 2023 – SAH (Hoh)','Ottawa SAH Rule – Perry, JAMA 2013','ESO 2017 / EAN – CVT (Ferro)','ESO 2019 – trombektomia (Turc); ESO 2023 – LVO','PTN 2019 – wytyczne postępowania w udarze mózgu','HINTS – Kattah 2009','RACE – Pérez de la Ossa 2014 · FAST-ED – Lima 2016',
- 'NIHSS – Brott 1989 / NINDS','ICH score – Hemphill, Stroke 2001','ABCD² – Johnston, Lancet 2007','mRS – van Swieten 1988','GCS – Teasdale & Jennett 1974','AMTS – Hodkinson 1972','Mini-Cog – Borson 2000','MoCA – Nasreddine 2005','CDR – Morris 1993','4AT – Bellelli 2014 / Tieges 2021','MMSE – Folstein 1975 (© PAR – tylko wpis wyniku)'];
+ 'NIHSS – Brott 1989 / NINDS','ICH score – Hemphill, Stroke 2001','ABCD² – Johnston, Lancet 2007','mRS – van Swieten 1988','GCS – Teasdale & Jennett 1974','AMTS – Hodkinson 1972','Mini-Cog – Borson 2000','4AT – Bellelli 2014 / Tieges 2021'];
 // ---------- NIHSS: [id, nazwa, [punkty-opis...]] ----------
 var NIH=[['1a','1a Przytomność',['czujny','senny (budzi się na lekki bodziec)','stupor (silny/powtarzany bodziec)','śpiączka / tylko odruchy']],
  ['1b','1b Pytania (miesiąc, wiek)',['obie poprawne','jedna poprawna','żadna']],
@@ -57,11 +57,8 @@ function gcs(e,v,m){if(!(nz(e)&&nz(v)&&nz(m)))return null;var s=e+v+m;return{sco
 // ---------- funkcje poznawcze ----------
 function amts(n){if(!nz(n))return null;n=Math.max(0,Math.min(10,Math.round(n)));return{score:n,abn:n<=6,lvl:n<=6?'orange':'ok'};}
 function minicog(rec,clock){if(!nz(rec))return null;rec=Math.max(0,Math.min(3,rec));var c=clock?2:0,s=rec+c;return{score:s,pos:s<3,lvl:s<3?'orange':'ok'};}
-function moca(raw,eduLe12){if(!nz(raw))return null;raw=Math.max(0,Math.min(30,Math.round(raw)));var s=Math.min(30,raw+(eduLe12?1:0));return{raw:raw,score:s,abn:s<26,lvl:s<26?'orange':'ok'};}
-var CDR=[['0','0 – brak otępienia'],['0.5','0,5 – wątpliwe / bardzo łagodne'],['1','1 – łagodne'],['2','2 – umiarkowane'],['3','3 – ciężkie']];
 function fourAT(i){var s=(i.alert?4:0)+Math.max(0,Math.min(2,i.amt4|0))+Math.max(0,Math.min(2,i.att|0))+(i.acute?4:0);
  return{score:s,lvl:s>=1?'orange':'ok',txt:s>=4?'możliwe majaczenie ± zaburzenia poznawcze':s>=1?'możliwe zaburzenia poznawcze':'majaczenie / ciężkie zab. poznawcze mało prawdopodobne'};}
-function mmse(n){if(!nz(n))return null;n=Math.max(0,Math.min(30,Math.round(n)));return{score:n,cat:n>=24?'w normie (24–30)':n>=18?'łagodne zaburzenia (18–23)':'umiarkowane/ciężkie (0–17)',lvl:n>=24?'ok':'orange'};}
 
 // ---------- ALGORYTM: podejrzenie udaru na SOR ----------
 var S_A='AHA/ASA 2019',S_A26='AHA/ASA 2026 DO WERYFIKACJI',S_E='ESO 2021/2023',S_PTN='PTN 2019';
@@ -113,4 +110,4 @@ function raceFromNihss(v){var g=function(k){var x=v[k];return x==='UN'||x===''||
 // podpowiedź z zaznaczonych objawów (ostrożna)
 function raceFromSym(s){return{face:s.foc?1:'',arm:s.foc?1:'',leg:'',gaze:s.gaze?1:'',cort:(s.aph||s.neg)?2:''};}
 
-return{race:race,RACE_MAX:RACE_MAX,raceFromNihss:raceFromNihss,raceFromSym:raceFromSym,ottawa:ottawa,stroke:stroke,SRC:SRC,NIH:NIH,nihss:nihss,alteplase:alteplase,tenecteplase:tenecteplase,window:window_,CI_ABS:CI_ABS,CI_REL:CI_REL,ci:ci,coag:coag,bp:bp,glu:glu,ichScore:ichScore,ICH_MORT:ICH_MORT,abc2:abc2,ichBP:ichBP,MRS:MRS,abcd2:abcd2,gcs:gcs,amts:amts,minicog:minicog,moca:moca,CDR:CDR,fourAT:fourAT,mmse:mmse};});
+return{race:race,RACE_MAX:RACE_MAX,raceFromNihss:raceFromNihss,raceFromSym:raceFromSym,ottawa:ottawa,stroke:stroke,SRC:SRC,NIH:NIH,nihss:nihss,alteplase:alteplase,tenecteplase:tenecteplase,window:window_,CI_ABS:CI_ABS,CI_REL:CI_REL,ci:ci,coag:coag,bp:bp,glu:glu,ichScore:ichScore,ICH_MORT:ICH_MORT,abc2:abc2,ichBP:ichBP,MRS:MRS,abcd2:abcd2,gcs:gcs,amts:amts,minicog:minicog,fourAT:fourAT};});

@@ -85,7 +85,7 @@ await p2.close();
 // ---- Druk A4: moduł cap
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 await page.emulateMediaType('print');const pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');
-const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap.pdf',pdf);
+const pages=(Buffer.from(pdf).toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap.pdf',pdf);
 const ph=await page.evaluate(()=>document.getElementById('printArea').textContent);
 rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez sekcji blokady wypisu',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/wiek:\s*\d+ lat/.test(ph)&&/płeć:/.test(ph)&&!/WSTRZYMAJ|wstrzymaj wypis/i.test(ph),'stron: '+pages);
 const navp=await page.$('#skPrint');rec('Przycisk „Drukuj do dokumentacji (A4)” w module',!!navp,'');

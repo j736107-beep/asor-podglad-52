@@ -9,12 +9,12 @@ const JS=(()=>{const w={};new Function('window',rd('mod/pompy/drugs.js'))(w);ret
 let n=0;const FAIL=[];const test=(name,fn)=>{fn();n++;console.log('OK',name);};
 const near=(a,b,e=1e-9)=>assert.ok(a!=null&&Math.abs(a-b)<=e,a+' != '+b);
 const ml=(id,syr,u,dose,w)=>{const d=D(id);return E.toMlh(d,E.recipe(d,syr).conc,u,dose,w);};
-const LIST=['adrenalina','noradrenalina_c80','dobutamina','levosimendan','dopamina','noradrenalina_c','noradrenalina_p','nitrogliceryna','heparyna','amiodaron','midazolam','morfina','pantoprazol','urapidyl','salbutamol','propofol','insulina','furosemid'];
+const LIST=['adrenalina','noradrenalina_c80','dobutamina','levosimendan','dopamina','noradrenalina_c','noradrenalina_p','nitrogliceryna','heparyna','amiodaron','midazolam','morfina','pantoprazol','urapidyl','salbutamol','propofol','insulina','furosemid','oktreotyd'];
 const CHPL=['dobutamina','heparyna','noradrenalina_c','propofol','urapidyl'];
 // ---------- dane ----------
 test('drugs.js == drugs.json',()=>assert.deepStrictEqual(JS,DB));
-test('18 receptur: 16 leków z listy (noradrenalina w 3 wariantach: C 40, C 80, P 20 µg/ml; levosimendan od 11.11.2026)',()=>assert.deepStrictEqual(DB.drugs.map(d=>d.id).sort(),LIST.slice().sort()));
-test('Zgodne z ChPL: dobutamina, heparyna, noradrenalina C 40 µg/ml, propofol, urapidyl; pozostałe 12 – standard lokalny',()=>{assert.deepStrictEqual(DB.drugs.filter(d=>d.status==='chpl').map(d=>d.id).sort(),CHPL.slice().sort());for(const d of DB.drugs)assert.ok(['chpl','lokalny','zatwierdzony'].includes(d.status));});
+test('19 receptur: 17 leków z listy (noradrenalina w 3 wariantach: C 40, C 80, P 20 µg/ml; levosimendan i oktreotyd od 11.11.2026)',()=>assert.deepStrictEqual(DB.drugs.map(d=>d.id).sort(),LIST.slice().sort()));
+test('Zgodne z ChPL: dobutamina, heparyna, noradrenalina C 40 µg/ml, propofol, urapidyl; pozostałe 14 – standard lokalny',()=>{assert.deepStrictEqual(DB.drugs.filter(d=>d.status==='chpl').map(d=>d.id).sort(),CHPL.slice().sort());for(const d of DB.drugs)assert.ok(['chpl','lokalny','zatwierdzony'].includes(d.status));});
 test('Każda receptura: link https do ChPL (RPL lub EMA), preparat, ampułka, dostęp, monitorowanie, uzasadnienie, źródła istnieją',()=>{for(const d of DB.drugs){assert.match(d.url,/^https:\/\/(rejestry\.ezdrowie\.gov\.pl\/api\/rpl\/medicinal-products\/\d+\/characteristic|www\.ema\.europa\.eu\/)/,d.id);assert.ok(d.product&&d.amp.label&&d.access&&d.monitor&&d.why.length>30,d.id);for(const s of d.src)assert.ok(DB.sources[s],d.id+' '+s);}});
 test('Każda jednostka dawki ma opis zakresu (tekst ze źródła)',()=>{for(const d of DB.drugs)for(const u of d.units){assert.ok(u.text&&u.text.length>10,d.id+u.u);E.perHourFactor(u.u,d.amp.unit);}});
 test('Strzykawki: 20 i 50 ml dla wszystkich poza pantoprazolem (tylko 20 ml – stabilność 12 h)',()=>{for(const d of DB.drugs)assert.deepStrictEqual(Object.keys(d.rec).sort(),d.id==='pantoprazol'?['20']:['20','50'],d.id);});
@@ -26,7 +26,7 @@ const REC={adrenalina:[0.1,{20:[2,2,18],50:[5,5,45]}],noradrenalina_c80:[0.08,{2
  nitrogliceryna:[1,{20:[20,2,0],50:[50,5,0]}],heparyna:[500,{20:[10000,0.4,18],50:[25000,1,45]}],amiodaron:[6,{20:[120,0.8,17.6],50:[300,2,44]}],midazolam:[1,{20:[20,4,16],50:[50,10,40]}],
  morfina:[1,{20:[20,2,18],50:[50,5,45]}],pantoprazol:[4,{20:[80,2,0]}],urapidyl:[2,{20:[40,1.6,12],50:[100,4,30]}],salbutamol:[0.1,{20:[2,4,16],50:[5,10,40]}],propofol:[10,{20:[200,1,0],50:[500,2.5,0]}],insulina:[1,{20:[20,0.02,19.8],50:[50,0.05,49.5]}],furosemid:[10,{20:[200,10,0],50:[500,25,0]}]};
 for(const [id,[c,m]] of Object.entries(REC))for(const [s,[amt,amps,dil]] of Object.entries(m))test(`Receptura ${id} ${s} ml: ${amt} ${D(id).amp.unit}, ${amps} amp./fiol., +${dil} ml → ${c}/ml`,()=>{const r=E.recipe(D(id),+s);near(r.amount,amt);near(r.amps,amps,1e-6);near(r.diluent,dil,1e-6);near(r.conc,c);near(r.drugVol+r.diluent,+s,1e-6);});
-test('Dopamina: 20 ml = 1 amp. 1% (50 mg, 2,5 mg/ml), 50 ml = 3 amp. (150 mg, 3 mg/ml) – oba w zakresie ChPL 0,4–3,2 mg/ml',()=>{const a=E.recipe(D('dopamina'),20),b=E.recipe(D('dopamina'),50);near(a.conc,2.5);near(a.amps,1);near(b.conc,3);near(b.amps,3);assert.ok(b.conc<=3.2&&a.conc>=0.4);});
+test('Dopamina 4% (200 mg/5 ml): 20 ml = 1,25 ml (50 mg, 2,5 mg/ml), 50 ml = 3,75 ml (150 mg, 3 mg/ml) – oba w zakresie ChPL 0,4–3,2 mg/ml',()=>{const a=E.recipe(D('dopamina'),20),b=E.recipe(D('dopamina'),50);near(a.conc,2.5);near(a.amps,0.25);near(b.conc,3);near(b.amps,0.75);assert.ok(b.conc<=3.2&&a.conc>=0.4);});
 test('Ta sama receptura przy zmianie strzykawki zachowuje stężenie (wszystkie poza dopaminą)',()=>{for(const d of DB.drugs){if(d.id==='dopamina'||!d.rec[50])continue;near(E.recipe(d,20).conc,E.recipe(d,50).conc,1e-12);}});
 test('Brak receptury 50 ml pantoprazolu → błąd',()=>assert.ok(E.recipe(D('pantoprazol'),50).error));
 // ---------- dawka -> ml/h (ręcznie) ----------

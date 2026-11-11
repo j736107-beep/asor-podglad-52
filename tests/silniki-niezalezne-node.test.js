@@ -20,6 +20,8 @@ const HAND=[
  ['adrenalina',50,'ug/kg/min',0.1,4.2],      // 5 mg/50 ml = 100 µg/ml; 0,1×70 = 7 µg/min = 420 µg/h → 4,2 ml/h
  ['dobutamina',50,'ug/kg/min',5,4.2],        // 250 mg/50 ml = 5 mg/ml; 5×70 = 350 µg/min = 21 mg/h → 4,2
  ['dopamina',50,'ug/kg/min',5,7],
+ ['oktreotyd',50,'ug/h',25,2.5],            // 500 µg/50 ml = 10 µg/ml; 25 µg/h → 2,5 ml/h (decyzja lekarza 11.11.2026)
+ ['oktreotyd',20,'ug/h',50,5],              // 200 µg/20 ml = 10 µg/ml; 50 µg/h (MAKS.) → 5 ml/h
  ['levosimendan',50,'ug/kg/min',0.1,8.4],  // 2,5 mg/50 ml = 0,05 mg/ml = 50 µg/ml; 7 µg/min = 420 µg/h → 8,4 (ChPL tab. 0,05 mg/ml: 70 kg → 8)
  ['levosimendan',20,'ug/kg/min',0.2,16.8], // 1 mg/20 ml = 50 µg/ml; 14 µg/min = 840 µg/h → 16,8 (ChPL: 17)            // 150 mg/50 ml = 3 mg/ml; 21 mg/h → 7
  ['noradrenalina_c80',50,'ug/kg/min',0.1,5.25],// 4 mg/50 = 80 µg/ml; 7 µg/min = 420 µg/h → 5,25
@@ -39,7 +41,7 @@ const HAND=[
  ['furosemid',50,'mg/h',10,1],               // 500 mg/50 ml = 10 mg/ml → 1
  ['amiodaron',20,'mg/kg/d',15,7.2917]        // 120/20 = 6 mg/ml; 15×70 = 1050 mg/d = 43,75 mg/h → 7,2917
 ];
-t('Pompy: 18 aktywnych receptur (+ levosimendan z ONS, 11.11.2026; 3 wyłączone: fentanyl, noradrenalina stara, oktreotyd)',()=>{assert.equal(DB.drugs.length,18);assert.deepEqual(DB.excluded.map(x=>x.id).sort(),['fentanyl','noradrenalina','oktreotyd']);});
+t('Pompy: 19 aktywnych receptur (+ levosimendan z ONS i oktreotyd, 11.11.2026; 2 wyłączone: fentanyl, noradrenalina stara)',()=>{assert.equal(DB.drugs.length,19);assert.deepEqual(DB.excluded.map(x=>x.id).sort(),['fentanyl','noradrenalina']);});
 t('Pompy: każdy aktywny preset ma przykład ręczny',()=>{const ids=new Set(HAND.map(h=>h[0]));for(const d of DB.drugs)assert.ok(ids.has(d.id),d.id);});
 for(const [id,syr,u,dose,exp] of HAND)t(`Pompy ${id} ${syr} ml: ${dose} ${u} @70 kg = ${exp} ml/h (ręcznie = wzór = silnik; dawka wstecz)`,()=>{
  const d=D(id),c=E.recipe(d,syr).conc;near(c,concIndep(d,syr),1e-12,'stężenie');
@@ -124,10 +126,19 @@ t('MTP: projekcja 12,5 → 3 dawki (ceil 12,5/6); dane ujemne → null',()=>{ass
 
 // ======================= ONS → Pompy SOR (faza 2: calc/pressB1.js usunięty) =======================
 t('ONS: drugi silnik pomp (calc/pressB1.js) usunięty; brak w index.html i sw.js',()=>{assert.ok(!fs.existsSync(path.join(R,'calc/pressB1.js')));for(const f of ['index.html','sw.js','b1-ui.js','clinical-ui.js'])assert.ok(!/pressB1\.js"|SK\.pressB1/.test(fs.readFileSync(path.join(R,f),'utf8')),f);});
-// każdy lek dawnego kalkulatora ONS ma preset w Pompach z tą samą ampułką (dopamina: 1% zamiast 4% – to samo stężenie końcowe 3 mg/ml)
-for(const [onsLek,id,mg,ml] of [['nor','noradrenalina_c80',4,4],['nor','noradrenalina_c',4,4],['nor','noradrenalina_p',4,4],['adr','adrenalina',1,1],['dob','dobutamina',250,20],['lev','levosimendan',12.5,5],['ntg','nitrogliceryna',10,10],['fur','furosemid',20,2],['dop','dopamina',50,5]])
+// każdy lek dawnego kalkulatora ONS ma preset w Pompach z tą samą ampułką (dopamina 4% – decyzja lekarza 11.11.2026)
+for(const [onsLek,id,mg,ml] of [['nor','noradrenalina_c80',4,4],['nor','noradrenalina_c',4,4],['nor','noradrenalina_p',4,4],['adr','adrenalina',1,1],['dob','dobutamina',250,20],['lev','levosimendan',12.5,5],['ntg','nitrogliceryna',10,10],['fur','furosemid',20,2],['dop','dopamina',200,5]])
  t(`ONS ${onsLek} → Pompy „${id}”: ampułka ${mg} mg / ${ml} ml`,()=>{const d=D(id);assert.ok(d,id);near(d.amp.content,mg);near(d.amp.volume,ml);});
-t('ONS dopamina 4% (200 mg/5 ml): 3,75 ml = 150 mg do 50 ml = 3 mg/ml = stężenie presetu Pompy (3 amp. 1%)',()=>{near(3.75*200/5,150);near(150/50,3);near(E.recipe(D('dopamina'),50).conc,3);});
+t('Dopamina 4% (200 mg/5 ml, decyzja lekarza 11.11.2026): 50 ml = 3,75 ml (150 mg) + 46,25 ml = 3 mg/ml; 20 ml = 1,25 ml (50 mg) + 18,75 ml = 2,5 mg/ml',()=>{const d=D('dopamina'),a=E.recipe(d,50),b=E.recipe(d,20);near(3.75*200/5,150);near(a.drugVol,3.75);near(a.diluent,46.25);near(a.conc,150/50);near(b.drugVol,1.25);near(b.diluent,18.75);near(b.conc,50/20);assert.ok(a.conc<=3.2&&b.conc>=0.4);assert.match(d.product,/4%/);});
+// niezależny rachunek ml/h = dawka [µg/kg/min] × masa × 60 / 1000 / stężenie [mg/ml]
+for(const [w,dose,syr,exp] of [[70,5,50,7],[70,10,50,14],[70,5,20,8.4],[80,20,50,32],[60,2,20,2.88]])
+ t(`Dopamina 4%: ${w} kg × ${dose} µg/kg/min, strzykawka ${syr} ml → ${String(exp).replace('.',',')} ml/h`,()=>{const d=D('dopamina'),c=syr===50?3:2.5,ind=dose*w*60/1000/c;near(ind,exp);near(E.toMlh(d,E.recipe(d,syr).conc,'ug/kg/min',dose,w),exp);});
+// oktreotyd (decyzja lekarza 11.11.2026): 10 µg/ml; 25 µg/h = 2,5 ml/h; 50 µg/h = 5 ml/h = MAKS.
+t('Oktreotyd: 50 ml = 5 amp. 100 µg (5 ml) + 45 ml NaCl = 10 µg/ml; 20 ml = 2 amp. + 18 ml = 10 µg/ml; zatwierdzony',()=>{const d=D('oktreotyd'),a=E.recipe(d,50),b=E.recipe(d,20);near(a.amps,5);near(a.diluent,45);near(a.conc,500/50);near(b.amps,2);near(b.diluent,18);near(b.conc,200/20);assert.equal(d.status,'zatwierdzony');assert.deepEqual(d.diluents,['NaCl 0,9%']);});
+for(const [dose,exp] of [[25,2.5],[50,5]])t(`Oktreotyd: ${dose} µg/h = ${String(exp).replace('.',',')} ml/h (obie strzykawki)`,()=>{const d=D('oktreotyd');near(dose/10,exp);near(E.toMlh(d,E.recipe(d,50).conc,'ug/h',dose,null),exp);near(E.toMlh(d,E.recipe(d,20).conc,'ug/h',dose,null),exp);});
+t('Oktreotyd: 50 µg/h bez flagi, 60 µg/h → flaga MAKS. (ChPL 4.4); 25 µg/h w zakresie',()=>{const d=D('oktreotyd');assert.ok(!E.assess(d,'ug/h',50,50).overMax);assert.ok(E.assess(d,'ug/h',60,60).overMax);assert.ok(!E.assess(d,'ug/h',25,25).out);});
+t('Oktreotyd: progi 2,5 / 5 ml/h z MAKS., bolus 50 µg „DO DECYZJI LEKARZA” z ostrzeżeniem o bloku AV, receptury dla 50/100/500 µg/ml',()=>{const d=D('oktreotyd');assert.match(d.thresholds.map(x=>x.text).join('|'),/2,5 ml\/h[\s\S]*5 ml\/h – MAKSYMALNIE/);assert.match(d.bolus,/^DO DECYZJI LEKARZA/);assert.match(d.bolus,/blok AV/);assert.match(d.why,/10 amp\. \(10 ml\) \+ 40 ml/);assert.match(d.why,/1 ml \+ 49 ml/);assert.match(d.why,/0,4 ml \+ 19,6 ml/);for(const k of d.src)assert.ok(DB.sources[k],k);});
+t('Levosimendan: zatwierdzony przez lekarza (bez bramki zatwierdzenia)',()=>{assert.equal(D('levosimendan').status,'zatwierdzony');});
 // levosimendan – ChPL Simdax, tabela dla 0,05 mg/ml (zaokrąglona do 1 ml/h): 70 kg → 4 / 8 / 17 ml/h dla 0,05 / 0,1 / 0,2 µg/kg/min
 for(const [w,dose,chpl] of [[40,0.1,5],[70,0.05,4],[70,0.1,8],[70,0.2,17],[100,0.1,12],[120,0.2,29]])
  t(`Levosimendan 0,05 mg/ml: ${w} kg × ${dose} µg/kg/min ≈ ${chpl} ml/h (ChPL); silnik = wzór`,()=>{const d=D('levosimendan'),u=d.units[0];const ind=dose*w*60/50;const r=E.toMlh(d,E.recipe(d,50).conc,u.u,dose,w);assert.equal(Math.round(ind),chpl);near(r,ind);near(E.toMlh(d,E.recipe(d,20).conc,u.u,dose,w),ind);});
