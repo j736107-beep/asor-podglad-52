@@ -92,8 +92,8 @@ await go('settings');await page.click('#aiKeyDel');await sleep(200);
 const dk=await page.evaluate(()=>JSON.parse(localStorage.getItem('v52:ai_cfg')).keys.anthropic===undefined);await go('cap');
 b=await page.evaluate(()=>document.getElementById('aiBtn').disabled);rec('Usuń klucz → klucz skasowany, przycisk wyszarzony',dk&&b,'');
 // SW i CSP
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix5/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
-rec('SW asor-v52-fix5: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix6/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
+rec('SW asor-v52-fix6: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
 rec('Brak prawdziwych wywołań poza atrapą',real.length===0,real.slice(0,3).join(' '));
 rec('Brak błędów JS',errs.filter(e=>!/401|429|Failed to load resource/.test(e)).length===0,errs.join(' | ').slice(0,300));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})().catch(e=>{console.log('CRASH',e);process.exit(1);});

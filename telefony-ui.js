@@ -1,6 +1,6 @@
 // 5.1 pw31 – Telefony szpitalne + Książka: rejestracja; kolejność menu ustawia shell.js (wysoko pod Hamulcem).
 (function(root,factory){var A=factory(root);if(typeof module==='object'&&module.exports){module.exports=A;return;}root.SORTel=A;
- if(root.SKM&&root.SKM.list&&typeof document!=='undefined'){root.SKM.list.push(A.modSzp,A.mod);}
+ if(root.SKM&&root.SKM.list&&typeof document!=='undefined'){root.SKM.list.push(A.mod);} // 11.11.2026: „Telefony szpitalne” = zakładka „Nasz szpital” w Książce (stare id telszp przekierowuje shell.js)
 })(typeof window!=='undefined'?window:this,function(root){'use strict';
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function norm(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');}
@@ -17,7 +17,7 @@ function load(){if(D)return Promise.resolve(D);var emb=function(){if(root.SORTel
  if(root.fetch&&/^https?:/.test(root.location.protocol))return fetch('data/telefony.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){D=j;return D;}).catch(emb);return Promise.resolve().then(emb);}
 function numHtml(n){var lab=n.typ==='wew'?'wew.':n.typ==='alarm'?'alarm':n.typ==='fax'?'fax (nie do dzwonienia)':'tel.',h=href(n),inner='<small>'+lab+(n.opis?' · '+esc(n.opis):'')+(n.centrala?' · przez centralę '+esc(fmt({typ:'tel',nr:n.centrala})):'')+'</small>'+(h?'📞 ':'')+esc(fmt(n))+(n.st==='lok'?'<span class="tl-ok">✓ sprawdzony przez lekarza (standard lokalny)</span>':n.st==='ok'?'<span class="tl-ok">✓ zgodny ze stroną placówki</span>':'')+(n.uwaga?'<span class="tl-chk'+(n.st==='rozb'?' tl-rozb':'')+'">⚠ '+esc(n.uwaga)+'</span>':'');return h?'<a class="tl-a'+(n.typ==='wew'?' w':'')+'" href="'+esc(h)+'">'+inner+'</a>':'<span class="tl-a w tl-nolink">'+inner+'</span>';}
 function groupHtml(g){return '<h3'+(g.id==='najwazniejsze'?' class="tl-sek"':'')+'>'+esc(g.nazwa)+'</h3>'+(g.uwagi?'<div class="tl-info">'+linkify(g.uwagi)+'</div>':'')+g.pozycje.map(itemHtml).join('');}
-function zakazneHtml(){var Dd=root.SORTelefony;if(!Dd)return '';var g=Dd.grupy.find(function(x){return x.id==='zakazne';});return g?'<style>'+CSS+'</style><div class="tl" id="tl-zak">'+kprInner()+groupHtml(g)+'<div class="tl-info">Ta sama lista: moduł „Książka telefoniczna” (menu – pod Hamulcem).</div></div>':'';}
+function zakazneHtml(){var Dd=root.SORTelefony;if(!Dd)return '';var g=Dd.grupy.find(function(x){return x.id==='zakazne';});return g?'<style>'+CSS+'</style><div class="tl" id="tl-zak">'+kprInner()+groupHtml(g)+'<div class="tl-info">Ta sama lista: moduł „Książka telefoniczna” (menu – pod Hamulcem); telefony PSZS: zakładka „Nasz szpital”.</div></div>':'';}
 function cpy(v){return '<button type="button" class="tl-copy" data-copy="'+esc(v)+'">📋 Kopiuj</button>';}
 function copyWire(el){el.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.tl-copy');if(!b)return;var v=b.getAttribute('data-copy'),ok=function(){b.textContent='✓ Skopiowano';};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(ok,function(){fallback();});else fallback();function fallback(){var t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{document.execCommand('copy');ok();}catch(x){}t.remove();}});}
 // numery w notach: 12 411 99 99 / 32 259 12 00 → tel:
@@ -34,6 +34,14 @@ function mk(m,title){return function(el){el.innerHTML='<style>'+CSS+'</style><di
  copyWire(el);el.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-toc]');if(!a)return;e.preventDefault();var t=el.querySelector('#tl-g'+a.getAttribute('data-toc'));if(t)t.scrollIntoView({block:'start'});});var q=el.querySelector('#tl-q');q.value=state[m];q.oninput=function(){state[m]=q.value;list(el,q.value,m);};
  load().then(function(){list(el,state[m],m);el.querySelector('#tl-src').textContent='Źródło: '+D.zrodlo+' · wersja '+D.wersja+'.';},function(e){el.querySelector('#tl-body').textContent=e.message;});};}
 // ---
-var mod={id:'telefony',icon:'📖',name:'Książka telefoniczna',render:mk('ksiazka','Książka telefoniczna (wszystkie numery: najważniejsze, nasz szpital, apteki, sanepid, Małopolska)')};
-var modSzp={id:'telszp',icon:'📞',name:'Telefony szpitalne',render:mk('szpital','Telefony szpitalne (PSZS Nowy Targ)')};
-return{mod:mod,modSzp:modSzp,liverHtml:liverHtml,LIVER:LIVER,zakazneHtml:zakazneHtml,kprHtml:kprHtml,href:href,fmt:fmt,valid:valid,flat:flat,search:search,norm:norm};});
+var rAll=mk('ksiazka','Książka telefoniczna (wszystkie numery: najważniejsze, nasz szpital, apteki, sanepid, Małopolska)'),rSzp=mk('szpital','Nasz szpital – telefony PSZS Nowy Targ');
+function renderBook(el){var t='ksiazka';try{t=(JSON.parse(localStorage.getItem('sk_m_telefony_tab')||'{}').t)==='szpital'?'szpital':'ksiazka';}catch(e){}
+ el.innerHTML='<div class="tabs tl-tabs"><button data-t="ksiazka" class="'+(t==='ksiazka'?'on':'')+'">Wszystkie numery</button><button data-t="szpital" class="'+(t==='szpital'?'on':'')+'">Nasz szpital</button></div><div id="tl-tabbody"></div>';
+ el.querySelectorAll('.tl-tabs button').forEach(function(b){b.onclick=function(){localStorage.setItem('sk_m_telefony_tab',JSON.stringify({t:b.dataset.t}));renderBook(el);};});
+ (t==='szpital'?rSzp:rAll)(el.querySelector('#tl-tabbody'));}
+var mod={id:'telefony',icon:'📖',name:'Książka telefoniczna',render:renderBook};
+var modSzp={id:'telszp',icon:'📞',name:'Telefony szpitalne',render:rSzp}; // tylko eksport (zgodność); w menu jako zakładka Książki
+// 11.11.2026 (audyt, faza 2): moduły kliniczne nie przepisują numerów – przycisk otwiera Książkę z wyszukiwaniem (jedno źródło: data/telefony.json)
+function openBook(q,tab){state.ksiazka=q||'';try{localStorage.setItem('sk_m_telefony_tab',JSON.stringify({t:tab==='szpital'?'szpital':'ksiazka'}));}catch(e){}if(root.SKS&&root.SKS.show)root.SKS.show('telefony');}
+function linkHtml(label,q){return '<button type="button" class="tg tl-book" data-nav="1" data-book="'+esc(q)+'" onclick="SORTel.openBook(this.getAttribute(\'data-book\'))">📖 '+esc(label)+' → Książka telefoniczna</button>';}
+return{openBook:openBook,linkHtml:linkHtml,mod:mod,modSzp:modSzp,liverHtml:liverHtml,LIVER:LIVER,zakazneHtml:zakazneHtml,kprHtml:kprHtml,href:href,fmt:fmt,valid:valid,flat:flat,search:search,norm:norm};});

@@ -174,7 +174,13 @@
   }
   window.SORICDUI={attach:attach,ensure:ensure,state:STS.icd10,states:STS,copyText:copyText};
   // ---------------- rejestracja panelu w menu: na końcu modułów, przed Ustawieniami i O programie ----------------
-  var L=window.SKM.list,m10={id:'icd10',icon:'🔎',name:'ICD-10 — rozpoznania',render:function(el){render(el,'icd10');}},m9={id:'icd9',icon:'🔎',name:'ICD-9 — procedury',render:function(el){render(el,'icd9');}},si=L.findIndex(function(m){return m.id==='settings';});
-  // kolejność: …, Neurologia, [tu wstawić „Neuroinfekcje”], ICD-10, ICD-9, ───, Ustawienia, O programie
-  if(si<0){L.push(m10,m9);}else{var at=(si>0&&L[si-1].sep)?si-1:si;L.splice(at,0,m10,m9);}
+  // 11.11.2026 (audyt, faza 2): ICD-10 i ICD-9 w jednym module „ICD” (2 zakładki); stare id icd10/icd9 przekierowuje shell.js (SKS.show / SKS.goTab)
+  function tabKey(){return 'sk_m_icd_tab';}
+  function renderIcd(el){var t='icd10';try{t=(JSON.parse(localStorage.getItem(tabKey())||'{}').t)==='icd9'?'icd9':'icd10';}catch(e){}
+    el.innerHTML='<div class="tabs icd-tabs"><button data-t="icd10" class="'+(t==='icd10'?'on':'')+'">ICD-10 — rozpoznania</button><button data-t="icd9" class="'+(t==='icd9'?'on':'')+'">ICD-9 — procedury</button></div><div id="icd-body"></div>';
+    el.querySelectorAll('.icd-tabs button').forEach(function(b){b.onclick=function(){localStorage.setItem(tabKey(),JSON.stringify({t:b.dataset.t}));renderIcd(el);};});
+    render(el.querySelector('#icd-body'),t);}
+  var L=window.SKM.list,mI={id:'icd',icon:'🔎',name:'ICD-10 / ICD-9 — kody',render:renderIcd},si=L.findIndex(function(m){return m.id==='settings';});
+  // kolejność: …, Neurologia, Neuroinfekcje, ICD, ───, Ustawienia, O programie
+  if(si<0){L.push(mI);}else{var at=(si>0&&L[si-1].sep)?si-1:si;L.splice(at,0,mI);}
 })();

@@ -20,7 +20,7 @@ const ID=new RegExp('pe'+'sel','i');// tekst szukany (bez dosłownego słowa w k
  await shot('pasek-0-bez-numeru-identyfikacyjnego.png');
  // ---- lista modułów
  const MODS=await page.evaluate(()=>[...document.querySelectorAll('#side button[data-id]')].map(b=>({id:b.dataset.id,name:b.textContent.trim()})));
- ok(MODS.length>=30,'Liczba modułów w menu: '+MODS.length,'');
+ ok(MODS.length>=29,'Liczba modułów w menu: '+MODS.length+' (11.11.2026: scalone telszp→Książka, icd10+icd9→ICD, eucast→przyciski)','');
  const go=async id=>{await page.evaluate(id=>document.querySelector('#side button[data-id="'+id+'"]').click(),id);await sleep(900);};
  // zbiera kontrolki ciąży w dokumencie + ramkach
  const collect=async()=>{const res=[];const fr=[page.mainFrame(),...page.frames().filter(f=>f!==page.mainFrame())];

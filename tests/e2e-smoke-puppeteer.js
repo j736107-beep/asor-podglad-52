@@ -2,8 +2,9 @@
    (każda opcja), pola liczbowe wypełniane wartościami środkowymi. Błąd JS / konsoli = FAIL; pusty panel wyniku w 5.2 tam, gdzie 5.1 go wypełniał = FAIL;
    brak SVG/canvas tam, gdzie 5.1 je miał = FAIL. B51 (opcjonalnie) = adres 5.1 do porównania.  BASE=http://localhost:8765/ B51=http://localhost:8751/ node e2e-smoke-puppeteer.js */
 const puppeteer=require('puppeteer-core');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const BASE=process.env.BASE||'http://localhost:8765/',B51=process.env.B51||'';const REMOVED={hamulec:1};
+const BASE=process.env.BASE||'http://localhost:8765/',B51=process.env.B51||'';const REMOVED={hamulec:1,telszp:'→ Książka telefoniczna, zakładka Nasz szpital (11.11.2026)',icd10:'→ moduł ICD (11.11.2026)',icd9:'→ moduł ICD (11.11.2026)',eucast:'→ przyciski w Sepsie, ZP i Lekach (11.11.2026)'};
 const EV=(fr,...a)=>{try{return fr.evaluate(...a).catch(()=>null);}catch(e){return Promise.resolve(null);}};
+// 11.11.2026: przyciski nawigacji między modułami (data-nav: Książka, Pompy, zakładka innego modułu) nie są klikane – skan dotyczy bieżącego modułu.
 const IGN=/favicon|Failed to load resource: the server responded with a status of 404.*(?:png|ico)|net::ERR_INTERNET_DISCONNECTED/;
 async function scan(br,base){const p=await br.newPage();await p.setViewport({width:1300,height:1000});const errs=[];p.on('pageerror',e=>errs.push('pageerror: '+e.message));p.on('console',m=>{if(m.type()==='error'&&!IGN.test(m.text()))errs.push(m.text());});p.on('dialog',d=>d.dismiss().catch(()=>{}));
  await p.goto(base,{waitUntil:'networkidle0'});await p.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await p.reload({waitUntil:'networkidle0'});
@@ -20,7 +21,7 @@ async function scan(br,base){const p=await br.newPage();await p.setViewport({wid
    for(const s of sels){res.sel++;for(let k=0;k<Math.min(s.n,14);k++){res.opt++;await EV(f,(i,k)=>{const root=document.getElementById('main')||document.body;const e=[...root.querySelectorAll('select')][i];if(!e)return;e.selectedIndex=k;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));},s.i,k);await sleep(40);}
     await EV(f,(i)=>{const root=document.getElementById('main')||document.body;const e=[...root.querySelectorAll('select')][i];if(!e)return;if(e.options.length>1){e.selectedIndex=1;e.dispatchEvent(new Event('change',{bubbles:true}));}},s.i);}
    const tg=await EV(f,async()=>{const root=document.getElementById('main')||document.body;const W=ms=>new Promise(r=>setTimeout(r,ms));let n=0;
-    const inFrame=window.parent!==window;const bs=[...root.querySelectorAll(inFrame?'button,input[type=checkbox],input[type=radio]':'button.tg,button[data-o],button[data-pl],button[data-al],button[data-sex],input[type=checkbox],input[type=radio]')].filter(b=>!b.disabled&&!b.closest('#pbar')&&!/usuń|wyczyść|reset|następny|drukuj|kopiuj|zapisz|wyślij|epikryza|odsłuchaj|test|wróć|pulpit|←|×|zamknij/i.test(b.textContent||'')).slice(0,40);
+    const inFrame=window.parent!==window;const bs=[...root.querySelectorAll(inFrame?'button,input[type=checkbox],input[type=radio]':'button.tg:not([data-nav]),button[data-o],button[data-pl],button[data-al],button[data-sex],input[type=checkbox],input[type=radio]')].filter(b=>!b.disabled&&!b.closest('#pbar')&&!/usuń|wyczyść|reset|następny|drukuj|kopiuj|zapisz|wyślij|epikryza|odsłuchaj|test|wróć|pulpit|←|×|zamknij/i.test(b.textContent||'')).slice(0,40);
     for(const b of bs){try{b.click();n++;await W(30);}catch(e){}}return n;}).then(x=>x||0);res.tg+=tg;await sleep(150);};
   const snap=async f=>EV(f,()=>{const root=document.getElementById('main')||document.body;const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden';};
     const pan=[...root.querySelectorAll('#res,.res,.result,.results,#out,.out,[id$="Res"],[id$="Out"],.clinical-result')].filter(vis);

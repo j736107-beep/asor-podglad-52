@@ -6,7 +6,7 @@
 })(typeof window!=='undefined'?window:this,function(root){
   'use strict';
   var PUMPS='sk_pumps',SNAP='sk_snap';
-  var SKIP={dashboard:1,documentation:1,trends:1,'treatment-log':1,fluid:1,settings:1,about:1,icd10:1,icd9:1,pompy:1};
+  var SKIP={dashboard:1,documentation:1,trends:1,'treatment-log':1,fluid:1,settings:1,about:1,icd:1,icd10:1,icd9:1,pompy:1};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function now(){return new Date().toLocaleString('pl-PL',{timeZone:'Europe/Warsaw',dateStyle:'short',timeStyle:'short'});}
   function hm(ts){return new Date(ts).toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Warsaw'});}

@@ -2,7 +2,7 @@
 // Dane ładowane leniwie (data/leki_karty.js, data/leki_rpl.js – działa z file://). Brak automatycznego doboru dawki do pacjenta.
 // Status „zweryfikowane” = zgodność z cytowanym źródłem, NIE walidacja kliniczna. „DO DECYZJI LEKARZA” = brak pełnej weryfikacji lub rozbieżność źródeł.
 (function(root,factory){var A=factory(root);if(typeof module==='object'&&module.exports){module.exports=A;return;}root.SORLeki=A;
- if(root.SKM&&root.SKM.list&&typeof document!=='undefined'){var L=root.SKM.list,i=L.findIndex(function(m){return m.id==='icd10';});if(i<0)i=L.findIndex(function(m){return m.id==='settings';});if(i<0)i=L.length;L.splice(i,0,A.mod);}
+ if(root.SKM&&root.SKM.list&&typeof document!=='undefined'){var L=root.SKM.list,i=L.findIndex(function(m){return m.id==='icd';});if(i<0)i=L.findIndex(function(m){return m.id==='settings';});if(i<0)i=L.length;L.splice(i,0,A.mod);}
 })(typeof window!=='undefined'?window:this,function(root){'use strict';
 var DISC='Narzędzie pomocnicze, niecertyfikowane. Dawki przepisane z ChPL (RPL/EMA) i wytycznych wskazanych przy każdym wskazaniu; status „zweryfikowane” oznacza zgodność z cytowanym źródłem, nie walidację kliniczną. Decyzję o leczeniu i dawce podejmuje lekarz po sprawdzeniu aktualnej ChPL konkretnego produktu.';
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -161,7 +161,7 @@ function printPlan(){var a=document.getElementById('printArea');if(!a){a=documen
  a.innerHTML='<h1>Zalecenia dotyczące leków po wypisie</h1><ol style="font-size:13pt;line-height:1.5">'+plan.map(function(it){return '<li>'+esc(itemSentence(it))+'</li>';}).join('')+'</ol><p style="font-size:11pt">Leki przyjmować zgodnie z powyższymi zaleceniami. W razie pogorszenia stanu zdrowia lub działań niepożądanych – kontakt z lekarzem POZ lub SOR.</p><div class="sig"><div>Lekarz: .......................................</div><div>Podpis i pieczątka<br><br>.......................................</div></div>';
  if(root.SORReport&&root.SORReport.brand)root.SORReport.brand(a);root.print();}
 
-function render(el){el.innerHTML='<style>'+CSS+'</style><div class="box orange"><b>Leki – karty dawkowania (5.1).</b> '+esc(DISC)+'</div><div class="lk-tabs"><button data-tab="karty">Karty substancji</button> <button data-tab="rpl">Produkty RPL</button> <button data-tab="plan">Leki na wypis</button> <button data-tab="wlasne">+ Własne leki</button></div><input id="lk-q" type="search" placeholder="Szukaj: substancja, produkt, ATC, wskazanie…" style="width:100%;margin:6px 0" autocomplete="off"><div id="lk-body">Wczytywanie kart…</div>';
+function render(el){el.innerHTML='<style>'+CSS+'</style><div class="box orange"><b>Leki – karty dawkowania (5.1).</b> '+esc(DISC)+'</div>'+(root.SKEUCAST?SKEUCAST.box():'')+'<div class="lk-tabs"><button data-tab="karty">Karty substancji</button> <button data-tab="rpl">Produkty RPL</button> <button data-tab="plan">Leki na wypis</button> <button data-tab="wlasne">+ Własne leki</button></div><input id="lk-q" type="search" placeholder="Szukaj: substancja, produkt, ATC, wskazanie…" style="width:100%;margin:6px 0" autocomplete="off"><div id="lk-body">Wczytywanie kart…</div>';
  var q=el.querySelector('#lk-q');q.value=state.q;q.oninput=function(){state.q=q.value;draw(el);};
  el.querySelector('.lk-tabs').onclick=function(e){var b=e.target.closest('[data-tab]');if(b){state.tab=b.dataset.tab;draw(el);}};
  el.querySelector('#lk-body').onclick=function(e){click(e,el);};

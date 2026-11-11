@@ -1146,6 +1146,21 @@
      ]
     },
     {
+     "nazwa": "Pracownia Informacji Toksykologicznej i Analiz Laboratoryjnych UJ CM, ul. Jakubowskiego 2, Kraków – informacja (godziny pracy)",
+     "www": "https://oit.cm.uj.edu.pl/",
+     "zrodlo": "https://oit.cm.uj.edu.pl/o-pracowni/kontakt/",
+     "email": "oit@cm-uj.krakow.pl",
+     "info": "Telefon alarmowy tej pracowni (24 h): 12 411 99 99. Przeniesione z modułu Zatrucia (zweryfikowane 23.10.2026).",
+     "numery": [
+      {
+       "typ": "tel",
+       "nr": "124002660",
+       "opis": "informacja, godziny pracy",
+       "st": "ok"
+      }
+     ]
+    },
+    {
      "nazwa": "Pracownia Toksykologiczna (laboratorium) SU, ul. Jakubowskiego 2",
      "www": "https://www.su.krakow.pl",
      "zrodlo": "https://toksy-alergo.cm-uj.krakow.pl",
@@ -1154,6 +1169,12 @@
        "typ": "tel",
        "nr": "124003649",
        "opis": "dyżur całodobowy",
+       "st": "ok"
+      },
+      {
+       "typ": "tel",
+       "nr": "124003614",
+       "opis": "drugi numer (su.krakow.pl, cennik 2026; przeniesione z modułu Zatrucia 11.11.2026)",
        "st": "ok"
       }
      ]

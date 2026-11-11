@@ -9,11 +9,11 @@ const JS=(()=>{const w={};new Function('window',rd('mod/pompy/drugs.js'))(w);ret
 let n=0;const FAIL=[];const test=(name,fn)=>{fn();n++;console.log('OK',name);};
 const near=(a,b,e=1e-9)=>assert.ok(a!=null&&Math.abs(a-b)<=e,a+' != '+b);
 const ml=(id,syr,u,dose,w)=>{const d=D(id);return E.toMlh(d,E.recipe(d,syr).conc,u,dose,w);};
-const LIST=['adrenalina','noradrenalina_c80','dobutamina','dopamina','noradrenalina_c','noradrenalina_p','nitrogliceryna','heparyna','amiodaron','midazolam','morfina','pantoprazol','urapidyl','salbutamol','propofol','insulina','furosemid'];
+const LIST=['adrenalina','noradrenalina_c80','dobutamina','levosimendan','dopamina','noradrenalina_c','noradrenalina_p','nitrogliceryna','heparyna','amiodaron','midazolam','morfina','pantoprazol','urapidyl','salbutamol','propofol','insulina','furosemid'];
 const CHPL=['dobutamina','heparyna','noradrenalina_c','propofol','urapidyl'];
 // ---------- dane ----------
 test('drugs.js == drugs.json',()=>assert.deepStrictEqual(JS,DB));
-test('17 receptur: 15 leków z listy (noradrenalina w 3 wariantach: C 40, C 80, P 20 µg/ml)',()=>assert.deepStrictEqual(DB.drugs.map(d=>d.id).sort(),LIST.slice().sort()));
+test('18 receptur: 16 leków z listy (noradrenalina w 3 wariantach: C 40, C 80, P 20 µg/ml; levosimendan od 11.11.2026)',()=>assert.deepStrictEqual(DB.drugs.map(d=>d.id).sort(),LIST.slice().sort()));
 test('Zgodne z ChPL: dobutamina, heparyna, noradrenalina C 40 µg/ml, propofol, urapidyl; pozostałe 12 – standard lokalny',()=>{assert.deepStrictEqual(DB.drugs.filter(d=>d.status==='chpl').map(d=>d.id).sort(),CHPL.slice().sort());for(const d of DB.drugs)assert.ok(['chpl','lokalny','zatwierdzony'].includes(d.status));});
 test('Każda receptura: link https do ChPL (RPL lub EMA), preparat, ampułka, dostęp, monitorowanie, uzasadnienie, źródła istnieją',()=>{for(const d of DB.drugs){assert.match(d.url,/^https:\/\/(rejestry\.ezdrowie\.gov\.pl\/api\/rpl\/medicinal-products\/\d+\/characteristic|www\.ema\.europa\.eu\/)/,d.id);assert.ok(d.product&&d.amp.label&&d.access&&d.monitor&&d.why.length>30,d.id);for(const s of d.src)assert.ok(DB.sources[s],d.id+' '+s);}});
 test('Każda jednostka dawki ma opis zakresu (tekst ze źródła)',()=>{for(const d of DB.drugs)for(const u of d.units){assert.ok(u.text&&u.text.length>10,d.id+u.u);E.perHourFactor(u.u,d.amp.unit);}});

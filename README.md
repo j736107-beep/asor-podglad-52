@@ -104,3 +104,12 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Alteplaza – jedno źródło: udar `calc/neuro.js` (Neurologia → Tromboliza), ZP `calc/clinical.js` (Zatorowość płucna); w Antykoagulacji zostaje STEMI i przyciski przejścia.
 - Neurologia: pola INR/PLT (INR >1,7, PLT <100 tys./µl = przeciwwskazanie; INR >1,3 przy VKA – ostrzeżenie), dodane przeciwwskazania ChPL (udar + cukrzyca w wywiadzie, NIHSS >25, ciężka choroba wątroby/trzustki, <16 lat; względne: >80 lat, cukrzyca); RR >185/>110 (ChPL), po leczeniu ≤180/105; glikemia >400 mg/dl czerwona.
 - SW `asor-v52-fix5`.
+
+## Audyt modułów – faza 2 (11.11.2026): scalenie menu
+- ONS: zakładki pomp (kalkulator B1 `calc/pressB1.js` – usunięty, oraz noradrenalina/dobutamina/dopamina) → zakładka „Leki wlewowe → Pompy SOR”: ściąga + przyciski `SKS.openPompa(id)`; worek 250 ml wg ChPL (dobutamina 1 mg/ml, dopamina 0,8 mg/ml) liczony w ściądze.
+- Pompy SOR: nowy preset `levosimendan` (ChPL Simdax RPL 34002: 0,05 mg/ml, 0,05–0,2 µg/kg/min; status lokalny – objętość strzykawki), drugs.json v9.
+- Książka telefoniczna: zakładki „Wszystkie numery” / „Nasz szpital” (dawny moduł `telszp`); `SORTel.openBook(q)` / `SORTel.linkHtml()` – moduły kliniczne linkują zamiast przepisywać numery (Zatrucia, Neuroinfekcje). Do Książki dopisano 12 400 26 60 i 12 400 36 14 (z panelu Zatruć).
+- ICD: jeden moduł `icd` z zakładkami ICD-10 / ICD-9. EUCAST: `SKEUCAST.box()` w Sepsie (Antybiotyki wg ogniska), ZP (Antybiotykoterapia) i Lekach.
+- Przekierowania (shell.js `MOD_ALIAS`/`TAB_ALIAS`): telszp → telefony/szpital, icd10/icd9 → icd, eucast → leki, ahf b1/nor/dob/dop → ahf/pompy.
+- SW `asor-v52-fix6`.
+

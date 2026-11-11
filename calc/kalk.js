@@ -509,7 +509,7 @@ var G=[['kardr','Kardiologia – ryzyko sercowo-naczyniowe (SCORE2)',['score2','
  ['endo','Endokrynologia',['bwps'],[['dka','Cukrzycowa kwasica ketonowa']]],
  ['sep','Sepsa i niewydolność narządów',['sirs','qsofa','sofa'],[['sepsis','Sepsa (pakiet 1 h)']]],
  ['leki','Konwersje leków',['gks','bzd','opioid'],[['leki','Leki (dawkowanie, nerki)']]],
- ['lab','Laboratorium – jednostki',['units','caCorr','labtab'],[]]];
+ ['lab','Laboratorium – jednostki',['units','labtab'],[]]];
 Object.keys(C).forEach(function(k){C[k].id=k;});
 function run(id,v){var c=C[id];if(!c)return{err:'Nieznany kalkulator: '+id};try{return c.calc(v||{});}catch(e){return{err:'Błąd obliczenia: '+e.message};}}
 return{C:C,G:G,run:run,num:num,fmt:fmt,fx:fx,score2:score2,score2op:score2op,score2dm:score2dm,ckdepi09:ckdepi09,hbaIfcc:hbaIfcc,ckdepi21:ckdepi21,cg:cg,LAB:LAB,OPI:OPI,BZD:BZD,GKS:GKS,PATCH:PATCH};

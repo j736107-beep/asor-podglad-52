@@ -67,7 +67,10 @@ window.SKS.PID=function(){return{name:PID.name,adm:PID.adm};};
 })(SKM.list);
 var MODS=SKM.list,active=null;
 function side(){$('#side').innerHTML=MODS.map(function(m){return m.sep?'<hr>':'<button data-id="'+m.id+'" class="'+(m.id===cur?'on ':'')+(m.soon?'soon':'')+'">'+m.icon+' '+m.name+'</button>'}).join('');}
-var navS=[];function go(id){if(id===cur){show();return;}navS.push(cur);try{history.pushState({sk:id},'')}catch(e){}cur=id;localStorage.setItem('sk_mod',cur);show();}
+// 11.11.2026 (audyt, faza 2): stare id modułów po scaleniu → nowy moduł + zakładka (zgodność linków i zakładek ulubionych)
+var MOD_ALIAS={telszp:['telefony','szpital'],icd10:['icd','icd10'],icd9:['icd','icd9'],eucast:['leki','']},TAB_ALIAS={'ahf:b1':'pompy','ahf:nor':'pompy','ahf:dob':'pompy','ahf:dop':'pompy'};
+function unalias(id){var a=MOD_ALIAS[id];if(!a)return id;if(a[1])try{localStorage.setItem('sk_m_'+a[0]+'_tab',JSON.stringify({t:a[1]}));}catch(e){}return a[0];}
+var navS=[];function go(id){id=unalias(id);if(id===cur){show();return;}navS.push(cur);try{history.pushState({sk:id},'')}catch(e){}cur=id;localStorage.setItem('sk_mod',cur);show();}
 function back(){if(!navS.length){if(cur!=='dashboard'){cur='dashboard';localStorage.setItem('sk_mod',cur);show();}return;}cur=navS.pop();localStorage.setItem('sk_mod',cur);show();}
 window.addEventListener('popstate',function(){back();});
 window.SKS.back=function(){if(navS.length)history.back();else back();};
@@ -108,7 +111,7 @@ function sync(f,m){var d;try{d=f.contentWindow.document}catch(e){return}if(!d||!
 applyS();patBar();show();
 window.SKS.show=function(id){go(id);};
 // 11.11.2026: przejście do zakładki modułu (tabbed: [data-t], kliniczne: [data-clin-tab])
-window.SKS.goTab=function(id,tab){go(id);var n=0;(function f(){var b=document.querySelector('#main [data-t="'+tab+'"],#main [data-clin-tab="'+tab+'"],#main .tabs button[data-tab="'+tab+'"]');if(b){b.click();return;}if(++n<20)setTimeout(f,50);})();};
+window.SKS.goTab=function(id,tab){id=unalias(id);tab=TAB_ALIAS[id+':'+tab]||tab;go(id);var n=0;(function f(){var b=document.querySelector('#main [data-t="'+tab+'"],#main [data-clin-tab="'+tab+'"],#main .tabs button[data-tab="'+tab+'"]');if(b){b.click();return;}if(++n<20)setTimeout(f,50);})();};
 window.SKS.openPompa=function(id){go('pompy');var f=$('#main iframe');if(!f)return;var set=function(){try{f.contentWindow.location.hash='d/'+id;}catch(e){}};f.addEventListener('load',set);set();};
 window.SKS.openPropofol=function(){go('pompy');var f=$('#main iframe');if(!f)return;var set=function(){try{f.contentWindow.location.hash='d/propofol';}catch(e){}};f.addEventListener('load',set);set();};
 window.SKS.active=function(){return active};
