@@ -1,0 +1,624 @@
+{
+ "doctor": {
+  "res": {
+   "wbc": {
+    "n": 3,
+    "v": [
+     9.1,
+     12.3,
+     15
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "hb": {
+    "n": 3,
+    "v": [
+     13.8,
+     13.2,
+     12.1
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "plt": {
+    "n": 3,
+    "v": [
+     260,
+     245,
+     198
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "crea": {
+    "n": 3,
+    "v": [
+     1,
+     1.2,
+     1.6
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "na": {
+    "n": 3,
+    "v": [
+     140,
+     138,
+     134
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "k": {
+    "n": 3,
+    "v": [
+     4.2,
+     4.5,
+     5.3
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "crp": {
+    "n": 3,
+    "v": [
+     8,
+     45,
+     120
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "trop": {
+    "n": 3,
+    "v": [
+     12,
+     25,
+     48
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "ddim": {
+    "n": 2,
+    "v": [
+     450,
+     820
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "alt": {
+    "n": 3,
+    "v": [
+     25,
+     41,
+     58
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   },
+   "glu": {
+    "n": 3,
+    "v": [
+     105,
+     162,
+     176.557
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "crit|Troponina narasta: 25 → 48 ng/l, delta +23 ng/l w 680 min – prawdopodobny zawał",
+   "alert|CRP narasta: 45 → 120 mg/l",
+   "alert|Ostre uszkodzenie nerek? Kreatynina 1 → 1,6 mg/dl",
+   "warn|Leukocyty poza zakresem SIRS: 15,0 10^3/µl",
+   "warn|D-dimery powyżej progu: 820 ng/ml FEU (wiek nieznany – próg 500 µg/l FEU (podaj wiek: > 50 r.ż. próg = wiek × 10))"
+  ],
+  "actions": 9
+ },
+ "ascii": {
+  "res": {
+   "wbc": {
+    "n": 2,
+    "v": [
+     12.3,
+     14.1
+    ],
+    "unitOk": [
+     false,
+     false
+    ]
+   },
+   "plt": {
+    "n": 2,
+    "v": [
+     245,
+     200
+    ],
+    "unitOk": [
+     false,
+     false
+    ]
+   },
+   "trop": {
+    "n": 2,
+    "v": [
+     25,
+     40
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "ddim": {
+    "n": 2,
+    "v": [
+     820,
+     1100
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "crea": {
+    "n": 2,
+    "v": [
+     1.199,
+     1.697
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "crit|Troponina narasta: 25 → 40 ng/l, delta +15 ng/l w 1440 min – prawdopodobny zawał",
+   "alert|Ostre uszkodzenie nerek? Kreatynina 1,2 → 1,7 mg/dl",
+   "warn|Leukocyty poza zakresem SIRS: 14,1 tys/ul",
+   "warn|D-dimery powyżej progu: 1,1 ug/ml FEU (wiek nieznany – próg 500 µg/l FEU (podaj wiek: > 50 r.ż. próg = wiek × 10))"
+  ],
+  "actions": 8
+ },
+ "exp": {
+  "res": {
+   "wbc": {
+    "n": 3,
+    "v": [
+     12.3,
+     14.1,
+     16
+    ],
+    "unitOk": [
+     false,
+     false,
+     true
+    ]
+   },
+   "plt": {
+    "n": 3,
+    "v": [
+     245,
+     200,
+     180
+    ],
+    "unitOk": [
+     false,
+     false,
+     false
+    ]
+   },
+   "hb": {
+    "n": 3,
+    "v": [
+     13.2,
+     12,
+     11.5
+    ],
+    "unitOk": [
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "warn|Leukocyty poza zakresem SIRS: 16,0 10^9/L"
+  ],
+  "actions": 0
+ },
+ "lis": {
+  "res": {
+   "wbc": {
+    "n": 2,
+    "v": [
+     12.3,
+     14.1
+    ],
+    "unitOk": [
+     false,
+     false
+    ]
+   },
+   "hb": {
+    "n": 2,
+    "v": [
+     13.2,
+     12
+    ],
+    "unitOk": [
+     false,
+     false
+    ]
+   },
+   "plt": {
+    "n": 2,
+    "v": [
+     245,
+     200
+    ],
+    "unitOk": [
+     false,
+     false
+    ]
+   },
+   "na": {
+    "n": 2,
+    "v": [
+     138,
+     134
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "k": {
+    "n": 2,
+    "v": [
+     4.5,
+     5.3
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "warn|Leukocyty poza zakresem SIRS: 14,10 WBC"
+  ],
+  "actions": 0
+ },
+ "tab": {
+  "res": {
+   "wbc": {
+    "n": 2,
+    "v": [
+     12.3,
+     14.1
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "hb": {
+    "n": 2,
+    "v": [
+     13.2,
+     12
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "crea": {
+    "n": 2,
+    "v": [
+     1.2,
+     1.6
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "crp": {
+    "n": 2,
+    "v": [
+     45,
+     120
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "alert|CRP narasta: 45 → 120 mg/l",
+   "alert|Ostre uszkodzenie nerek? Kreatynina 1,2 → 1,6 mg/dl",
+   "warn|Leukocyty poza zakresem SIRS: 14,1 tys/µl"
+  ],
+  "actions": 4
+ },
+ "sample": {
+  "res": {
+   "wbc": {
+    "n": 2,
+    "v": [
+     13.8,
+     19.6
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "rbc": {
+    "n": 1,
+    "v": [
+     3.92
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "hb": {
+    "n": 2,
+    "v": [
+     10.9,
+     8.4
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "ht": {
+    "n": 1,
+    "v": [
+     32.8
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "plt": {
+    "n": 2,
+    "v": [
+     182,
+     141
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "neu": {
+    "n": 1,
+    "v": [
+     11.2
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "crea": {
+    "n": 2,
+    "v": [
+     1.1,
+     1.9
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "urea": {
+    "n": 2,
+    "v": [
+     48,
+     81
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "na": {
+    "n": 2,
+    "v": [
+     136,
+     134
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "k": {
+    "n": 2,
+    "v": [
+     5.2,
+     6.3
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "crp": {
+    "n": 2,
+    "v": [
+     64.2,
+     186
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "pct": {
+    "n": 2,
+    "v": [
+     0.42,
+     4.8
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "trop": {
+    "n": 2,
+    "v": [
+     11,
+     38
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "glu": {
+    "n": 2,
+    "v": [
+     168,
+     142
+    ],
+    "unitOk": [
+     true,
+     true
+    ]
+   },
+   "inr": {
+    "n": 1,
+    "v": [
+     1.4
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "ddim": {
+    "n": 1,
+    "v": [
+     1240
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "aptt": {
+    "n": 1,
+    "v": [
+     36
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "ph": {
+    "n": 1,
+    "v": [
+     7.26
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "pco2": {
+    "n": 1,
+    "v": [
+     38
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "hco3": {
+    "n": 1,
+    "v": [
+     16.4
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "be": {
+    "n": 1,
+    "v": [
+     -9.8
+    ],
+    "unitOk": [
+     true
+    ]
+   },
+   "lac": {
+    "n": 1,
+    "v": [
+     4.6
+    ],
+    "unitOk": [
+     true
+    ]
+   }
+  },
+  "alerts": [
+   "crit|Spadek Hb o 2,5 g/dl (10,9 → 8,4) – krwawienie?",
+   "crit|Mleczany > 4: 4,6 mmol/l – hipoperfuzja / wstrząs?",
+   "crit|Troponina narasta: 11 → 38 ng/l, delta +27 ng/l w 695 min – prawdopodobny zawał",
+   "alert|Hiperkaliemia: K 6,3 mmol/l",
+   "alert|Kwasica: pH 7,26",
+   "alert|Prokalcytonina wysoka: 4,8 ng/ml – zakażenie bakteryjne / sepsa?",
+   "alert|CRP narasta: 64,2 → 186 mg/l",
+   "alert|Ostre uszkodzenie nerek? Kreatynina 1,1 → 1,9 mg/dl",
+   "alert|Zapalenie płuc / naciek – „Opis: W dolnym polu płuca prawego widoczny naciek zapalny z bronchogramem powietrznym, odpowiadający zapaleniu…”",
+   "warn|Leukocyty poza zakresem SIRS: 19,6 tys/µl",
+   "warn|D-dimery powyżej progu: 1240 ng/ml FEU (wiek nieznany – próg 500 µg/l FEU (podaj wiek: > 50 r.ż. próg = wiek × 10))",
+   "warn|Płyn – „Niewielka ilość płynu w prawym kącie przeponowo-żebrowym.”"
+  ],
+  "actions": 19
+ }
+}

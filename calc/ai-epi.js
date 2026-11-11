@@ -43,7 +43,7 @@ var SEV=[['ventilation','wentylacja mechaniczna inwazyjna'],['vasopressor','wstr
 var CO=[['liver','niewydolność wątroby'],['renal','niewydolność nerek'],['heart','niewydolność serca'],['preg','ciąża']];
 var RISK=[['mrsa','ryzyko MRSA'],['pseudo','ryzyko Pseudomonas'],['recent','hospitalizacja / antybiotyk i.v. w ostatnich 90 dniach'],['asp','zachłyśnięcie'],['abscess','ropień / ropniak'],['leg','podejrzenie Legionella'],['atyp','podejrzenie patogenu atypowego'],['qt','wydłużony QT'],['hd','hemodializa'],['comorb','choroby współistniejące'],['noOral','brak tolerancji doustnej']];
 var ALLERGY={none:'brak alergii na β-laktamy (potwierdzone)',late:'alergia na penicyliny – reakcja późna / łagodna',imm:'alergia na penicyliny – reakcja natychmiastowa (IgE-zależna)'};
-var PLACE={home:'Leczenie domowe możliwe',obs:'Krótka obserwacja w SOR – dom możliwy tylko po decyzji lekarza',ward:'HOSPITALIZACJA – oddział (wypis do domu zablokowany)',icu:'CIĘŻKIE PZP – sugerowany OIOM / OIT (wypis do domu zablokowany)'};
+var PLACE={home:'Leczenie domowe',obs:'Krótka hospitalizacja / obserwacja lub dom ze ścisłą kontrolą (decyzja lekarza)',ward:'Hospitalizacja – oddział',icu:'Ciężkie PZP – OIOM / OIT rozważany'};
 var RANK={home:0,obs:0,ward:1,icu:2};
 // src: {bar:SKS.P(), assess:{i,r}, zp:{allergy,o,place}, abx:'tekst planu', notes:'tekst'}  ids: {name,pesel,adm} – używane TYLKO do czyszczenia
 function buildPayload(src,ids){src=src||{};var b=src.bar||{},A=src.assess||{},i=A.i||{},r=A.r||{},a=r.assess||{},zp=src.zp||{},o=zp.o||{};
@@ -62,8 +62,8 @@ function buildPayload(src,ids){src=src||{};var b=src.bar||{},A=src.assess||{},i=
  if(fin(c.score))W['CURB-65']=(c.complete?'':'co najmniej ')+c.score+'/5';
  if(p.step1)W['PSI / PORT']='klasa I (reguła pierwszego etapu)';else if(fin(p.score))W['PSI / PORT']=p.complete?'klasa '+p.cls+' ('+p.score+' pkt)':'co najmniej '+p.score+' pkt – klasa nieustalona (dane niepełne)';
  if(s.major)W['Ciężkie PZP ATS/IDSA 2019']=s.major.length+' kryteria duże / '+s.minor.length+' małe'+((s.majorTxt||[]).concat(s.minorTxt||[]).length?': '+(s.majorTxt||[]).concat(s.minorTxt||[]).join('; '):'')+(s.severe?' – SPEŁNIA kryteria ciężkiego PZP':'');
- var pl=a.place;if(zp.place&&RANK[zp.place]!=null&&(pl==null||RANK[zp.place]>RANK[pl]))pl=zp.place;
- if(pl&&PLACE[pl]){W['Miejsce leczenia']=PLACE[pl]+(pl!==a.place&&a.place?' (podwyższone ręcznie przez lekarza)':'');P._place=pl;}
+ var pl=a.place;if(zp.place&&RANK[zp.place]!=null)pl=zp.place;
+ if(pl&&PLACE[pl]){W['Miejsce leczenia']=PLACE[pl]+(pl!==a.place&&a.place&&PLACE[a.place]?' (wybór lekarza; rekomendacja programu: '+PLACE[a.place]+')':'');P._place=pl;}
  if(a.reasons&&a.reasons.length)W['Uzasadnienie miejsca leczenia']=a.reasons.map(function(x){return scrub(x,ids);});
  if(a.missing&&a.missing.length)W['Brakujące dane (wg programu)']=a.missing.map(function(x){return scrub(x,ids);});
  String(src.abx||'').split('\n').map(function(x){return scrub(x,ids).trim();}).filter(Boolean).forEach(function(x){P.antybiotykoterapia.push(x);});

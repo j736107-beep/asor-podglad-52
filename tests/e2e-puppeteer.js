@@ -42,17 +42,18 @@ const clickTab=async t=>{await page.evaluate(t=>document.querySelector('[data-cl
 await clickTab('scores');
 const NORM={rr:16,sbp:120,dbp:80,hr:80,temp:37,spo2:97,urea:24,na:140,glu:108,ph:7.4,hct:40,pao2:85,pf:400,wbc:8,platelets:250,nursing:false,cancer:false,liver:false,heart:false,stroke:false,renal:false,confusion:false,effusion:false,multilobar:false,fluidHypotension:false,ventilation:false,vasopressor:false,oral:true};
 await setScores(Object.assign({},NORM,{spo2:70}));await sleep(500);
-let sc=await page.evaluate(()=>{const vis=id=>{const e=document.getElementById(id);return !!e&&!e.hidden;};return {eng:(document.querySelector('#capEngine')||{}).textContent,hold:SORHold.items(),ov:vis('holdOv'),lamp:vis('holdLamp'),banner:vis('holdBanner'),lamp2:document.getElementById('lamp').classList.contains('on')};});
-rec('ZP-1 Skale SpO₂ 70%: OIT, BEZ alarmu WSTRZYMAJ WYPIS (bez nakładki, lampy, paska)',/OIOM \/ OIT/.test(sc.eng||'')&&!sc.hold.cap&&!sc.ov&&!sc.lamp&&!sc.banner&&!sc.lamp2,JSON.stringify(sc).slice(0,400));
+let sc=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,noHold:typeof window.SORHold==='undefined'&&!document.getElementById('holdOv')&&!document.getElementById('holdLamp'),lamp2:document.getElementById('lamp').classList.contains('on')}));
+rec('ZP-1 Skale SpO₂ 70%: OIT, bez alarmu blokady wypisu (mechanizm usunięty)',/OIOM \/ OIT/.test(sc.eng||'')&&sc.noHold&&!sc.lamp2,JSON.stringify(sc).slice(0,400));
 // ramka antybiotykoterapii
 await clickTab('abx51');const zf=await frameOf('mod/zp');await sleep(900);
 const zr=async()=>zf.evaluate(()=>({place:(document.getElementById('zpPlace')||{}).textContent,dom:(()=>{const b=document.querySelector('[data-pl="home"]');return b&&{dis:b.disabled,blk:b.classList.contains('blk'),title:b.title};})(),res:document.getElementById('res').textContent,quick:document.getElementById('quick').textContent,psiBtn:document.querySelectorAll('[data-psi]').length,minor:!!document.getElementById('minor'),psi:(document.getElementById('zpPsi')||{}).textContent}));
 let z=await zr();
-rec('ZP-1 ramka: OIT, Dom przekreślony, ceftriakson/cefotaksym+makrolid, bez amoksycyliny/ampicyliny',/OIOM \/ OIT/.test(z.place)&&z.dom.dis&&z.dom.blk&&/Ceftriakson|ceftriakson/.test(z.quick)&&/klarytromycyna|azytromycyna|Klarytromycyna|Azytromycyna/i.test(z.quick)&&!/amoksycylin|ampicylin/i.test(z.quick),JSON.stringify({place:z.place,dom:z.dom,quick:z.quick.slice(0,300)}));
+rec('ZP-1 ramka: rekomendacja OIT, Dom dostępny (bez blokady), ceftriakson/cefotaksym+makrolid, bez amoksycyliny/ampicyliny',/OIOM \/ OIT/.test(z.place)&&!z.dom.dis&&!z.dom.blk&&/Ceftriakson|ceftriakson/.test(z.quick)&&/klarytromycyna|azytromycyna|Klarytromycyna|Azytromycyna/i.test(z.quick)&&!/amoksycylin|ampicylin/i.test(z.quick),JSON.stringify({place:z.place,dom:z.dom,quick:z.quick.slice(0,300)}));
 rec('PSI automatyczny, brak ręcznych PSI/małych kryteriów',z.psiBtn===0&&!z.minor&&/automatycznie/.test(z.psi||''),z.psi);
-// ZP-9: klik Dom zablokowany
+// ZP-9: lekarz wybiera Dom mimo rekomendacji OIT – wybór przyjęty, uwaga z rekomendacją
 await zf.evaluate(()=>document.querySelector('[data-pl="home"]').click());await sleep(300);z=await zr();
-rec('ZP-9 klik „Dom” zablokowany + dymek',/OIOM \/ OIT/.test(z.place)&&/Zablokowane/.test(z.dom.title),z.dom.title.slice(0,120));
+rec('ZP-9 klik „Dom” → wybór lekarza przyjęty + uwaga z rekomendacją',/Leczenie domowe/.test(z.place)&&/wybór lekarza/.test(z.place)&&/rekomendacja silnika/.test(z.res),z.place);
+await zf.evaluate(()=>document.querySelector('[data-pl=""]').click());await sleep(300);
 // ZP-11: alergia natychmiastowa
 await zf.evaluate(()=>document.querySelector('[data-al="imm"]').click());await sleep(400);z=await zr();
 rec('ZP-11 alergia natychmiastowa: bez β-laktamów, fluorochinolon',/lewofloksacyna|moksyfloksacyna/i.test(z.quick)&&!/ceftriakson|cefotaksym|amoksycylin|ampicylin|piperacylin|meropenem|cefepim|ceftazydym/i.test(z.quick),z.quick.slice(0,300));
@@ -60,8 +61,8 @@ await zf.evaluate(()=>document.querySelector('[data-al="none"]').click());await 
 // ZP-2 w UI: 30 K
 await page.evaluate(()=>{const a=document.querySelector('#pa');a.value='30';a.dispatchEvent(new Event('input'));document.querySelector('#psex button[data-s="f"]').click();});
 await clickTab('scores');await setScores(Object.assign({},NORM,{temp:37.5}));await sleep(400);
-let s2=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,hold:SORHold.items()}));
-rec('ZP-2 Skale: dom możliwy, alarm cap zdjęty',/Leczenie domowe/.test(s2.eng)&&!s2.hold.cap,JSON.stringify(s2).slice(0,300));
+let s2=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent}));
+rec('ZP-2 Skale: dom możliwy',/leczenie domowe/i.test(s2.eng),JSON.stringify(s2).slice(0,300));
 await clickTab('abx51');const zf2=await frameOf('mod/zp');await sleep(900);
 z=await zf2.evaluate(()=>({place:document.getElementById('zpPlace').textContent,quick:document.getElementById('quick').textContent,dom:document.querySelector('[data-pl="home"]').disabled}));
 rec('ZP-2 ramka: dom, amoksycylina 1 g p.o. co 8 h',/domowe/.test(z.place)&&/Amoksycylina[^+]*1 g[^+]*p\.o\.[^+]*8 h/i.test(z.quick)&&!z.dom,JSON.stringify(z).slice(0,300));
@@ -74,31 +75,31 @@ const p2=await br.newPage();await p2.goto(BASE+'mod/zp/index.html',{waitUntil:'n
 const pl2a=await p2.$eval('#zpPlace',e=>e.textContent);
 await clickTab('scores');await setScores({spo2:91});await sleep(800);
 const pl2b=await p2.$eval('#zpPlace',e=>e.textContent);
-rec('ZP-12 ramka odświeża się bez przeładowania',/domowe/.test(pl2a)&&/HOSPITALIZACJA – oddział/.test(pl2b),pl2a+' → '+pl2b);
+rec('ZP-12 ramka odświeża się bez przeładowania',/domowe/.test(pl2a)&&/Hospitalizacja – oddział/i.test(pl2b),pl2a+' → '+pl2b);
 // ZP-10 (UI): SpO2 91 → oddział + alarm
-let s10=await page.evaluate(()=>{const e=document.getElementById('holdOv');return {eng:(document.querySelector('#capEngine')||{}).textContent,hold:!!SORHold.items().cap,ov:!!e&&!e.hidden,lamp:document.getElementById('lamp').classList.contains('on')};});
-rec('ZP-10 Skale: SpO₂ 91 → oddział, bez alarmu',/oddział/.test(s10.eng)&&!s10.hold&&!s10.ov&&!s10.lamp,JSON.stringify(s10).slice(0,200));
+let s10=await page.evaluate(()=>({eng:(document.querySelector('#capEngine')||{}).textContent,lamp:document.getElementById('lamp').classList.contains('on')}));
+rec('ZP-10 Skale: SpO₂ 91 → oddział, bez alarmu',/oddział/.test(s10.eng)&&!s10.lamp,JSON.stringify(s10).slice(0,200));
 await p2.close();
 // ---- Druk A4: moduł cap
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 await page.emulateMediaType('print');const pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');
 const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap.pdf',pdf);
 const ph=await page.evaluate(()=>document.getElementById('printArea').textContent);
-rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez alarmu ZP',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/44051401359/.test(ph)&&!/WSTRZYMAJ WYPIS/.test(ph),'stron: '+pages);
+rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez sekcji blokady wypisu',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/44051401359/.test(ph)&&!/WSTRZYMAJ|wstrzymaj wypis/i.test(ph),'stron: '+pages);
 const navp=await page.$('#skPrint');rec('Przycisk „Drukuj do dokumentacji (A4)” w module',!!navp,'');
-// ---- DKA hold
+// ---- DKA: wynik bez mechanizmu blokady wypisu
 await go('dka');await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>{const e=f.querySelector('#'+id);if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}};set('glu','450');set('ket','5');set('ph','7.1');set('hco3','10');set('k','4.5');set('na','135');});await sleep(400);
-let dk=await page.evaluate(()=>SORHold.items().dka);rec('DKA → WSTRZYMAJ WYPIS',!!dk,JSON.stringify(dk||{}).slice(0,200));
+let dk=await page.evaluate(()=>({t:document.getElementById('main').innerText,h:typeof window.SORHold}));rec('DKA → wynik, bez alarmu blokady wypisu',/DKA|kwasica/i.test(dk.t)&&dk.h==='undefined'&&!/WSTRZYMAJ WYPIS/.test(dk.t),dk.h);
 // ---- Elektrolity (ramka) – Na 110
 await go('el');const ef=await frameOf('mod/el');await sleep(700);
 const eIds=await ef.evaluate(()=>[...document.querySelectorAll('input')].map(i=>i.id).filter(Boolean).slice(0,30));
-// ---- Następny pacjent przy aktywnym alarmie (ZP-8b)
+// ---- Następny pacjent
 await page.evaluate(()=>{localStorage.setItem('el1state:test','{"a":1}');});
 await go('dashboard');
-const hasOv=await page.evaluate(()=>!document.getElementById('holdOv').hidden);await Promise.all([page.waitForNavigation({waitUntil:'networkidle0'}),page.evaluate(()=>{const b=document.getElementById('holdNext');if(b&&!document.getElementById('holdOv').hidden)b.click();else document.getElementById('nextPt').click();})]);rec('Alarm nie blokuje „Następny pacjent” (przycisk w nakładce)',hasOv,'');await sleep(500);
-const after=await page.evaluate(()=>({keys:Object.keys(localStorage),ss:Object.keys(sessionStorage),name:document.querySelector('#pbName').value,pesel:document.querySelector('#pbPesel').value,age:document.querySelector('#pa').value,hold:SORHold.active(),lamp:!document.getElementById('holdLamp')||document.getElementById('holdLamp').hidden}));
+await Promise.all([page.waitForNavigation({waitUntil:'networkidle0'}),page.evaluate(()=>document.getElementById('nextPt').click())]);await sleep(500);
+const after=await page.evaluate(()=>({keys:Object.keys(localStorage),ss:Object.keys(sessionStorage),name:document.querySelector('#pbName').value,pesel:document.querySelector('#pbPesel').value,age:document.querySelector('#pa').value}));
 const leftover=after.keys.filter(k=>/^(zp1state|zp_handoff|el1state:|se4state:|sk_patient|sk_m_)/.test(k)&&k!=='sk_m_dka_cfg');
-rec('Następny pacjent: pełny reset (także zp1state/zp_handoff/el1state:), nie blokowany alarmem',leftover.length===0&&!after.name&&!after.pesel&&!after.age&&!after.hold&&after.lamp,JSON.stringify(after).slice(0,400));
+rec('Następny pacjent: pełny reset (także zp1state/zp_handoff/el1state:)',leftover.length===0&&!after.name&&!after.pesel&&!after.age,JSON.stringify(after).slice(0,400));
 await go('cap');await clickTab('abx51');const zf3=await frameOf('mod/zp');await sleep(800);
 const z8=await zf3.evaluate(()=>({on:[...document.querySelectorAll('[data-pl].on')].map(b=>b.dataset.pl),spo2:document.getElementById('spo2').value,age:document.getElementById('age').value}));
 rec('ZP-8 po „Następny pacjent”: pusty stan, tryb Auto',z8.on.length===1&&z8.on[0]===''&&z8.spo2===''&&z8.age==='',JSON.stringify(z8));

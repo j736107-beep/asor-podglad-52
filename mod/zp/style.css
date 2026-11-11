@@ -69,3 +69,6 @@ textarea#copyOut{width:100%;min-height:120px;font-size:12.5px;border-radius:10px
 .pl button.blk{text-decoration:line-through;opacity:.45;cursor:not-allowed;background:#eee!important;color:#777!important}
 .psiAuto{margin:6px 0;padding:8px 10px;border-radius:10px;background:#f1f4f8;font-size:13px;line-height:1.45}
 .psiAuto details{margin-top:4px}
+
+.pl button.rec{outline:3px solid #1b7a3a;outline-offset:-3px}
+.pl button.rec::after{content:' ★ rekomendacja';font-size:11px;font-weight:600}

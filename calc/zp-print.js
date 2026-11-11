@@ -8,7 +8,7 @@ function input(){var h=handoff(),b=(h&&h.i)||{},p=root.SKS&&root.SKS.P?root.SKS.
  var i=Object.assign({},b);if(isFinite(p.w))i.w=p.w;if(isFinite(p.age))i.age=p.age;if(p.sex)i.sex=p.sex;if(isFinite(p.crMg)){i.crea=p.crMg;i.creaU='mgdl';}
  i.place='';i.allergy='';var co=p.co||{};i.comorb=!!(b.cancer||b.liver||b.heart||b.renal||b.stroke||co.liver||co.renal||co.heart);i.preg=!!co.preg;
  ['mrsa','pseudo','recent','asp','abscess','leg','atyp','qt','liver','hd','statin','vka','doac','ssri','steroid','colch'].forEach(function(k){if(i[k]==null)i[k]=false;});return{i:i,h:h};}
-var LBL={home:'Leczenie domowe możliwe (niskie ryzyko)',obs:'PSI III – krótka obserwacja, dom tylko po decyzji lekarza',ward:'HOSPITALIZACJA – oddział (dom zablokowany)',icu:'CIĘŻKIE PZP – sugerowany OIOM / OIT (dom zablokowany)'};
+var LBL={home:'Leczenie domowe (niskie ryzyko)',obs:'Krótka hospitalizacja / obserwacja lub dom ze ścisłą kontrolą (decyzja lekarza)',ward:'Hospitalizacja – oddział',icu:'Ciężkie PZP – OIOM / OIT rozważany'};
 function item(x){return strip(x.n)+' '+strip(x.dose)+' '+strip(x.route)+' '+strip(x.q)+(x.rmod||x.rdec?' [nerki: '+strip(x.renal)+']':'');}
 // pilot AI (10.11.2026): wejście uzupełnione o wybory z zakładki „Antybiotykoterapia” (alergia, czynniki ryzyka, ręczne podwyższenie miejsca) – zp1state
 function zpState(){try{var z=JSON.parse(localStorage.getItem('zp1state')||'null');return z&&typeof z==='object'?z:null;}catch(e){return null;}}

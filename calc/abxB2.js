@@ -183,9 +183,10 @@ function bundle(p){p=p||{};var w=num(p.w);var o={};o.fluidMl=(w>=25&&w<=350)?Mat
 var SOURCES={
  lung:'Płuca (PZP)',uti:'Układ moczowy',abd:'Jama brzuszna (pozażółciowe)',bil:'Drogi żółciowe',skin:'Skóra / tkanki miękkie z martwicą',cns:'OUN (zapalenie opon)',unk:'Nieznane ognisko',mening:'Sepsa meningokokowa (podejrzenie)'};
 function sepsisAbx(p){p=p||{};var src=p.source;if(!SOURCES[src])return{ok:false,msg:'Wybierz ognisko zakażenia.'};
- var age=num(p.age);if(!(age>=18&&age<=110))return{ok:false,msg:'Brak wyniku: podaj wiek 18–110 lat (moduł dla dorosłych).'};
+ var age=num(p.age);if(isFinite(age)&&age!==0&&!(age>=18&&age<=110))return{ok:false,msg:'Moduł dla dorosłych: wiek '+age+' lat – poza zakresem 18–110 lat.'};var noAge=!(age>=18&&age<=110);
  var c=cg(p);var crcl=c.ok?c.crcl:NaN;var rrt=p.rrt||'none';var allergy=p.allergy||'none';
  var out={ok:true,crcl:c,regimens:[],warnings:[],decisions:[],notes:[],src:[SRC.npoa20,SRC.npoa14,SRC.ssc21,SRC.unmc,SRC.einstein,SRC.fk]};
+ if(noAge)out.warnings.push('Nie podano wieku (pasek pacjenta lub PESEL) – schemat pokazany dla dorosłego; korekta nerkowa wymaga wieku, masy ciała, płci i kreatyniny.');
  if(!c.ok)out.warnings.push('Nie obliczono CrCl – brakuje: '+c.missing.join(', ')+'. Pierwsza dawka i tak pełna; dalsze dawki bez korekty nerkowej NIE są zweryfikowane.');
  if(c.ok&&c.extreme.length)out.decisions.push('Skrajna masa ciała ('+c.extreme.join(', ')+') – '+DEC+'.');
  out.notes.push('Pierwsza dawka każdego antybiotyku jest PEŁNA, niezależnie od nerek; korekta dotyczy dawek kolejnych (wiele źródeł zaleca nie zmniejszać dawek β-laktamów w pierwszych 24–48 h sepsy: '+DEC+').');

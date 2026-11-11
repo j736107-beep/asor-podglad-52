@@ -33,7 +33,6 @@ lang: pl
 | Strona główna, pasek górny | `index.html` | `<header id="top">`: marka, `#pbar` (pasek pacjenta), przyciski 🖨 Ten ekran / 📚 Źródła / 🖨 Raport zbiorczy / 🆕 Następny pacjent, `#lamp` (lampka alarmu 30 px), `#mute` |
 | Logika powłoki | `shell.js` | `PT` = dane pacjenta w `localStorage['sk_patient']` (`w, h, age, sex, crMg, co{liver,renal,heart,preg}`); `SKS.P()`; `alarm(key,on)` (lampka + dźwięk `SORSound`); nawigacja `go()/show()`; most do ramek `bridge()/sync()`; `wipe()` = „Następny pacjent” |
 | Dźwięki | `sound.js` | `SORSound`: tony do wyboru classic, guitar, piano, bells (domyślny), marimba; ustawienie w `sk_settings.tone` |
-| Alarm „wstrzymaj wypis” | `wypis.js` | `SORWypis.trigger(reasons)`: pełnoekranowy czerwony komunikat, głos `audio/wypis_alarm.mp3` w pętli, nie do wyłączenia aż do zamknięcia karty; blokuje „Następny pacjent”. Ten sam plik dopisuje do menu moduł `hamulec` |
 | Wydruk | `report.js` + `shell.css` (`@media print`, `@page A4 14mm`) | `SORReport.capture()` zapisuje tekstowe migawki modułów (`sk_snap`), `SORReport.print(parts)` drukuje |
 | Lista modułów | `mods.js` (`SKM.list`, `SKM.insertAfter`) + `mods2–5.js`, `b1-ui.js`, `b2-ui.js`, `c-ui.js`, `clinical-ui.js` (`install()`), `workbench.js`, `fluid.js`, `leki-ui.js`, `icd-ui.js`, `telefony-ui.js`, `eucast-ui.js` | |
 | Style | `shell.css` (`--pk:#ff5fa2`, `--vi:#7b3fe4`), `advanced.css`, `big.css` | |
@@ -80,8 +79,8 @@ Moduł `zp` czyta pasek pacjenta tylko przy załadowaniu (`bar()`). Alarm z ramk
 
 | Etap | Zakres | Priorytet |
 |------------------|------------------------------------------------------------------|----------------|
-| **Etap 1 – bezpieczeństwo i szkielet** | wspólny pasek pacjenta (pkt 1); wydruk 1–2 stron A4 (pkt 2); wspólny mechanizm „WSTRZYMAJ WYPIS” (pkt 5) z regułami dla zapalenia płuc, troponiny/OZW, sepsy, elektrolitów, stanu padaczkowego i DKA/HHS; wyłączenie hamulca (pkt 4); pełna naprawa zapalenia płuc (pkt 14); pełne czyszczenie przy „Następny pacjent”; prefiks kluczy w 5.2 | P1 |
-| **Etap 2 – treść kliniczna** | stan padaczkowy: drugi lek II rzutu i tiamina (pkt 7); hiponatremia i tiamina (pkt 8); anafilaksja oporna i czas obserwacji (pkt 12); posiewy w sepsie (pkt 13); neuroinfekcje: wirusowy wzorzec PMR (pkt 16); reguły „WSTRZYMAJ WYPIS” dla pozostałych modułów; własne kalkulatory offline (pkt 17) | P2 |
+| **Etap 1 – bezpieczeństwo i szkielet** | wspólny pasek pacjenta (pkt 1); wydruk 1–2 stron A4 (pkt 2); wyłączenie hamulca (pkt 4); pełna naprawa zapalenia płuc (pkt 14); pełne czyszczenie przy „Następny pacjent”; prefiks kluczy w 5.2 | P1 |
+| **Etap 2 – treść kliniczna** | stan padaczkowy: drugi lek II rzutu i tiamina (pkt 7); hiponatremia i tiamina (pkt 8); anafilaksja oporna i czas obserwacji (pkt 12); posiewy w sepsie (pkt 13); neuroinfekcje: wirusowy wzorzec PMR (pkt 16); własne kalkulatory offline (pkt 17) | P2 |
 | **Etap 3 – wygląd i grafika** | schematy EKG (pkt 9); nowa szata graficzna bez różu: omdlenia, zapalenie płuc, elektrolity, potem pozostałe ramki (pkt 6); polskie nazwy DKA/HHS (pkt 10); zdjęcia grzybów (pkt 15); kod Kompendium na stronie tytułowej (pkt 3) | P3 (pkt 10 i 3 są proste i mogą wejść wcześniej) |
 
 **Po każdym etapie:** testy z rozdziału 4, publikacja do wersji testowej 5.2, akceptacja lekarza i dopiero potem kolejny etap.
@@ -138,7 +137,7 @@ Dane same przechodzą do wszystkich modułów i nie trzeba ich wpisywać ponowni
 - data i godzina wydruku, godzina przyjęcia;
 - moduł i wersja.
 
-**Treść:** wprowadzone dane, wyniki skal, propozycje leczenia z dawkami i rachunkiem pompy, zalecenia, alarmy („WSTRZYMAJ WYPIS” z przyczynami i godziną potwierdzenia przez lekarza).
+**Treść:** wprowadzone dane, wyniki skal, propozycje leczenia z dawkami i rachunkiem pompy, zalecenia.
 
 **Stopka:** „Narzędzie pomocnicze – niecertyfikowane. Decyzja i odpowiedzialność: lekarz”, miejsce na podpis i pieczątkę, numer strony.
 
@@ -206,47 +205,9 @@ Dane same przechodzą do wszystkich modułów i nie trzeba ich wpisywać ponowni
 
 **Testy:** przyciski są nieaktywne, napis widoczny, kliknięcie i Enter nic nie robią, alarm z tego modułu nie może się włączyć.
 
-## Punkt 5. „WSTRZYMAJ WYPIS” w każdym module – P1 (mechanizm) / P1–P2 (reguły)
+## Punkt 5. (usunięty)
 
-**Co:** bezwzględne wstrzymanie wypisu z mechanizmu hamulca przenosimy do każdego modułu.
-
-- Gdy wpisane parametry wskazują na bezpośrednie zagrożenie życia, automatycznie włącza się sygnał:
-  - powtarzany komunikat głosowy „Wstrzymaj wypis. Powtarzam: wstrzymaj wypis.”;
-  - wybrany sygnał dźwiękowy, jak dotąd (`SORSound`: klasyczny, gitara, pianino, dzwoneczki, marimba);
-  - **większa migająca czerwona lampka**.
-- Pod lampką lista przyczyn z nazwą modułu.
-
-**Wspólny mechanizm (nowy plik `hold.js`, zastępuje `wypis.js`):**
-
-- API: `SORHold.set(modulId, przyczyny[])` i `SORHold.clear(modulId)`. Moduły natywne wołają je bezpośrednio, ramki przez `parent.SORHold`. W `SKM.list` można zamiast tego użyć deklaratywnego selektora `hold:` (analogicznie do istniejącego `red:`).
-- Lampka `#lamp`: 30 px zamienić na ok. 90 px, z napisem „WSTRZYMAJ WYPIS” obok, miganiem ok. 2 Hz i czerwoną poświatą. Na każdej stronie widoczny czerwony pasek z przyczynami.
-- Dźwięk: najpierw wybrany ton z Ustawień, potem komunikat głosowy (`audio/wypis_alarm.mp3`), powtarzane.
-- **Zachowanie po potwierdzeniu [DO AKCEPTACJI – wybór lekarza]:**
-  - **Wariant A (jak w 5.1):** alarmu nie da się wyciszyć do zamknięcia karty. Ryzyko: fałszywy alarm blokuje pracę na całym dyżurze.
-  - **Wariant B (rekomendowany):** głos i dźwięk powtarzają się, dopóki lekarz nie kliknie „Potwierdzam: pacjent NIE zostanie wypisany do domu”. Potwierdzenie z godziną trafia do wydruku i raportu. Po nim dźwięk milknie, ale czerwony pasek i lampka zostają do ustąpienia przyczyny albo „Następnego pacjenta”. Każda **nowa** przyczyna włącza dźwięk od nowa.
-- „Następny pacjent” ma być zawsze możliwy, z dodatkowym potwierdzeniem przy aktywnym wstrzymaniu.
-
-**Reguły wyzwalające (bezpośrednie zagrożenie życia):**
-
-| Moduł | Wyzwalacz „WSTRZYMAJ WYPIS” | Źródło |
-|------------------|------------------------------------------------------------|----------------------|
-| Zapalenie płuc | dowolne kryterium hospitalizacji z pkt 14: PSI IV–V, CURB-65 ≥2, SpO₂ <92%, SBP <90 mmHg, ≥1 duże lub ≥3 małe kryteria ATS/IDSA, brak tolerancji leczenia doustnego | ATS/IDSA 2019; BTS/NICE |
-| Troponina / OZW | STEMI lub równoważnik (ściana tylna, prawa komora, de Winter, LBBB albo stymulacja z dodatnimi kryteriami Sgarbossy), uniesienie ST w aVR z rozlanymi obniżeniami, zespół Wellensa, dowolne kryterium „bardzo wysokiego ryzyka” (wstrząs, ból oporny, groźna arytmia, ostra niewydolność serca, powikłanie mechaniczne), troponina „rule-in” w algorytmie 0/1 h | ESC 2023 OZW |
-| Sepsa | podejrzenie zakażenia i: SBP <90 albo MAP <65 mmHg mimo płynów, potrzeba wazopresora, mleczany ≥4 mmol/l; mleczany ≥2 mmol/l z dysfunkcją narządową [DO AKCEPTACJI] | SSC 2021; Sepsis-3 |
-| Elektrolity | K⁺ ≥6,5 mmol/l albo ≥6,0 ze zmianami w EKG; K⁺ <2,5 albo <3,0 z zaburzeniami rytmu lub niedowładem; Na⁺ <125 z objawami umiarkowanymi lub ciężkimi albo Na⁺ ≤120 bez względu na objawy; Na⁺ >160; Ca²⁺ skorygowany >3,5 mmol/l; Mg²⁺ <0,5 mmol/l z zaburzeniami rytmu [progi DO AKCEPTACJI] | ERC 2021 (hiperkaliemia); ESE 2014 |
-| Stan padaczkowy | zawsze, gdy rozpoznano stan padaczkowy (napad ≥5 min lub kolejne napady bez powrotu świadomości) albo podano lek I rzutu | ILAE 2015; PTE 2018 |
-| DKA / HHS | spełnione kryteria DKA lub HHS | JBDS / ADA 2024 |
-| Anafilaksja | od pierwszej dawki adrenaliny do upływu minimalnego czasu obserwacji z pkt 12 (licznik) | RCUK 2021 / ERC |
-| Omdlenie | dowolna cecha wysokiego ryzyka według ESC 2018 (istniejące reguły modułu) | ESC 2018 |
-| Zatorowość płucna | ZP wysokiego albo pośrednio-wysokiego ryzyka; sPESI ≥1 | ESC 2019 |
-| Ostra niewydolność serca | SBP <90, SpO₂ <90% mimo tlenu, oddechy >25/min z wysiłkiem oddechowym, hipoperfuzja | ESC 2021/2023 |
-| AF | niestabilność hemodynamiczna, rytm komór >150/min z objawami, preekscytacja | ESC 2024 |
-| Krwawienie z GOPP | skala Glasgow-Blatchford ≥2, niestabilność hemodynamiczna | ESGE 2021 |
-| Neurologia / Neuroinfekcje | ostry deficyt (kandydat do leczenia reperfuzyjnego); podejrzenie bakteryjnego zapalenia opon albo zapalenia mózgu | ESO; ESCMID 2016 |
-| Zatrucia | podejrzenie zatrucia amatoksynami (objawy po >6 h), metanol lub glikol, GCS <15 | |
-| Pompy SOR | prowadzony wlew wazopresora lub inotropu | |
-
-**Testy:** dla każdego modułu jeden przypadek dodatni, który włącza alarm z poprawną przyczyną, i jeden ujemny, który go nie włącza. Wybór tonu w Ustawieniach zmienia sygnał. Potwierdzenie (wariant B) wycisza dźwięk i zostawia pasek. Nowa przyczyna włącza dźwięk ponownie. Wydruk zawiera alarm i godzinę potwierdzenia.
+Decyzja lekarza 11.11.2026: wersja 5.2 nie zawiera żadnego mechanizmu alarmu blokującego wypis – bez lampy, nakładki, dźwięku, paska i sekcji na wydruku, w żadnym module.
 
 ## Punkt 6. Szata graficzna bez różu (omdlenia, elektrolity, zapalenie płuc, pozostałe) – P3
 
@@ -388,7 +349,7 @@ Nad kartami czerwony napis: „EKG 12-odprowadzeniowe ≤10 min od pierwszego ko
 
 **Źródła:** ESC 2023 Wytyczne dotyczące OZW; Czwarta uniwersalna definicja zawału serca (2018); Sgarbossa i wsp. NEJM 1996; Smith i wsp. Ann Emerg Med 2012; AHA/ACCF/HRS 2009 (kryteria LBBB).
 
-**Testy:** każda karta ma schemat (14 kart), działa offline i jest widoczna na wydruku (SVG nie jest wycinany w `report.js`, który dziś pomija `SVG`; dodać wyjątek dla `.ecg-svg`). Zaznaczenie karty z kategorii STEMI włącza „WSTRZYMAJ WYPIS” (pkt 5).
+**Testy:** każda karta ma schemat (14 kart), działa offline i jest widoczna na wydruku (SVG nie jest wycinany w `report.js`, który dziś pomija `SVG`; dodać wyjątek dla `.ecg-svg`).
 
 ## Punkt 10. DKA / HHS – polskie nazwy – P3 (proste)
 
@@ -451,7 +412,7 @@ Przed wypisem do zaleceń: 2 autowstrzykiwacze adrenaliny, instruktaż, poradnia
 
 1. Masa 70 kg i „oporna”: wlew 1 mg/50 ml = 20 µg/ml, 17,5–35 ml/h = 5,8–11,7 µg/min.
 2. β-bloker: glukagon 1–2 mg co 5 min, a nie 5–15 µg/min.
-3. Dwie dawki adrenaliny i godzina ustąpienia 14:00: wypis zablokowany do 20:00.
+3. Dwie dawki adrenaliny i godzina ustąpienia 14:00: obserwacja do 20:00.
 4. Wlew adrenaliny: hospitalizacja.
 
 ## Punkt 13. Sepsa – pobranie materiału na posiewy (lista do odhaczenia) – P2
@@ -514,42 +475,38 @@ Przed wypisem do zaleceń: 2 autowstrzykiwacze adrenaliny, instruktaż, poradnia
    - **Małe kryteria ATS/IDSA (9; ≥3 = ciężkie PZP):** (1) oddechy ≥30/min; (2) PaO₂/FiO₂ ≤250 mmHg; (3) nacieki wielopłatowe; (4) splątanie lub dezorientacja; (5) mocznik (BUN, azot mocznika) ≥20 mg/dl, czyli mocznik ≥7,14 mmol/l; (6) leukopenia <4 G/l z powodu zakażenia; (7) małopłytkowość <100 G/l; (8) hipotermia <36 °C; (9) hipotensja wymagająca intensywnej płynoterapii. „Ciężkie PZP” = ≥1 duże albo ≥3 małe.
    - **OIT** – oddział intensywnej terapii (w szpitalu: OIOM).
    - **BTS** – British Thoracic Society; **NPOA** – Narodowy Program Ochrony Antybiotyków (rekomendacje 2016).
-4. **Deterministyczne miejsce leczenia** (kolejność reguł; pierwsza spełniona decyduje):
+4. **Rekomendacja miejsca leczenia – bez blokad (decyzja lekarza 11.11.2026; BTS, NPOA 2016, ERS/ESCMID 2023, ATS/IDSA 2019):**
 
-   | Warunek | Wynik | „Dom” |
-   |---|---|---|
-   | ≥1 duże kryterium ATS/IDSA | **OIT** (obowiązkowo) | przekreślony, zablokowany |
-   | ≥3 małe kryteria ATS/IDSA | **OIT / intensywny nadzór** (sugerowany) | zablokowany |
-   | SpO₂ <85% przy oddychaniu powietrzem albo potrzeba FiO₂ ≥0,4 / HFNO (wysokoprzepływowa tlenoterapia donosowa) / NIV (wentylacja nieinwazyjna) [DO AKCEPTACJI] | **konsultacja OIT** (sugerowany OIT) | zablokowany |
-   | CURB-65 ≥3 | oddział z rozważeniem OIT | zablokowany |
-   | PSI IV–V, CURB-65 = 2, SpO₂ <92% (BTS/NICE; ATS/IDSA <90%), SBP <90, brak tolerancji p.o., brak opieki | **oddział** | zablokowany |
-   | Niepełne dane PSI lub CURB-65 | oddział (domyślnie) + „uzupełnij: …” | zablokowany do uzupełnienia |
-   | PSI III, CURB-65 0–1, bez powyższych | krótka obserwacja w SOR; dom możliwy po decyzji lekarza | dostępny z ostrzeżeniem |
-   | PSI I–II i CURB-65 0–1, SpO₂ ≥92%, toleruje p.o., ma opiekę | **dom** | dostępny |
+   | Warunek | Rekomendacja |
+   |---|---|
+   | ≥1 duże lub ≥3 małe kryteria ATS/IDSA, SpO₂ <85%, CURB-65 4–5 | OIT rozważany / konsultacja OIT |
+   | CURB-65 3, PSI IV–V, SpO₂ <92%, SBP <90, brak tolerancji p.o., brak warunków opieki | hospitalizacja – oddział |
+   | CURB-65 2 z chorobami współistniejącymi lub naciekami wielopłatowymi | krótka hospitalizacja |
+   | CURB-65 2 bez modyfikatorów, PSI III, nacieki wielopłatowe, dane niepełne | krótka hospitalizacja / obserwacja LUB dom ze ścisłą kontrolą po 48–72 h |
+   | CURB-65 0–1, PSI I–II, bez modyfikatorów | zwykle leczenie domowe |
 
-   Ręczny wybór może tylko **podnieść** poziom (dom → oddział → OIT), nigdy go obniżyć. Zablokowany „Dom” jest przekreślony z dymkiem „Zablokowane: PSI klasa IV; SpO₂ 70%”.
+   Rekomendacja zawiera listę powodów. Każde miejsce leczenia (Dom / Oddział / OIT) jest zawsze do wybrania przez lekarza; wybór niezgodny z rekomendacją wyświetla uwagę „udokumentuj uzasadnienie”. Skale, CrCl i schemat z dawkami (korekta do CrCl i alergii) przeliczają się na bieżąco.
 5. **Antybiotyk zgodny z poziomem (NPOA 2016, ATS/IDSA 2019, ERS/ESICM/ESCMID/ALAT 2023):**
    - **dom:** amoksycylina (bez chorób współistniejących); amoksycylina z klawulanianem + makrolid lub doksycyklina (z chorobami współistniejącymi). Bez zmian merytorycznych, istniejące karty;
    - **oddział, PZP nieciężkie:** ampicylina lub amoksycylina z klawulanianem i.v. albo ceftriakson lub cefotaksym, ± makrolid. Ampicylina jest tu zgodna z rekomendacjami polskimi, ale nagłówek ma podawać prawdziwy powód (np. „SpO₂ <92%”), a nie „CURB-65 2”;
    - **OIT / ciężkie PZP:** ceftriakson lub cefotaksym **+ makrolid** (ERS 2023: preferowany makrolid); alternatywa przy alergii natychmiastowej: lewofloksacyna lub moksyfloksacyna. Ampicylina i amoksycylina p.o. **niedostępne**. Rozważyć hydrokortyzon w ciężkim PZP według ERS/ESICM 2023 i ATS 2025 **[DO DECYZJI LEKARZA]**;
    - ryzyko MRSA (gronkowca złocistego opornego na metycylinę) lub *Pseudomonas*: istniejące reguły.
 6. **Ścieżka danych:** ramka `zp` reaguje na zmiany w „Skalach” i w pasku na żywo (`storage` → `bar()` → `result()`). Stan modułu czyszczony przy „Następny pacjent”. Wybór miejsca leczenia **nie jest zapamiętywany** między pacjentami.
-7. **Alarm:** każdy wynik inny niż „dom” włącza „WSTRZYMAJ WYPIS” (pkt 5).
 
 **Przypadki testowe (obowiązkowe, automatyczne w `node` + ręczne w przeglądarce):**
 
 | Nr | Dane | Oczekiwany wynik |
 |------|---------------------------------------|-------------------------------------------------------|
-| ZP-1 | 40 lat, M, SpO₂ 70% na powietrzu, reszta prawidłowa | sugerowany OIT; „Dom” przekreślony; ciężkie PZP: ceftriakson lub cefotaksym + makrolid; **brak amoksycyliny p.o. i ampicyliny**; WSTRZYMAJ WYPIS |
+| ZP-1 | 40 lat, M, SpO₂ 70% na powietrzu, reszta prawidłowa | sugerowany OIT (rekomendacja); ciężkie PZP: ceftriakson lub cefotaksym + makrolid; **brak amoksycyliny p.o. i ampicyliny** |
 | ZP-2 | 30 lat, K, bez chorób, RR 16, SBP 120, HR 80, T 37,5, SpO₂ 97%, mocznik 4 | PSI I (reguła 1. etapu), CURB-65 0; dom; amoksycylina 1 g p.o. co 8 h |
 | ZP-3 | 70 lat, M, niewydolność serca, pozostałe prawidłowe, pełne laboratorium | PSI = 70 + 10 = 80 → klasa III; CURB-65 = 1 (wiek ≥65); krótka obserwacja, dom z ostrzeżeniem |
-| ZP-4 | 85 lat, M, nowotwór, pH 7,30 | PSI = 85 + 30 + 30 = 145 → klasa V; oddział, dom zablokowany |
-| ZP-5 | oddechy 32, nacieki wielopłatowe, splątanie | 3 małe kryteria → OIT; dom zablokowany |
+| ZP-4 | 85 lat, M, nowotwór, pH 7,30 | PSI = 85 + 30 + 30 = 145 → klasa V; rekomendacja: oddział |
+| ZP-5 | oddechy 32, nacieki wielopłatowe, splątanie | 3 małe kryteria → rekomendacja OIT |
 | ZP-6 | wazopresor | 1 duże kryterium → OIT obowiązkowo |
-| ZP-7 | brak mocznika i wieku | „Uzupełnij”; dom zablokowany; domyślnie oddział |
+| ZP-7 | brak mocznika i wieku | „Uzupełnij”; rekomendacja wstępna: krótka obserwacja (bez blokady) |
 | ZP-8 | poprzedni pacjent „Dom”, potem „Następny pacjent” | pusty stan, tryb Auto |
-| ZP-9 | wynik „oddział”, lekarz klika „Dom” | kliknięcie zablokowane, dymek z powodem |
-| ZP-10 | SpO₂ 91%, reszta jak ZP-2 | oddział (SpO₂ <92%); dom zablokowany |
+| ZP-9 | wynik „oddział”, lekarz klika „Dom” | wybór przyjęty, schemat domowy + uwaga z rekomendacją |
+| ZP-10 | SpO₂ 91%, reszta jak ZP-2 | rekomendacja: oddział (SpO₂ <92%) |
 | ZP-11 | ZP-1 + alergia natychmiastowa na penicyliny | brak β-laktamów; fluorochinolon oddechowy według istniejących reguł |
 | ZP-12 | zmiana SpO₂ w „Skalach” przy otwartej ramce | wynik w ramce zmienia się bez przeładowania |
 | ZP-13 | 50 lat, K, bez chorób, pozostałe prawidłowe | reguła 1. etapu PSI → klasa I (punktowo 50 − 10 = 40); dom |
@@ -616,7 +573,7 @@ Każdy kalkulator: wzór, źródło, jednostki zgodne z przełącznikiem mg/dl �
 
 Zatorowość płucna, Ostra niewydolność serca, Migotanie przedsionków (AF), Krwawienie z GOPP (górnego odcinka przewodu pokarmowego), Transfuzjologia, Neurologia, Leki – karty dawkowania.
 
-Dostają **tylko** wspólne elementy z pkt 1, 2 i 5. Reguły „WSTRZYMAJ WYPIS” dla nich (tabela w pkt 5) wchodzą w etapie 2 po akceptacji lekarza.
+Dostają **tylko** wspólne elementy z pkt 1 i 2.
 
 # 4. Testy i kontrola jakości
 
@@ -648,7 +605,7 @@ Dostają **tylko** wspólne elementy z pkt 1, 2 i 5. Reguły „WSTRZYMAJ WYPIS�
 
 # 6. Otwarte pytania do lekarza
 
-1. Alarm „WSTRZYMAJ WYPIS”: wariant A (bez możliwości wyciszenia, jak w 5.1) czy B (potwierdzenie wycisza dźwięk, czerwony pasek zostaje)? Rekomendacja: B.
+1. (usunięte – alarm blokady wypisu nie istnieje w 5.2)
 2. Próg SpO₂ dla hospitalizacji w zapaleniu płuc: <92% (BTS/NICE, ostrzejszy) czy <90% (ATS/IDSA)? Rekomendacja: <92%.
 3. Kryterium „konsultacja OIT” przy SpO₂ <85% na powietrzu albo FiO₂ ≥0,4 / HFNO / NIV – akceptacja progu.
 4. Progi elektrolitowe w tabeli z pkt 5 – akceptacja.

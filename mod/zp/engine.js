@@ -38,10 +38,12 @@ function curb65(i){var miss=[],sc=0;
 function CS(){if(typeof CAPSEV!=='undefined')return CAPSEV;if(typeof window!=='undefined'&&window.CAPSEV)return window.CAPSEV;if(typeof require==='function')return require('../../calc/cap-severity.js');throw new Error('brak silnika CAPSEV');}
 function place(i){var a=CS().assess(i);return{p:a.place,c:a.curb,why:a.reasons,auto:true,a:a,blocked:a.homeBlocked};}
 // ---------- nerki ----------
-function crcl(i){var m=num(i.crclManual);if(isFinite(m)&&m>0)return{v:m,src:'wpisany ręcznie'};
- var a=num(i.age),w=num(i.w),cr=num(i.crea);if(i.creaU==='umol')cr=cr/88.42;
- if(!(a>=18&&a<=110&&w>=30&&w<=250&&cr>=0.2&&cr<=20&&(i.sex==='m'||i.sex==='f')))return{v:NaN,src:'brak danych (wiek, płeć, masa, kreatynina)'};
- var v=(140-a)*w/(72*cr)*(i.sex==='f'?0.85:1);return{v:Math.round(v),src:'Cockcroft–Gault, masa rzeczywista'};}
+function crcl(i){var m=num(i.crclManual);if(isFinite(m)&&m>0)return{v:m,src:'wpisany ręcznie',auto:false};
+ var a=num(i.age),w=num(i.w),cr=num(i.crea),note='';if(i.creaU==='umol')cr=cr/88.42;else if(cr>25&&cr<=1800){cr=cr/88.42;note='Kreatynina '+String(num(i.crea)).replace('.',',')+' > 25 – przyjęto µmol/l (sprawdź jednostkę).';}
+ var miss=[];if(!(a>=18&&a<=110))miss.push('wiek');if(!(i.sex==='m'||i.sex==='f'))miss.push('płeć');if(!(w>=30&&w<=250))miss.push('masa');if(!(cr>=0.2&&cr<=20))miss.push('kreatynina');
+ if(miss.length)return{v:NaN,src:'brak danych: '+miss.join(', '),auto:true,missing:miss};
+ var v=(140-a)*w/(72*cr)*(i.sex==='f'?0.85:1);var c2=Math.round(cr*100)/100,F2=function(x){return String(Math.round(x*100)/100).replace('.',',');};
+ return{v:Math.round(v),src:'Cockcroft–Gault, masa rzeczywista',auto:true,f:'(140 − '+F2(a)+') × '+F2(w)+' kg / (72 × '+F2(c2)+' mg/dl)'+(i.sex==='f'?' × 0,85':''),note:note};}
 // korekty nerkowe wg ChPL (zwraca {t, mod, avoid, dec})
 function R(k,c,ctx){ctx=ctx||{};var hd=ctx.hd===true,w=num(ctx.w),T=function(t,o){o=o||{};o.t=t;return o;};
  if(!isFinite(c)&&!hd)return T('CrCl nieznany – nie oceniono korekty nerkowej',{unk:true});
@@ -116,7 +118,10 @@ function txtItem(o){return o.n+' ('+o.brand+') '+o.dose+' '+o.route+' '+o.q;}
 // ---------- dobór ----------
 function plan(i){i=i||{};var out={ok:false,need:[],regs:[],avoid:[],dec:[],notes:[],ix:[],dur:'',src:['npoa','ats','ers','nice']};
  out.warn=[];var age=num(i.age);if(isFinite(age)&&!(age>=18&&age<=110))out.need.push('moduł tylko dla dorosłych (18–110 lat)');if(!isFinite(age))out.warn.push('brak wieku – założono pacjenta dorosłego (CURB-65 bez kryterium wieku)');
- var pl=place(i);out.place=pl;var P=pl.p;out.manualRejected=false;if(i.place&&i.place!==P){if(CS().allowed(i.place,P))P=i.place;else{out.manualRejected=true;out.warn.push('Ręczny wybór „'+({home:'Dom',ward:'Oddział',icu:'OIT'})[i.place]+'” ODRZUCONY – miejsce leczenia można zmienić tylko w górę (wg silnika: '+pl.a.label+').');}}if(pl.a.missing.length&&P==='ward'&&!pl.a.reasons.some(function(r){return r.indexOf('dane niepełne')<0;})){out.pDef=true;out.dec.push('Dane niepełne: schemat oddziałowy wyświetlony z ostrożności – uzupełnij dane (zakładka „Skale i hospitalizacja”) – '+DEC+'.');}out.pAuto=pl.p;out.obs=P==='obs';if(P==='obs'){P='home';out.warn.push('PSI III: schemat doustny pokazany WARUNKOWO – najpierw krótka obserwacja i ocena warunków opieki ('+DEC+').');}out.p=P;
+ var pl=place(i);out.place=pl;var P=pl.p;out.manualRejected=false;var LBL={home:'Dom',obs:'krótka obserwacja / dom ze ścisłą kontrolą',ward:'Oddział',icu:'OIT'};
+ if(i.place&&i.place!==P){if(CS().RANK[i.place]<CS().RANK[P])out.warn.push('Wybrano „'+LBL[i.place]+'” – rekomendacja silnika: '+pl.a.label.replace('Rekomendacja: ','')+' ('+(pl.why||[]).filter(function(r){return r.indexOf('dane niepełne')<0;}).join('; ')+'). Decyzja lekarza – udokumentuj uzasadnienie.');P=i.place;}
+ out.pAuto=pl.p;out.obs=P==='obs';if(P==='obs'){P='home';out.warn.push('Schemat doustny pokazany jako opcja: leczenie domowe możliwe po ocenie lekarza – kontrola po 48–72 h ('+DEC+').');}out.p=P;
+ if(P==='home')out.notes.push('Leczenie domowe: kontrola kliniczna po 48–72 h (wcześniej przy pogorszeniu: duszność, SpO₂ <92%, splątanie, brak poprawy); pisemna informacja dla pacjenta (BTS / NICE NG138 / NPOA 2016).');
  if(!['none','late','imm'].includes(i.allergy)){i=Object.assign({},i,{allergy:'none'});out.alDef=true;out.warn.push('alergia na penicyliny nieustalona – schemat zakłada BRAK alergii; potwierdź wywiad');}
  if(out.need.length)return out;
  var c=crcl(i);out.crcl=c;var ctx={crcl:c.v,hd:i.hd===true,w:num(i.w),preg:i.preg===true};
@@ -142,6 +147,7 @@ function plan(i){i=i||{};var out={ok:false,need:[],regs:[],avoid:[],dec:[],notes
  if(P==='home'){
   if(pseudo||mrsa)out.dec.push('Dom, a w wywiadzie MRSA / Pseudomonas w drogach oddechowych: brak zweryfikowanego schematu doustnego – rozważ hospitalizację i posiewy: '+DEC+'.');
   if(pen&&!i.comorb){reg('Pierwszy wybór – dom, bez chorób współistniejących','pref',[I('amox')],'Amoksycylina działa na pneumokoka (wrażliwość 94% w Polsce, NPOA 2016).',['npoa','nice'],D2);
+   if(!(leg||i.atyp)&&out.place&&out.place.c&&out.place.c.score>=2)reg('CURB-65 '+out.place.c.score+' leczony w domu – rozważ dołączenie do amoksycyliny','alt',[macro('po')||(!noDoxy?I('doxy'):null)],'BTS (umiarkowane PZP): amoksycylina + makrolid; ATS/IDSA 2019: makrolid lub doksycyklina – drugi lek '+DEC+'. Kontrola po 48–72 h.',['ats','npoa'],D2);
    if(leg||i.atyp)reg('Podejrzenie drobnoustrojów atypowych / Legionelli – zamiast lub z amoksycyliną','alt',[macro('po')||(!noDoxy?I('doxy'):null)],'NPOA 2016: makrolid u młodych dorosłych z łagodnym przebiegiem bez chorób współistniejących.',['npoa','ats'],durLeg);}
   else if(pen&&i.comorb){var okCl=!(isFinite(c.v)&&c.v<30)&&!ctx.hd;
    reg('Dom + choroby współistniejące','pref',[okCl?I('amoxclav_po'):I('amox'),macro('po')||(!noDoxy?I('doxy'):null)],(okCl?'Amoksycylina/klawulanian':'CrCl <30: amoksycylina zamiast postaci 7:1')+' + makrolid lub doksycyklina (ATS/IDSA 2019 tab. 3). NPOA 2016 nie wymaga skojarzenia – drugi lek '+DEC+'.',['ats','npoa'],D2);

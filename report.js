@@ -85,7 +85,7 @@
   function modulesHtml(ids,lim){var all=snaps(),keys=Object.keys(all).filter(function(k){return !ids||ids.indexOf(k)>=0;});
     function cut(t,l){t=String(t||'');return l&&t.length>l?t.slice(0,l).replace(/\s+\S*$/,'')+' … [skrócono do wydruku A4 – pełna treść w module]':t;}
     return keys.map(function(k){var s=all[k],L0=lim&&s.ai?Math.max(1500,lim-s.ai.length):lim,l1=L0&&s.sub?Math.round(L0*0.5):L0,t=cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3>'+(s.ai?'<div class="rp-text rp-ai">'+esc(s.ai)+'</div>':'')+'<div class="rp-text">'+esc(t)+'</div>'+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,L0?L0-l1:0))+'</div>':'');}).join('');}
-  function pwHtml(){var m=root.SKS&&root.SKS.pwMem;if(!m||!m.report)return '';var R=m.report;function ul(t,a){return a&&a.length?'<h3>'+esc(t)+'</h3><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}return ul('Nie przeocz',R.alerts)+ul('Co zrobić teraz',R.actions)+ul('Czego brakuje',R.missing)+(R.algo&&R.algo.length?ul('Algorytmy',R.algo):'');}
+  function pwHtml(){var m=root.SKS&&root.SKS.pwMem;if(!m||!m.report)return '';var R=m.report;function ul(t,a){return a&&a.length?'<h3>'+esc(t)+'</h3><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}return ul('Nie przeocz',R.alerts)+ul('Co zrobić teraz',R.actions)+ul('Czego brakuje',R.missing)+(R.algo&&R.algo.length?ul('Algorytmy',R.algo):'')+ul('Wyniki – przebieg w czasie',R.trend);}
   var TITLES={pw:'Przegląd wyników – czujnik bezpieczeństwa',doc:'Dokumentacja',done:'Co rzeczywiście wykonano',pumps:'Pompy – zapisane nastawy',fluid:'Bilans płynów',modules:'Moduły użyte u pacjenta'};
   function build(parts){
     parts=parts&&parts.length?parts:['doc','done','pumps','fluid','modules'];var out='',any=false;
@@ -96,7 +96,7 @@
       if(h){any=true;out+=section(p&&p.module?'Moduł':TITLES[p],h);}});
     if(!any)out='<p><b>Brak danych do wydruku w wybranym zakresie.</b> Wypełnij moduł lub dodaj wpisy.</p>';
     var title=parts.length>=4?'Raport zbiorczy – Asystent lekarza SOR':'Wydruk – Asystent lekarza SOR';
-    return '<h1>'+title+'</h1><div class="sub">Wydruk: '+esc(now())+' (Europe/Warsaw) · Narzędzie pomocnicze – niecertyfikowane</div>'+section('Dane pacjenta',patientHtml())+(root.SORHold?root.SORHold.printHtml():'')+out+(any&&root.SORSources?'<div class="rp-srcwrap">'+root.SORSources.footerHtml(mids)+'</div>':'')+
+    return '<h1>'+title+'</h1><div class="sub">Wydruk: '+esc(now())+' (Europe/Warsaw) · Narzędzie pomocnicze – niecertyfikowane</div>'+section('Dane pacjenta',patientHtml())+out+(any&&root.SORSources?'<div class="rp-srcwrap">'+root.SORSources.footerHtml(mids)+'</div>':'')+
       '<div class="sig"><div>Lekarz: .......................................</div><div>Podpis i pieczątka<br><br>.......................................</div></div><div class="foot">Asystent lekarza SOR – narzędzie pomocnicze, niecertyfikowane. Wartości i dawki weryfikuje lekarz; wydruk nie zastępuje dokumentacji medycznej szpitala.</div>';}
   var HOSP='Podhalański Szpital Specjalistyczny im. Jana Pawła II w Nowym Targu',SOR='Szpitalny Oddział Ratunkowy',LOGO='img/pszs-logo.svg';
   var FOOT='Dokument wygenerowany pomocniczo poza systemem szpitalnym – zatwierdzam: ............................................ (pieczątka i podpis lekarza)';

@@ -18,7 +18,7 @@ await tf.evaluate(()=>{const t=new Date(Date.now()-15*60000);document.getElement
 const cl=await tf.evaluate(()=>{const e=document.getElementById('ecgCnt');return {t:e.textContent,late:e.classList.contains('late')}});rec('Licznik: >10 min bez EKG → czerwony',cl.late,JSON.stringify(cl));
 for(const k of ['dew','sgar']){await tf.evaluate(()=>{document.querySelectorAll('#ecg .mk').forEach(b=>{if(/Zaznaczone/.test(b.textContent))b.click();});});await tf.evaluate(k=>document.querySelector('#ecg .mk[data-k="'+k+'"]').click(),k);await sleep(500);
  const r=await tf.evaluate(()=>({red:!!document.querySelector('#light.L-red'),on:!!document.querySelector('#ecg button.on')}));rec('Karta '+k+' → czerwone światło',r.red&&r.on,JSON.stringify(r));}
-await go('dashboard');await sleep(600);const hold=await page.evaluate(()=>JSON.stringify(Object.keys(SORHold.items())));rec('Wstrzymanie wypisu z troponiny (de Winter/Sgarbossa)',/trop/.test(hold||''),String(hold).slice(0,200));
+await go('dashboard');await sleep(600);const hold=await page.evaluate(()=>typeof window.SORHold);rec('Troponina: brak mechanizmu blokady wypisu (usunięty)',hold==='undefined',hold);
 await go('trop');const tf2=await frameOf('mod/troponina');await sleep(600);
 await tf2.evaluate(()=>{document.querySelectorAll('#ecg .mk').forEach(b=>{if(/Zaznaczone/.test(b.textContent))b.click();});document.querySelector('#ecg .mk[data-k="norm"]').click();});await sleep(400);
 const nr=await tf2.evaluate(()=>!document.querySelector('#light.L-red'));rec('EKG prawidłowe → bez czerwonego światła (bez troponiny)',nr,'');

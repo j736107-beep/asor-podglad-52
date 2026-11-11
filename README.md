@@ -7,15 +7,13 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 ## Etap 1 (zrealizowany) – wg `docs/SPEC_Asystent_SOR_5.2.md`
 - **Pasek pacjenta:** imię i nazwisko, PESEL (suma kontrolna; wiek i płeć uzupełniane automatycznie), czas przyjęcia. Dane identyfikacyjne tylko w tej karcie (`sessionStorage`). Przenoszone do Troponiny, Neurologii i na wydruk.
 - **Następny pacjent:** czyści wszystkie dane pacjenta we wszystkich modułach (m.in. `zp1state`, `zp_handoff`, `el1state:*`, `se4state:*`, zakładki modułów, alarmy). Zostają: ustawienia, ulubione, konfiguracja lokalna, własne leki, zatwierdzenia pomp, ustawienia DKA.
-- **Wydruk A4:** przycisk „🖨 Drukuj do dokumentacji (A4)” w każdym module; nagłówek szpitala + pacjent; sekcja WSTRZYMAJ WYPIS; tekst modułu skracany, by zmieścić 1–2 strony.
+- **Wydruk A4:** przycisk „🖨 Drukuj do dokumentacji (A4)” w każdym module; nagłówek szpitala + pacjent; tekst modułu skracany, by zmieścić 1–2 strony.
 - **Ostateczny hamulec:** moduł całkowicie usunięty 09.11.2026 (decyzja lekarza) – menu, kod `mod/hamulec`, `wypis.js`, wpisy w pamięci podręcznej SW i testy.
-- **WSTRZYMAJ WYPIS (hold.js, wariant B):** duża migająca lampa, czerwony pasek, nakładka z dźwiękiem (ton z Ustawień + komunikat głosowy) powtarzanym co 12 s do potwierdzenia. Potwierdzenie wycisza dźwięk, lampa i pasek zostają do „Następny pacjent”; nowa przyczyna – alarm od nowa. Nie blokuje „Następny pacjent”. Wyzwalacze: zapalenie płuc (oddział/OIT), Troponina (światło czerwone / próg hospitalizacji), Elektrolity (ciężkie), Stan padaczkowy (podane leki), Sepsa, DKA/HHS.
-- **Zapalenie płuc:** jeden silnik `calc/cap-severity.js` dla zakładki „Skale” i modułu antybiotykoterapii. PSI liczony automatycznie (bez ręcznego wyboru), kryteria ATS/IDSA z danych, deterministyczne miejsce leczenia, „Dom” przekreślony i zablokowany, ręczna zmiana tylko w górę, „Dom” nie jest zapamiętywany, wynik w ramce odświeża się na żywo.
+- **Zapalenie płuc:** jeden silnik `calc/cap-severity.js` dla zakładki „Skale” i modułu antybiotykoterapii. PSI liczony automatycznie (bez ręcznego wyboru), kryteria ATS/IDSA z danych, rekomendacja miejsca leczenia z uzasadnieniem (bez blokad – lekarz wybiera), „Dom” nie jest zapamiętywany, wynik w ramce odświeża się na żywo.
 
 ## Decyzje lekarza – zaakceptowane 09.11.2026
 - SpO₂ <85% → konsultacja OIT; SpO₂ 85–91% → oddział.
 - PSI III (CURB-65 0–1) → krótka obserwacja; dom tylko decyzją lekarza (schemat doustny pokazywany warunkowo).
-- Wyzwalacze WSTRZYMAJ WYPIS: Sepsa (podejrzenie sepsy, NEWS2 ≥7, mleczany ≥4, MAP <65, wazopresor), DKA/HHS (rozpoznanie), Stan padaczkowy (każde podanie leku), Troponina (próg hospitalizacji HEART ≥4 / EDACS ≥16).
 - Choroby współistniejące z PSI przekazywane do modułu antybiotykoterapii.
 - Zmiana po akceptacji: alarm Troponiny włącza się dopiero po wpisaniu EKG lub troponiny (nie z samego wieku).
 - PMR: pleocytoza 100–999/µl z przewagą limfocytów = wzorzec wirusowy (etap 4).
@@ -26,7 +24,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - **Stan padaczkowy:** drugi lek II rzutu (po lewetyracetamie → walproinian 40 mg/kg, maks. 3000 mg, 100 mg/ml, 10 min; alternatywy fenytoina / lakozamid), przeciwwskazania walproinianu (wątroba, POLG, cykl mocznikowy, ciąża; PLT – ostrzeżenie; karbapenem – interakcja), licznik czasu od początku napadu, komunikat III rzutu (≥40 min lub pogorszenie oddychania), tiamina.
 - **Tiamina (`calc/thiamine.js`):** profilaktyka 100 mg i.v.; 200–250 mg w 50–100 ml NaCl 0,9% w 15–30 min przez 3–5 dni; Wernicke 500 mg w 100 ml w 30 min 3×/d, potem 250 mg/d, potem 100–250 mg/d. Rachunek ampułek 50 mg/ml. **Preparat i.v. – do potwierdzenia z apteką szpitalną** (polskie preparaty w RPL są i.m.).
 - **Hiponatremia:** CEL i LIMIT w osobnych ramkach; ryzyko ODS automatycznie (Na⁺ ≤105, K⁺ <3,5, alkoholizm, niedożywienie, marskość) z listą „TAK, bo…”; licznik bolusów (maks. 3) z kolejnymi Na⁺, przyrostem i STOP przy +5; ostrzeżenie przy limit − 2; karta korekty w dół (G5% 10 ml/kg w 1 h, desmopresyna 2 µg co ≥8 h, Na⁺ co 1–2 h).
-- **Anafilaksja:** zakładka leczenia (wlew adrenaliny 5–10 µg/kg/h z rachunkiem 20 / 10 / 100 µg/ml, noradrenalina 80 µg/ml, glukagon 1–2 mg przy β-blokerze, skurcz oskrzeli, obrzęk krtani, tryptaza) i zakładka „Obserwacja / wypis” (2 / 6 / 12 h od ustąpienia objawów, wlew → hospitalizacja, blokada WSTRZYMAJ WYPIS).
+- **Anafilaksja:** zakładka leczenia (wlew adrenaliny 5–10 µg/kg/h z rachunkiem 20 / 10 / 100 µg/ml, noradrenalina 80 µg/ml, glukagon 1–2 mg przy β-blokerze, skurcz oskrzeli, obrzęk krtani, tryptaza) i zakładka „Obserwacja / wypis” (2 / 6 / 12 h od ustąpienia objawów, wlew → hospitalizacja).
 - **Sepsa:** zakładka „Materiał na posiewy” (`calc/cultures.js`) – zestawy krwi z licznikiem, godziny, mocz, PMR (4 probówki), drogi oddechowe, inne ogniska, adnotacja „pobrane po antybiotyku”; trafia do raportu sepsy.
 - **Neuroinfekcje:** wzorzec PMR (wirusowy / mieszany) przekazywany do leczenia; wirusowy → acyklowir 10 mg/kg co 8 h na pierwszym miejscu z korektą wg CrCl (Cockcroft-Gault, ChPL); mieszany → acyklowir + ceftriakson.
 - **DKA/HHS:** pełne polskie nazwy w menu, tytule i wydruku.
@@ -59,7 +57,6 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Testy: `node tests/etap4-node.test.js`, `tests/e2e-etap4-puppeteer.js`.
 
 ## Zmiany lekarza 09.11.2026 (23:24)
-- **Zapalenie płuc:** usunięty alarm „WSTRZYMAJ WYPIS” (brak lampy, dźwięku, nakładki i wyzwalacza – `clinical-ui.js`, `mod/zp/app.js`; `hold.js` ignoruje klucz `cap`). Logika miejsca leczenia (Dom zablokowany, sugestia OIT) bez zmian.
 - **Ostateczny hamulec:** moduł całkowicie usunięty (menu, `mod/hamulec/`, `wypis.js`, pamięć podręczna SW, testy).
 - **PESI / sPESI** (Aujesky 2005; Jiménez 2010; ESC 2019): grupa „Zatorowość płucna – rokowanie”, wiek/płeć z paska; klasy I–V z 30-dniową śmiertelnością, sPESI 0 → 1,0% / ≥1 → 10,9%; nota ESC 2019 (niskie ryzyko) i uwaga o tłumaczeniu („III–IV” w wersji polskiej; oryginał III–V). Przycisk w module „Zatorowość płucna”.
 - **SCORE2-Diabetes** (Eur Heart J 2023;44:2544; ESC 2023): 40–69 lat, cukrzyca typu 2; najpierw kryteria bardzo dużego ryzyka (ASCVD, eGFR <45, eGFR 45–59 + A2, A3, mikroangiopatia ≥3 lokalizacje); eGFR CKD-EPI 2009 z kreatyniny z paska; HbA1c mmol/mol lub % (IFCC = (DCCT − 2,15) × 10,929); kategorie <5 / 5–<10 / 10–<20 / ≥20%. **Weryfikacja:** przykłady z publikacji (region umiarkowany) M 11 / 17%, K 8 / 13% → 10,96 / 17,19 / 7,59 / 12,70%. SCORE2 u chorych na cukrzycę odsyła do SCORE2-Diabetes.
@@ -75,8 +72,16 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - CSP: `connect-src 'self' https://api.x.ai https://api.openai.com https://api.anthropic.com`; Service Worker nie przechwytuje zapytań do API AI.
 - Testy: `tests/ai-node.test.js`, `tests/e2e-ai-puppeteer.js` (atrapa API – bez prawdziwych wywołań).
 
+## Poprawki 11.11.2026 (zgłoszenia lekarza)
+- **Przegląd wyników** (`mod/pw/engine.js`): kod modułu identyczny jak w 5.1 – wykresy i „jednostka nierozpoznana” zależały od pisowni jednostek we wklejce. Rozpoznawane teraz także: `tys/ul`, `10^3/ul`, `x10^3/uL`, `10³/µl`, `10*9/l`, `G/l`, `K/uL`, `/nl`, `umol/l`, `ug/ml FEU`, `µg FEU/ml`, `IU/l`; alias w nawiasie („Leukocyty (WBC)”) nie jest jednostką; ta sama jednostka w innej pisowni = jeden wykres z normą. Wiek z paska pacjenta synchronizowany na bieżąco; wydruk A4 zawiera przebieg wyników w czasie.
+- **Usunięty alarm blokady wypisu** – wspólny plik alarmu, nagranie głosowe, wyzwalacze (Sepsa, DKA/HHS, Anafilaksja, Troponina, Elektrolity, Stan padaczkowy), CSS, sekcja wydruku, ustawienie dźwięku, wpisy SW/index; Anafilaksja pokazuje „Obserwacja do …”.
+- **Sepsa – antybiotyki wg ogniska**: przy braku wieku silnik zwracał tylko „Brak wyniku: podaj wiek” (tak samo w 5.1) – teraz schemat dla dorosłego pokazuje się zawsze; korekta nerkowa, gdy są wiek, płeć, masa i kreatynina.
+- **Zapalenie płuc**: CrCl Cockcroft–Gault na żywo ze wzorem (kreatynina mg/dl lub µmol/l, przecinek, wiek/płeć z PESEL) → korekta dawek; miejsce leczenia = rekomendacja z powodami (CURB-65 0–1 zwykle dom; 2 krótka hospitalizacja lub dom ze ścisłą kontrolą 48–72 h; 3 oddział; 4–5 rozważ OIT; modyfikatory PSI, SpO₂, nacieki wielopłatowe, choroby współistniejące, warunki opieki, tolerancja p.o.) – bez blokad, lekarz wybiera.
+- Testy: `tests/pw-node.test.js` (regresja 5.1→5.2 na tych samych wklejkach, `tests/data/pw51_baseline.json`), `tests/e2e-pw-puppeteer.js`, `tests/e2e-fix-puppeteer.js`, `tests/e2e-smoke-puppeteer.js` (wszystkie moduły, zakładki, listy i przełączniki; błędy JS = FAIL; porównanie z 5.1 przez `B51=`).
+
 ## Testy
-- `node tests/zp-node.test.js` – przypadki ZP-1…ZP-13 (silnik).
+- `node tests/zp-node.test.js` – przypadki ZP-1…ZP-16 i CrCl (silnik).
+- `node tests/pw-node.test.js` – Przegląd wyników: regresja względem 5.1 i jednostki.
 - `node tests/etap2-node.test.js` – silniki etapu 2 (SE, hiponatremia, tiamina, anafilaksja, posiewy, neuroinfekcje).
 - `node tests/etap3-node.test.js`, `node tests/etap4-node.test.js` – etap 3 i kalkulatory (przykłady z publikacji).
 - Testy przeglądarkowe (puppeteer) – opis w raporcie wdrożenia.

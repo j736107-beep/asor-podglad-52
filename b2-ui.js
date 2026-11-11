@@ -163,7 +163,7 @@ function sepPaintUo(g,P){
 function sepLiveBox(mp,pf,g){var fio=sepFiO2(g),pct=nz(fio)?fio*100:NaN;
  return bx(nz(mp)&&mp<65?'red':nz(mp)?'ok':'','Wyliczone','<b>MAP: '+(nz(mp)?F(mp,0)+' mmHg':'— (podaj SBP i DBP)')+'</b>'+(nz(mp)&&mp<65?' <b class="r">&lt;65 – hipotensja: płyny 30 ml/kg, ponowna ocena</b>':'')+' · <b>FiO₂: '+(nz(pct)?F(pct,0)+' %':'—')+'</b> · <b>PaO₂/FiO₂: '+(nz(pf)?F(pf,0)+' mmHg':'— (PaO₂ + tryb O₂)')+'</b><div class="mut">MAP = DBP + (SBP − DBP)/3. FiO₂ i P/F aktualizują się przy trybie O₂ / przepływie / PaO₂.</div>');}
 function sepCalcHeavyA(g,P){var i=sepInputs(g,P);var r=A.sepsisAssess(i);var mp=sepMAP(g('sbp'),g('dbp')),pf=sepPF(g);var live=sepLiveBox(mp,pf,g);sepPaintMap(mp);sepPaintFio2(g);sepPaintUo(g,P);var rest='';
- if(!r.ok){rest=bx('orange','Sepsa – ocena'+dw(),rich(r.msg)+'<div class="mut">Wprowadź parametry; brak danych = brak wyniku.</div>')+srcl(esc(A.SRC.ssc21));sepLastRest=rest;sepLastLvl='ok';try{window.SORHold&&SORHold.clear('sepsis');}catch(e){}return{H:live+rest,lvl:'ok'};}
+ if(!r.ok){rest=bx('orange','Sepsa – ocena'+dw(),rich(r.msg)+'<div class="mut">Wprowadź parametry; brak danych = brak wyniku.</div>')+srcl(esc(A.SRC.ssc21));sepLastRest=rest;sepLastLvl='ok';return{H:live+rest,lvl:'ok'};}
  var q=r.q,s=r.s,n=r.n;
  rest+=bx(r.shock?'red':r.suspected?'orange':'ok',esc(r.msg),(r.shockPossible?'<div class="o">Wazopresor bez mleczanów: nie można potwierdzić wstrząsu septycznego (wymagane mleczany >2 mmol/l).</div>':'')+'<div class="mut">Rozpoznanie wg NPOA 2020/Sepsis-3: podejrzenie zakażenia + SOFA ≥2 pkt LUB qSOFA ≥2/3. SSC 2021 nie zaleca qSOFA jako jedynego narzędzia przesiewowego – dlatego pokazano też NEWS2.</div>');
  rest+=tbl(['Skala','Wynik','Komentarz'],[
@@ -173,8 +173,6 @@ function sepCalcHeavyA(g,P){var i=sepInputs(g,P);var r=A.sepsisAssess(i);var mp=
  if(s.parts.length)rest+='<div class="mut">SOFA wg układów: '+s.parts.map(function(x){return esc(x[0])+' '+x[1];}).join(' · ')+'</div>';
  if(r.shock||n.cls==='emergency')rest+=bx('red','[HOSPITALIZACJA BEZWZGLĘDNA] – OIT / monitorowanie','Wstrząs septyczny lub NEWS2 ≥7: pilna ocena zespołu intensywnej terapii, pakiet 1 h – zakładka „Pakiet 1 h”.');
  rest+=srcl(esc(A.SRC.ssc21)+'; NPOA 2020 (13.1.4); '+esc(A.SRC.news2));
- // 5.2: WSTRZYMAJ WYPIS – sepsa (zaakceptowane przez lekarza 09.11.2026)
- try{if(window.SORHold){var HR=[];if(r.shock)HR.push('wstrząs septyczny (wazopresor + mleczany >2 mmol/l)');else if(r.shockPossible)HR.push('wazopresor – możliwy wstrząs septyczny');if(r.suspected)HR.push('podejrzenie sepsy ('+r.flags.join(', ')+')');if(n.cls==='emergency')HR.push('NEWS2 '+n.score+' (≥7)');if(nz(i.lac)&&i.lac>=4)HR.push('mleczany '+i.lac+' mmol/l (≥4)');if(nz(mp)&&mp<65)HR.push('MAP '+Math.round(mp)+' mmHg (<65)');SORHold.set('sepsis',HR,'Sepsa');}}catch(e){}
  var lvl=(r.shock||n.cls==='emergency')?'red':'ok';sepLastRest=rest;sepLastLvl=lvl;return{H:live+rest,lvl:lvl};}
 function sepCalc(t,g,P){
  if(t==='a'){var mp=sepMAP(g('sbp'),g('dbp')),pf=sepPF(g);

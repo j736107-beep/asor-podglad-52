@@ -9,10 +9,9 @@ const page=await br.newPage();await page.setViewport({width:1400,height:1000});
 const errs=[];page.on('pageerror',e=>errs.push('pageerror '+e.message));page.on('console',m=>{if(m.type()==='error')errs.push('console '+m.text());});
 page.on('dialog',d=>d.accept());
 await page.goto(BASE,{waitUntil:'networkidle0'});await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await page.reload({waitUntil:'networkidle0'});
-const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 2+',/5\.2 \(testowa\) · etap [23] · 09\.11\.2026/.test(ver),ver);
+const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 2+',/5\.2 \(testowa\) · etap [2-9] · 09\.11\.2026/.test(ver),ver);
 const go=async id=>{await page.evaluate(id=>{document.querySelector('#side button[data-id="'+id+'"]').click();},id);await sleep(800);};
 const frameOf=async src=>{for(let k=0;k<30;k++){const f=page.frames().find(f=>f.url().includes(src));if(f){try{await f.waitForSelector('body');return f;}catch(e){}}await sleep(200);}return null;};
-const ack=async()=>{await page.evaluate(()=>{const b=document.getElementById('holdAck');if(b&&!document.getElementById('holdOv').hidden)b.click();});};
 await page.type('#pbName','Anna Testowa');await page.type('#pbPesel','44051401359');
 await page.evaluate(()=>{const w=document.querySelector('#pw');w.value='70';w.dispatchEvent(new Event('input'));const a=document.querySelector('#pa');a.value='40';a.dispatchEvent(new Event('input'));});await sleep(300);
 // ===== SE
@@ -31,7 +30,7 @@ await f.evaluate(()=>{document.querySelector('.tg2[data-c="polg"]').click();docu
 await f.evaluate(()=>{document.querySelector('.tg2[data-c="wern"]').click();});await sleep(400);
 let th=await f.evaluate(()=>(document.getElementById('thiaCard')||{}).textContent||'');
 rec('SE: tiamina 100 mg + Wernicke 500 mg 3×/d, 5 amp.',/100 mg/.test(th)&&/500 mg/.test(th)&&/5 amp/.test(th)&&/aptek/i.test(th),th.slice(0,250));
-await ack();
+
 // ===== EL
 await go('el');f=await frameOf('mod/el');await sleep(800);
 await f.evaluate(()=>document.querySelector('[data-k="hipoNa"]').click());await sleep(300);
@@ -50,7 +49,7 @@ await addNa('129');let rl=await f.evaluate(()=>(document.getElementById('relower
 rec('EL: +11 → korekta w dół G5% 700 ml w 1 h',/700 ml w 1 h/.test(rl)&&/desmopresyna/i.test(rl),rl.slice(0,200));
 await f.evaluate(()=>document.querySelector('[data-o="alco"]').click());await sleep(300);
 th=await f.evaluate(()=>(document.getElementById('thiaCard')||{}).textContent||'');rec('EL: alkoholizm → karta tiaminy',/100 mg/.test(th),th.slice(0,120));
-await f.evaluate(()=>document.getElementById('trkClr').click());await ack();
+await f.evaluate(()=>document.getElementById('trkClr').click());
 // ===== ANA
 await go('ana');
 const chk=async id=>{await page.evaluate(id=>{const e=document.querySelector('#main #'+id);e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));},id);await sleep(250);};
@@ -63,10 +62,10 @@ await page.evaluate(()=>document.querySelector('#main .tabs button[data-t="obs"]
 await page.evaluate(()=>{const e=document.querySelector('#main #doses');e.value='2';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(200);
 const now=new Date(),tres=new Date(now.getTime()-60*60000),exp=hhmm(new Date(tres.getTime()+6*3600e3));
 await page.evaluate(t=>{const e=document.getElementById('anaTres');e.value=t;e.dispatchEvent(new Event('input',{bubbles:true}));},hhmm(tres));await sleep(300);
-let ob=await page.evaluate(()=>({r:(document.getElementById('anaObsRes')||{}).textContent,h:SORHold.items().ana}));
-rec('ANA: 2 dawki, ustąpienie −1 h → wypis zablokowany do +6 h ('+exp+')',ob.r&&ob.r.indexOf('zablokowany do '+exp)>=0&&ob.h&&ob.h.reasons[0].indexOf(exp)>=0,JSON.stringify(ob));
+let ob=await page.evaluate(()=>({r:(document.getElementById('anaObsRes')||{}).textContent,h:typeof window.SORHold}));
+rec('ANA: 2 dawki, ustąpienie −1 h → obserwacja do +6 h ('+exp+'), bez blokady wypisu',ob.r&&ob.r.indexOf('Obserwacja do '+exp)>=0&&ob.h==='undefined',JSON.stringify(ob));
 await chk('inf');ob=await page.evaluate(()=>(document.getElementById('anaObsRes')||{}).textContent);rec('ANA: wlew adrenaliny → HOSPITALIZACJA',/HOSPITALIZACJA/.test(ob),ob);
-await ack();
+
 // ===== Sepsa – materiał na posiewy
 await go('sepsis');await page.evaluate(()=>document.querySelector('#main .tabs button[data-t="m"]').click());await sleep(500);
 const setT=async(id,v)=>page.evaluate((id,v)=>{const e=document.querySelector('#main #'+id);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},id,v);
@@ -79,7 +78,7 @@ await chk('csf');cu=await page.evaluate(()=>({n:document.querySelectorAll('#csfL
 rec('SEP: PMR → lista 4 probówek',cu.n===4&&cu.vis,JSON.stringify(cu));
 await page.evaluate(()=>document.querySelector('#main .tabs button[data-t="e"]').click());await sleep(500);
 cu=await page.evaluate(()=>document.querySelector('#main #out').textContent);rec('SEP: raport zawiera materiał na posiewy z godzinami',/Materiał na posiewy/.test(cu)&&/10:05/.test(cu),'');
-await ack();
+
 // ===== Neuroinfekcje
 await page.evaluate(()=>{const c=document.querySelector('#pcr');if(c){c.value='0.9';c.dispatchEvent(new Event('input'));}});
 await go('neuroinf');await page.evaluate(()=>document.querySelector('#main .tabs button[data-t="p"]').click());await sleep(500);
@@ -87,11 +86,11 @@ for(const [k,v] of [['cells','150'],['neut','10'],['prot','60'],['glu','65'],['s
 await page.evaluate(()=>document.querySelector('#main .tabs button[data-t="t"]').click());await sleep(600);
 let nu=await page.evaluate(()=>({s:(document.getElementById('csfSteer')||{}).textContent||'',o:document.querySelector('#main #out').textContent}));
 rec('NEU: wzorzec wirusowy → acyklowir 700 mg co 8 h na 1. miejscu',/WIRUSOWY/.test(nu.o)&&/700 mg co 8 h/.test(nu.s)&&nu.o.indexOf('Acyklowir')<nu.o.indexOf('Ceftriakson'),nu.s.slice(0,200));
-await ack();
+
 // ===== DKA nazwy
 const dn=await page.$eval('#side button[data-id="dka"]',b=>b.textContent);await go('dka');const dt=await page.evaluate(()=>document.querySelector('#main h2').textContent);
 rec('DKA: polskie nazwy w menu i tytule',/Kwasica ketonowa \(DKA\)/.test(dn)&&/Cukrzycowa kwasica ketonowa \(DKA\)/.test(dt)&&/Hiperglikemiczny stan hiperosmolarny \(HHS\)/.test(dt),dn+' | '+dt);
-await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>{const e=f.querySelector('#'+id);if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}};set('glu','450');set('ket','5');set('ph','7.1');set('hco3','10');set('k','4.5');set('na','135');});await sleep(400);await ack();await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'dka'}]);});let pd=await page.evaluate(()=>document.getElementById('printArea').textContent);
+await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>{const e=f.querySelector('#'+id);if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}};set('glu','450');set('ket','5');set('ph','7.1');set('hco3','10');set('k','4.5');set('na','135');});await sleep(400);await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'dka'}]);});let pd=await page.evaluate(()=>document.getElementById('printArea').textContent);
 rec('DKA: wydruk zawiera pełne polskie nazwy',/Kwasica ketonowa \(DKA\) \/ Stan hiperosmolarny \(HHS\)/.test(pd),'');
 // ===== Bilans płynów + Antykoagulacja
 await go('fluid');let fl=await page.evaluate(()=>({s:(document.getElementById('ptStrip')||{}).textContent||'',b:!!document.querySelector('#main .tabPrint')}));

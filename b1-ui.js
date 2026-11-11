@@ -48,8 +48,6 @@ var DKA=tabbed({id:'dka',icon:'🍬',name:'Kwasica ketonowa (DKA) / Stan hiperos
   var i={w:w,glu:g('glu'),ket:g('ket'),ph:g('ph'),hco3:g('hco3'),k:g('k'),na:g('na'),cl:g('cl'),urea:g('urea'),sbp:g('sbp'),gcs:g('gcs'),knownDM:g('dm'),co:P.co,age:P.age,urine:g('urine'),
    syrUnits:su,syrMl:+g('syrMl'),hhsFalling:g('hhsf'),gluReduce:cfg.gluRed,rateReduced:cfg.rr,dex:cfg.dex};
   var o=D.plan(i),H='',lvl=o.lvl;
-  // 5.2: WSTRZYMAJ WYPIS – DKA / HHS (zaakceptowane przez lekarza 09.11.2026): rozpoznanie DKA/HHS = leczenie szpitalne
-  try{if(window.SORHold){var HR=[];if(o.mode==='dka'||o.mode==='mixed')HR.push('kwasica ketonowa (DKA)'+(o.severe&&o.severe.length?' – ciężka: '+o.severe.join(', '):''));if(o.mode==='hhs'||o.mode==='mixed')HR.push('hiperglikemiczny stan hiperosmolarny (HHS)');SORHold.set('dka',HR,'Kwasica ketonowa (DKA) / Stan hiperosmolarny (HHS)');}}catch(e){}
   var dx={dka:'DKA',hhs:'HHS',mixed:'DKA + HHS (mieszany) → leczyć jak DKA',none:'Brak pełnych kryteriów DKA/HHS'}[o.mode];
   H+=box(o.mode==='none'?'':o.lvl,'','<span class="big">'+dx+'</span>'+(o.warn.length?'<div class="r">⚠ '+o.warn.map(h).join('<br>⚠ ')+'</div>':''));
   var c=[];if(nz(o.ag))c.push('Luka anionowa <b>'+F(o.ag,0)+'</b>');if(nz(o.osm))c.push('Osmolalność <b>'+F(o.osm,0)+'</b> mOsm/kg');if(nz(o.naCorr16))c.push('Na⁺ skorygowane <b>'+F(o.naCorr16,0)+'</b> (Katz 1,6) / <b>'+F(o.naCorr24,0)+'</b> (Hillier 2,4)');

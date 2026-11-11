@@ -27,7 +27,7 @@ t('EL-5 +11 bez ryzyka → korekta w dół 700 ml G5% w 1 h',()=>{const r=el({na
 t('ANA-1 70 kg: 20 µg/ml 17,5–35 ml/h = 5,8–11,7 µg/min',()=>{const r=B.anaRefr(70);const q=r.rec.find(x=>x.conc===20);return q.def&&q.mlhLo===17.5&&q.mlhHi===35&&r.ugminLo.toFixed(1)==='5.8'&&r.ugminHi.toFixed(1)==='11.7'?true:JSON.stringify(q);});
 t('ANA-1b RCUK 10 µg/ml = 0,5–1 ml/kg/h; Pompy 100 µg/ml',()=>{const r=B.anaRefr(70);return r.rec.find(x=>x.conc===10).mlhLo===35&&r.rec.find(x=>x.conc===10).mlhHi===70&&r.rec.find(x=>x.conc===100).mlhLo===3.5?true:'x';});
 t('ANA-2 β-bloker: glukagon 1–2 mg co 5 min (nie 5–15 µg/min jako schemat główny)',()=>{const g=B.anaGlucagon();return /1–2 mg/.test(g.txt)&&/co 5 min/.test(g.txt)&&!/µg\/min/.test(g.txt)?true:g.txt;});
-t('ANA-3 2 dawki, ustąpienie 14:00 → blokada do 20:00',()=>{const o=B.anaObs({doses:2});const u=B.obsUntil('14:00',o.h,new Date('2026-11-09T15:00:00'));return o.h===6&&u.label==='20:00'&&u.active?true:JSON.stringify([o,u]);});
+t('ANA-3 2 dawki, ustąpienie 14:00 → obserwacja do 20:00',()=>{const o=B.anaObs({doses:2});const u=B.obsUntil('14:00',o.h,new Date('2026-11-09T15:00:00'));return o.h===6&&u.label==='20:00'&&u.active?true:JSON.stringify([o,u]);});
 t('ANA-4 wlew adrenaliny → hospitalizacja',()=>B.anaObs({doses:1,infusion:true}).hosp?true:'no hosp');
 t('ANA-5 1 dawka + autowstrzykiwacze → 2 h; >2 dawki → 12 h',()=>B.anaObs({doses:1,pens:true}).h===2&&B.anaObs({doses:3}).h===12?true:'x');
 // --- Sepsa (SPEC §13) ---

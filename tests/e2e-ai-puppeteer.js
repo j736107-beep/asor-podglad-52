@@ -3,7 +3,7 @@ const puppeteer=require('puppeteer-core'),fs=require('fs');
 const BASE=process.env.BASE||'http://localhost:8765/';const SHOTS=process.env.SHOTS||'';
 let fails=0;function rec(id,ok,msg){if(!ok)fails++;console.log(id.padEnd(66),ok?'PASS':'FAIL',String(msg||'').slice(0,260));}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const SAMPLE='EPIKRYZA\nPacjent 82-letni przyjęty do SOR z powodu gorączki i kaszlu od 3 dni. RR 32/min, SBP 95 mmHg, HR 118/min, SpO₂ 84%, splątanie. CURB-65 4/5. PSI klasa V. Miejsce leczenia: CIĘŻKIE PZP – sugerowany OIOM / OIT (wypis do domu zablokowany).\n\nROZPOZNANIA ICD-10\nJ18.9 – Zapalenie płuc, nieokreślone\n\nUZASADNIENIE PRZEKAZANIA DO OIT\nCiężka hipoksemia (SpO₂ 84%) i ≥3 małe kryteria ATS/IDSA.\n\n=====\nUWAGI DLA LEKARZA\n- Brak wyniku RTG klatki piersiowej.\n- Zweryfikuj dawkę klarytromycyny przy QT.';
+const SAMPLE='EPIKRYZA\nPacjent 82-letni przyjęty do SOR z powodu gorączki i kaszlu od 3 dni. RR 32/min, SBP 95 mmHg, HR 118/min, SpO₂ 84%, splątanie. CURB-65 4/5. PSI klasa V. Miejsce leczenia: Ciężkie PZP – OIOM / OIT rozważany.\n\nROZPOZNANIA ICD-10\nJ18.9 – Zapalenie płuc, nieokreślone\n\nUZASADNIENIE PRZEKAZANIA DO OIT\nCiężka hipoksemia (SpO₂ 84%) i ≥3 małe kryteria ATS/IDSA.\n\n=====\nUWAGI DLA LEKARZA\n- Brak wyniku RTG klatki piersiowej.\n- Zweryfikuj dawkę klarytromycyny przy QT.';
 (async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
 const ctx=br.defaultBrowserContext();try{await ctx.overridePermissions(new URL(BASE).origin,['clipboard-read','clipboard-write','clipboard-sanitized-write']);}catch(e){}
 const page=await br.newPage();await page.setViewport({width:1300,height:1000});const errs=[];page.on('pageerror',e=>errs.push(e.message));page.on('console',m=>{if(m.type()==='error')errs.push(m.text())});page.on('dialog',d=>d.accept());
@@ -92,8 +92,8 @@ await go('settings');await page.click('#aiKeyDel');await sleep(200);
 const dk=await page.evaluate(()=>JSON.parse(localStorage.getItem('v52:ai_cfg')).keys.anthropic===undefined);await go('cap');
 b=await page.evaluate(()=>document.getElementById('aiBtn').disabled);rec('Usuń klucz → klucz skasowany, przycisk wyszarzony',dk&&b,'');
 // SW i CSP
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-ai2/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
-rec('SW asor-v52-ai2: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix1/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
+rec('SW asor-v52-fix1: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
 rec('Brak prawdziwych wywołań poza atrapą',real.length===0,real.slice(0,3).join(' '));
 rec('Brak błędów JS',errs.filter(e=>!/401|429|Failed to load resource/.test(e)).length===0,errs.join(' | ').slice(0,300));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})().catch(e=>{console.log('CRASH',e);process.exit(1);});

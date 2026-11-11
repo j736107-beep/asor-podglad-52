@@ -54,13 +54,16 @@ var AN=[
 var BYKEY={};AN.forEach(function(a){BYKEY[a.key]=a;});
 // przeliczenia do jednostek kanonicznych (tylko oczywiste); null = jednostka nierozpoznana
 var CANON={hb:'g/dl',crea:'mg/dl',urea:'mg/dl',glu:'mg/dl',bil:'mg/dl',bild:'mg/dl',ca:'mg/dl',mg:'mg/dl',lac:'mmol/l',trop:'ng/l',crp:'mg/l',pct:'ng/ml',fib:'g/l',ddim:'µg/l',pco2:'mmHg',po2:'mmHg',wbc:'tys/µl',plt:'tys/µl'};
-function nu(u){return String(u||'').toLowerCase().replace(/\s+/g,'').replace(/feu$/,'').replace(/μ/g,'µ').replace(/^u(?=[a-z]+\/)/,'µ').replace(/^umol/,'µmol').replace(/^ug/,'µg').replace(/l$/,'l');}
+function nu(u){var s=String(u||'').toLowerCase().replace(/\s+/g,'').replace(/μ/g,'µ').replace(/feu/g,'').replace(/[\[\]()]/g,'');
+ s=s.replace(/³/g,'^3').replace(/⁹/g,'^9').replace(/⁶/g,'^6').replace(/¹²/g,'^12').replace(/10\*\*?(\d)/g,'10^$1').replace(/10e(\d)/g,'10^$1').replace(/^[x×*]\s*(?=10)/,'');
+ s=s.replace(/(^|\/)u(?=(l|g|mol|iu)\b|(l|g|mol)$|g\/|mol\/)/g,'$1µ').replace(/mcg/g,'µg').replace(/mikro?(?=l|g|mol)/g,'µ').replace(/^tys\.?/,'tys').replace(/^iu\//,'u/').replace(/^j\.?m?\.?\//,'u/');
+ return s;}
 function factor(key,unit){var u=nu(unit);if(!CANON[key])return 1;if(!u)return 1;
  var M={hb:{'g/dl':1,'g/l':0.1,'mmol/l':1.611},crea:{'mg/dl':1,'µmol/l':1/88.4},urea:{'mg/dl':1,'mmol/l':6.006},
  glu:{'mg/dl':1,'mmol/l':18.016},bil:{'mg/dl':1,'µmol/l':1/17.1},bild:{'mg/dl':1,'µmol/l':1/17.1},ca:{'mg/dl':1,'mmol/l':4.008},mg:{'mg/dl':1,'mmol/l':2.431},
  lac:{'mmol/l':1,'mg/dl':1/9.01},trop:{'ng/l':1,'pg/ml':1,'ng/ml':1000,'µg/l':1000},crp:{'mg/l':1,'mg/dl':10},pct:{'ng/ml':1,'µg/l':1},
  fib:{'g/l':1,'mg/dl':0.01},ddim:{'µg/l':1,'ng/ml':1,'mg/l':1000,'µg/ml':1000,'mg/dl':10000},pco2:{'mmhg':1,'kpa':7.5006},po2:{'mmhg':1,'kpa':7.5006}};
- if(key==='wbc'||key==='plt'){if(/^(tys\.?\/µl|10\^?3\/µl|10\^?9\/l|g\/l|x10\^?9\/l|x10\^?3\/µl|k\/µl|10e3\/µl|10\*3\/µl|tys\/mm3)$/.test(u))return 1;return null;}
+ if(key==='wbc'||key==='plt'){if(/^(tys\/(µl|mm3|mm\^3)|10\^?3\/(µl|mm3|mm\^3)|10\^?9\/l|g\/l|giga\/l|k\/µl|\/nl|1\/nl)$/.test(u))return 1;return null;}
  var m=M[key];return m&&m[u]!==undefined?m[u]:null;}
 var NUM='-?\\d+(?:[.,]\\d+)?';
 function pnum(s){return parseFloat(String(s).replace(',','.'));}
@@ -79,8 +82,9 @@ function findDates(s,yr){var out=[],m;RE_DATE.lastIndex=0;while((m=RE_DATE.exec(
 function fmtT(t){if(t==null)return'';var d=new Date(t),p=function(n){return(n<10?'0':'')+n;};return p(d.getUTCDate())+'.'+p(d.getUTCMonth()+1)+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes());}
 function fmt(v){if(v==null||isNaN(v))return'—';var a=Math.abs(v),s=a>=100?String(Math.round(v)):a>=10?String(Math.round(v*10)/10):String(Math.round(v*100)/100);return s.replace('.',',');}
 // parsowanie reszty linii po nazwie
+function isUnit(x){var t=String(x).trim();return /[\/%µ^]/.test(t)||/^(mmhg|kpa|s|sek|sec|fl|pg|g\/dl|mosm\/kg|ratio|inr|j|u|iu|ml|l)$/i.test(t);}
 function parseRest(rest){var r={};var s=rest.replace(/^[\s:=\t]+/,'');
- var um=s.match(/^[\[(]([^\])\d]*[a-zµ%][^\])]*)[\])]\s*/i);if(um&&!RE_VAL.test(um[1])){r.unit=um[1].trim();s=s.slice(um[0].length);}
+ var um=s.match(/^[\[(]([^\])\d]*[a-zµ%][^\])]*)[\])]\s*/i);if(um&&!RE_VAL.test(um[1])){if(isUnit(um[1]))r.unit=um[1].trim();s=s.slice(um[0].length).replace(/^[\s:=\t]+/,'');}
  var vm=s.match(RE_VAL);if(!vm)return null;r.cmp=vm[1]||'';r.raw=(r.cmp?r.cmp+' ':'')+vm[2];r.val=pnum(vm[2]);s=s.slice(vm[0].length);
  var rm=s.match(RE_RANGE_UP);if(rm){r.hi=pnum(rm[2]);s=s.replace(rm[0],' ');}else if((rm=s.match(RE_RANGE_LO))){r.lo=pnum(rm[2]);s=s.replace(rm[0],' ');}else if((rm=s.match(RE_RANGE))&&!/\^\s*$/.test(s.slice(0,rm.index))){r.lo=pnum(rm[1]);r.hi=pnum(rm[2]);s=s.replace(rm[0],' ');}
  var fm=s.match(RE_FLAG);if(fm){r.flag=fm[2];s=s.replace(fm[0],' ');}
@@ -113,7 +117,7 @@ function parse(text){var lines=String(text||'').replace(/\r/g,'').split('\n');va
   if(blk){blk.lines.push(tl);return;}
   if(tl.split(/\s+/).length>=4){blk={lines:[tl],head:false,t:curT};return;}
  });endBlk();
- Object.keys(res).forEach(function(k){var p=res[k].points;var all=p.every(function(x){return x.t!=null;});p.sort(function(a,b){return all?a.t-b.t||a.seq-b.seq:a.seq-b.seq;});var u=p.length?p[p.length-1].unit:'';res[k].unit=u||'';res[k].sameUnit=p.every(function(x){return(x.unit||'')===(u||'');});});
+ Object.keys(res).forEach(function(k){var p=res[k].points;var all=p.every(function(x){return x.t!=null;});p.sort(function(a,b){return all?a.t-b.t||a.seq-b.seq:a.seq-b.seq;});var u=p.length?p[p.length-1].unit:'';res[k].unit=u||'';res[k].sameUnit=p.every(function(x){var a=nu(x.unit),b=nu(u);if(a===b)return true;if(!CANON[k])return false;var fa=factor(k,x.unit),fb=factor(k,u);return fa!=null&&fa===fb;});});
  descs.forEach(function(d){d.hits=scanText(d.text);});
  return{res:res,descs:descs,anyText:/\bekg\b/i.test(text)?['ekg']:[],grupa:/grupa krwi|próba krzyżowa/i.test(text),ekg:/(^|\s)ekg(?![a-z])/i.test(text)};}
 // słowa groźne w opisach

@@ -87,7 +87,7 @@ function mkNav(m){var pv=navS.length&&MODS.filter(function(x){return x.id===navS
  var bk=document.createElement('button');bk.id='skBack';bk.type='button';bk.onclick=function(){SKS.back()};bk.hidden=home&&!pv;bk.innerHTML='&#x2190; Wróć'+(pv?' <span>do: '+pv.name+'</span>':' <span>do: Pulpit dyżuru</span>');
  var hm=document.createElement('button');hm.id='skHome';hm.type='button';hm.hidden=home;hm.innerHTML='&#x2302; Pulpit dyżuru';hm.onclick=function(){go('dashboard')};
  navBar.appendChild(bk);navBar.appendChild(hm);
- if(!home&&['settings','about'].indexOf(m.id)<0){var pr=document.createElement('button');pr.id='skPrint';pr.type='button';pr.className='sk-print';pr.innerHTML='🖨 Drukuj do dokumentacji (A4)';pr.title='Wydruk A4 (1–2 strony) z nagłówkiem pacjenta: ten moduł + alarmy WSTRZYMAJ WYPIS';pr.onclick=function(){$('#printMod').click();};navBar.appendChild(pr);}
+ if(!home&&['settings','about'].indexOf(m.id)<0){var pr=document.createElement('button');pr.id='skPrint';pr.type='button';pr.className='sk-print';pr.innerHTML='🖨 Drukuj do dokumentacji (A4)';pr.title='Wydruk A4 (1–2 strony) z nagłówkiem pacjenta: ten moduł';pr.onclick=function(){$('#printMod').click();};navBar.appendChild(pr);}
  navBot=null; /* pw26: jeden pełny wipe = #nextPt „Następny pacjent”; bez #skClear w dole */}
 function ensureNav(){var el=$('#main');if(!navBar)return;if(el.firstChild!==navBar)el.insertBefore(navBar,el.firstChild);if(navBot&&el.lastChild!==navBot)el.appendChild(navBot);}
 function show(){if(window.SORReport&&active)SORReport.capture(active);side();alarms={};alarm('_',false);var m=MODS.filter(function(x){return x.id===cur})[0]||MODS[0],el=$('#main');active=m;el.className='';if(navObs)navObs.disconnect();el.innerHTML='';mkNav(m);el.appendChild(navBar);
@@ -108,16 +108,10 @@ function sync(f,m){var d;try{d=f.contentWindow.document}catch(e){return}if(!d||!
  if(m.id==='se'){var map={liver:'liver',renal:'renal',heart:'cardiac',preg:'preg'};Object.keys(map).forEach(function(k){var b=d.querySelector('.tg[data-c="'+map[k]+'"]');if(b&&b.classList.contains('on')!==!!PT.co[k])b.click();});
   var cr=d.getElementById('crcl');if(cr&&isFinite(p.crcl))setVal(cr,Math.round(p.crcl),m,'cr');}
  if(m.id==='el'){var ea=d.getElementById('age');if(ea&&PT.age!=='')setVal(ea,String(PT.age),m,'age');if(PT.sex){var eb=d.querySelector('.sx[data-s="'+(PT.sex==='k'||PT.sex==='f'?'f':'m')+'"]');if(eb&&!eb.classList.contains('on'))eb.click();}}
+ if(m.id==='trends'){var pa=d.getElementById('age');if(pa&&PT.age!==''){if(m._age===undefined)m._age=pa.value;setVal(pa,String(PT.age),m,'age');}}
  if(m.id==='trop'){var ag=d.getElementById('age'),sx=d.getElementById('sex');if(ag&&PT.age!=='')setVal(ag,String(PT.age),m,'age');if(sx&&PT.sex)setVal(sx,PT.sex,m,'sex');}
  ['pname','pesel'].forEach(function(k){var e=d.getElementById(k);var v=k==='pname'?PID.name:PID.pesel;if(e&&v)setVal(e,v,m,'id_'+k);});
- if(m.red)alarm(m.id+':dom',!!d.querySelector(m.red));
- holdFrame(d,m);}
-// 5.2: wyzwalacze „WSTRZYMAJ WYPIS” w modułach-ramkach (zaakceptowane przez lekarza 09.11.2026)
-function txt(e){return e?String(e.textContent||'').replace(/\s+/g,' ').trim():'';}
-function holdFrame(d,m){if(!window.SORHold)return;var R=[];
- if(m.id==='trop'){var hasData=!!d.querySelector('#ecg button.on')||['c0','c1','c3'].some(function(k){var e=d.getElementById(k);return e&&String(e.value).trim()!=='';});if(!hasData){SORHold.clear('trop');return;}var L=d.querySelector('#light.L-red');if(L){var p=L.querySelector('p');R.push('światło czerwone – '+(txt(p)||'pilna konsultacja kardiologiczna').slice(0,240));}var h=d.querySelector('#hosp.on');if(h)R.push(txt(h.querySelector('p'))||'próg hospitalizacji (HEART/EDACS)');SORHold.set('trop',R,'Troponina / OZW');}
- else if(m.id==='el'){var s=d.querySelector('.sev.red');if(s)R.push('ciężkie zaburzenie elektrolitowe: '+txt(s));SORHold.set('el',R,'Elektrolity');}
- else if(m.id==='se'){var g=d.getElementById('lg');var t=txt(g);if(g&&t&&t!=='brak podań')R.push('stan padaczkowy – leczenie w toku (podania: '+t.replace(/ ?wyczyść$/,'').slice(0,200)+')');SORHold.set('se',R,'Stan padaczkowy');}}
+ if(m.red)alarm(m.id+':dom',!!d.querySelector(m.red));}
 // ---------- start ----------
 applyS();patBar();show();
 window.SKS.show=function(id){go(id);};
@@ -141,9 +135,9 @@ function wipe(){window.SKS.pwMem=null;window.SKS.ordMem=null;try{window.SORClini
  // 5.2: pełny reset – WSZYSTKIE dane pacjenta we wszystkich modułach (także zp1state, zp_handoff, el1state:, se4state:, zakładki modułów); zostają tylko ustawienia i ulubione
  var KEEP=['sk_settings','omdl_settings','sor_favorites','sor_local_cfg','sor_leki_wlasne','sor_icd_recent','sor_pompy_zatw_v2','sk_m_dka_cfg'];
  Object.keys(localStorage).forEach(function(k){if(KEEP.indexOf(k)>=0||k.indexOf('discAccepted')===0||k.indexOf('sor_cfg')===0||k.indexOf('v52:ai_cfg')===0)return;localStorage.removeItem(k);});
- try{window.SORHold&&SORHold.reset();}catch(e){}try{sessionStorage.clear();}catch(e){}
+ try{sessionStorage.clear();}catch(e){}
  localStorage.setItem('sk_mod','dashboard');location.reload();}
-window.SKS.nextPatient=function(){var h=window.SORHold&&SORHold.active();if(!confirm((h?'UWAGA: aktywny alarm WSTRZYMAJ WYPIS dla obecnego pacjenta.\n\n':'')+'Następny pacjent: wyczyścić WSZYSTKIE dane pacjenta we wszystkich modułach (dane identyfikacyjne, pasek pacjenta, wyniki, zlecenia, wykonane, dokumentacja, trendy, zapalenie płuc, elektrolity, alarmy)? Ustawienia i ulubione zostają.'))return;wipe();};
+window.SKS.nextPatient=function(){if(!confirm('Następny pacjent: wyczyścić WSZYSTKIE dane pacjenta we wszystkich modułach (dane identyfikacyjne, pasek pacjenta, wyniki, zlecenia, wykonane, dokumentacja, trendy, zapalenie płuc, elektrolity, alarmy)? Ustawienia i ulubione zostają.'))return;wipe();};
 window.SKS.wipe=wipe;
 window.SKS.clearData=window.SKS.nextPatient; /* alias – UI ma tylko #nextPt */
 $('#nextPt').onclick=window.SKS.nextPatient;
