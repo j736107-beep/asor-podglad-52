@@ -2,7 +2,7 @@
    (każda opcja), pola liczbowe wypełniane wartościami środkowymi. Błąd JS / konsoli = FAIL; pusty panel wyniku w 5.2 tam, gdzie 5.1 go wypełniał = FAIL;
    brak SVG/canvas tam, gdzie 5.1 je miał = FAIL. B51 (opcjonalnie) = adres 5.1 do porównania.  BASE=http://localhost:8765/ B51=http://localhost:8751/ node e2e-smoke-puppeteer.js */
 const puppeteer=require('puppeteer-core');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const BASE=process.env.BASE||'http://localhost:8765/',B51=process.env.B51||'';const REMOVED={hamulec:1,telszp:'→ Książka telefoniczna, zakładka Nasz szpital (11.11.2026)',icd10:'→ moduł ICD (11.11.2026)',icd9:'→ moduł ICD (11.11.2026)',eucast:'→ przyciski w Sepsie, ZP i Lekach (11.11.2026)'};
+const BASE=process.env.BASE||'http://localhost:8765/',B51=process.env.B51||'';const REMOVED={hamulec:1,documentation:'usunięty za zgodą lekarza (11.11.2026); Pulpit, PW i reset pacjenta → pulpit.js',telszp:'→ Książka telefoniczna, zakładka Nasz szpital (11.11.2026)',icd10:'→ moduł ICD (11.11.2026)',icd9:'→ moduł ICD (11.11.2026)',eucast:'→ przyciski w Sepsie, ZP i Lekach (11.11.2026)'};
 const EV=(fr,...a)=>{try{return fr.evaluate(...a).catch(()=>null);}catch(e){return Promise.resolve(null);}};
 // 11.11.2026: przyciski nawigacji między modułami (data-nav: Książka, Pompy, zakładka innego modułu) nie są klikane – skan dotyczy bieżącego modułu.
 const IGN=/favicon|Failed to load resource: the server responded with a status of 404.*(?:png|ico)|net::ERR_INTERNET_DISCONNECTED/;
