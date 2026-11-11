@@ -29,8 +29,9 @@ const BASE=process.env.BASE||'http://localhost:8765/',SHOTS=process.env.SHOTS||'
  const txt=async()=>zf.evaluate(()=>document.getElementById('quick').textContent+'|'+document.getElementById('res').innerText);
  const SAME_OK={comorb:['ward','icu'],atyp:['home:late','home:imm','ward','icu'],social:['ward','icu']};
  for(const p of ['home','ward','icu'])for(const al of ['none','late','imm']){await click('[data-pl="'+p+'"]');if(!(await zf.evaluate(p=>document.querySelector('[data-pl="'+p+'"]').classList.contains('on'),p)))await click('[data-pl="'+p+'"]');await click('[data-al="'+al+'"]');
-  const t0=await txt();ok(/💊 Proponowane/.test(t0),`baza ${p}/${al}: schemat`,t0.slice(0,200));
-  for(const m of MODS){await click('[data-o="'+m+'"]');const t=await txt();const q=t.split('|')[0];const id=`${m} × ${p} × ${al}`;
+  const t0b=await txt();ok(/💊 Proponowane/.test(t0b),`baza ${p}/${al}: schemat`,t0b.slice(0,200));
+  for(const m of MODS){let t0=t0b;if(m==='preg'){const dis=await zf.evaluate(()=>{const b=document.querySelector('[data-o="preg"]');return b.disabled&&!b.classList.contains('on')&&/niedost/.test(b.title||'');});ok(dis,`preg × ${p} × ${al}: M → ciąża zablokowana`,'');await click('[data-sex="f"]');t0=await txt();}
+   await click('[data-o="'+m+'"]');const t=await txt();const q=t.split('|')[0];const id=`${m} × ${p} × ${al}`;
    ok(t!==t0||(SAME_OK[m]||[]).some(x=>x===p||x===p+':'+al),id+': tekst schematu zmienia się',q.slice(0,200));
    if(['asp','abscess','empyema'].includes(m)){ok(!/Amoksycylina<?\/?b?>? 1 g|\bAmoksycylina 1 g/.test(q)&&!/Ampicylina 1 g/.test(q),id+': nie sama amoksycylina / ampicylina',q.slice(0,250));
     if(al==='none')ok(/klawulan|sulbakt/i.test(q),id+': β-laktam z inhibitorem w propozycji',q.slice(0,250));
@@ -39,7 +40,7 @@ const BASE=process.env.BASE||'http://localhost:8765/',SHOTS=process.env.SHOTS||'
    if(p==='home'&&al==='none'&&m==='asp')await shot('zp-3-dom-brak-alergii-zachlystowe.png');
    if(p==='ward'&&al==='none'&&m==='abscess')await shot('zp-4-oddzial-ropien-pluca.png');
    if(p==='home'&&al==='imm'&&m==='abscess')await shot('zp-5-dom-alergia-natychmiastowa-ropien.png');
-   await click('[data-o="'+m+'"]');}
+   await click('[data-o="'+m+'"]');if(m==='preg')await click('[data-sex="m"]');}
   if(p==='home'&&al==='none')await shot('zp-0-dom-bez-modyfikatorow-amoksycylina.png');}
  ok(!errs.length,'Brak błędów JS / konsoli',errs.join(' | '));
  await br.close();console.log((n-fail)+'/'+n+(fail?' FAIL':' PASS'));process.exit(fail?1:0);})();

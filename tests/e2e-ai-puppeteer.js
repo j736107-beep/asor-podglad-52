@@ -21,7 +21,7 @@ page.on('request',q=>{const u=q.url();if(/api\.(openai|anthropic)\.com|api\.x\.a
  if(!u.startsWith(BASE)&&!u.startsWith('data:'))real.push(u);q.continue();});
 await page.goto(BASE,{waitUntil:'networkidle0'});await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await page.reload({waitUntil:'networkidle0'});
 const go=async id=>{await page.evaluate(id=>document.querySelector('#side button[data-id="'+id+'"]').click(),id);await sleep(700);};
-await page.type('#pbName','Jan Testowy');await page.type('#pbPesel','44051401359');
+await page.type('#pbName','Jan Testowy');
 await page.evaluate(()=>{const s=(q,v)=>{const e=document.querySelector(q);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));};s('#pa','82');s('#pw','78');s('#pc','1.3');document.querySelector('#psex button[data-s="m"]').click();});await sleep(300);
 await go('cap');
 let b=await page.evaluate(()=>{const x=document.getElementById('aiBtn');return{has:!!x,dis:x&&x.disabled,why:(document.getElementById('aiWhy')||{}).textContent};});
@@ -45,14 +45,14 @@ await page.evaluate(()=>{const f=document.querySelector('.clinical-form');const 
 b=await page.evaluate(()=>({dis:document.getElementById('aiBtn').disabled}));rec('Z kluczem i online: przycisk aktywny',!b.dis,'');
 await page.click('#aiBtn');await sleep(300);
 await page.evaluate(()=>{document.getElementById('aiPrev').open=true;});
-await page.type('#aiNotes','Jan Testowy, PESEL 44051401359: kaszel i gorączka od 3 dni.');await sleep(300);
+await page.type('#aiNotes','Jan Testowy, nr 44051401359: kaszel i gorączka od 3 dni.');await sleep(300);
 const pv=await page.evaluate(()=>document.getElementById('aiPrevTxt').textContent);
-rec('Podgląd „Co zostanie wysłane”: dane kliniczne, PSI, miejsce leczenia, antybiotyk; bez imienia/PESEL',/SpO₂ \[%\]: 84/.test(pv)&&/PSI \/ PORT: klasa/.test(pv)&&/OIOM \/ OIT/.test(pv)&&/ANTYBIOTYKOTERAPIA/.test(pv)&&/kaszel i gorączka od 3 dni/.test(pv)&&!/Jan|Testowy|44051401359/.test(pv),pv.slice(0,200));
+rec('Podgląd „Co zostanie wysłane”: dane kliniczne, PSI, miejsce leczenia, antybiotyk; bez imienia / numerów',/SpO₂ \[%\]: 84/.test(pv)&&/PSI \/ PORT: klasa/.test(pv)&&/OIOM \/ OIT/.test(pv)&&/ANTYBIOTYKOTERAPIA/.test(pv)&&/kaszel i gorączka od 3 dni/.test(pv)&&!/Jan|Testowy|44051401359/.test(pv),pv.slice(0,200));
 if(SHOTS){await page.evaluate(()=>document.getElementById('aiEpi').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/ai-podglad.png'});}
 const n0=sent.length;await page.click('#aiSend');await page.waitForSelector('#aiOut',{timeout:15000});await sleep(300);
 const rq=sent.slice(n0).find(x=>x.method==='POST');const body=rq?rq.body:'';
 rec('Żądanie xAI: POST api.x.ai/v1/chat/completions, Bearer xai-…, model grok-4.7, temperatura 0,2, reasoning_effort low',rq&&rq.url==='https://api.x.ai/v1/chat/completions'&&rq.headers.authorization==='Bearer '+KEY&&JSON.parse(body).temperature===0.2&&JSON.parse(body).model==='grok-4.7'&&JSON.parse(body).reasoning_effort==='low'&&JSON.parse(body).messages.length===2,rq&&rq.url);
-rec('RODO: body żądania bez imienia, nazwiska, PESEL, czasu przyjęcia',body.length>500&&!/Jan|Testowy|44051401359/.test(body)&&!/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/.test(body),'body '+body.length+' B');
+rec('RODO: body żądania bez imienia, nazwiska, numerów, czasu przyjęcia',body.length>500&&!/Jan|Testowy|44051401359/.test(body)&&!/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/.test(body),'body '+body.length+' B');
 const out=await page.evaluate(()=>({ta:document.getElementById('aiOut').value,warn:document.getElementById('aiWarn').textContent,notes:(document.getElementById('aiNotesOut')||{}).textContent||''}));
 rec('Panel wyniku: edytowalne pole z EPIKRYZA/ICD-10/uzasadnieniem OIT; UWAGI osobno; etykieta AI',/^EPIKRYZA/.test(out.ta)&&/J18\.9/.test(out.ta)&&/UZASADNIENIE PRZEKAZANIA DO OIT/.test(out.ta)&&!/UWAGI DLA LEKARZA|Brak wyniku RTG/.test(out.ta)&&/Brak wyniku RTG/.test(out.notes)&&out.warn==='Tekst wygenerowany przez AI – wymaga weryfikacji i zatwierdzenia przez lekarza',JSON.stringify(out).slice(0,200));
 if(SHOTS){await page.evaluate(()=>document.getElementById('aiOutBox').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/ai-wynik.png'});}
@@ -62,7 +62,7 @@ rec('Kopiuj: tylko blok do wklejenia (z edycją lekarza), bez UWAG',/^EPIKRYZA/.
 // wydruk A4
 await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module:'cap'}]);});
 const pr=await page.evaluate(()=>document.getElementById('printArea').textContent);
-rec('Wydruk A4: nagłówek z imieniem/PESEL (lokalnie) + epikryza AI z etykietą, bez UWAG i bez panelu AI',/Jan Testowy/.test(pr)&&/44051401359/.test(pr)&&/EPIKRYZA \(AI\) – Tekst wygenerowany przez AI/.test(pr)&&/J18\.9/.test(pr)&&!/Brak wyniku RTG/.test(pr)&&!/Potwierdzam – wyślij/.test(pr),pr.slice(0,120));
+rec('Wydruk A4: nagłówek z imieniem (lokalnie) + epikryza AI z etykietą, bez UWAG i bez panelu AI',/Jan Testowy/.test(pr)&&!/44051401359/.test(pr)&&/EPIKRYZA \(AI\) – Tekst wygenerowany przez AI/.test(pr)&&/J18\.9/.test(pr)&&!/Brak wyniku RTG/.test(pr)&&!/Potwierdzam – wyślij/.test(pr),pr.slice(0,120));
 // zmiana zakładki zachowuje wynik
 await page.evaluate(()=>document.querySelector('[data-clin-tab="abx51"]').click());await sleep(500);
 const keep=await page.evaluate(()=>(document.getElementById('aiOut')||{}).value||'');rec('Wynik zachowany po zmianie zakładki',/\[poprawka lekarza\]/.test(keep),'');
@@ -92,8 +92,8 @@ await go('settings');await page.click('#aiKeyDel');await sleep(200);
 const dk=await page.evaluate(()=>JSON.parse(localStorage.getItem('v52:ai_cfg')).keys.anthropic===undefined);await go('cap');
 b=await page.evaluate(()=>document.getElementById('aiBtn').disabled);rec('Usuń klucz → klucz skasowany, przycisk wyszarzony',dk&&b,'');
 // SW i CSP
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix3/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
-rec('SW asor-v52-fix3: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix4/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
+rec('SW asor-v52-fix4: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
 rec('Brak prawdziwych wywołań poza atrapą',real.length===0,real.slice(0,3).join(' '));
 rec('Brak błędów JS',errs.filter(e=>!/401|429|Failed to load resource/.test(e)).length===0,errs.join(' | ').slice(0,300));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})().catch(e=>{console.log('CRASH',e);process.exit(1);});

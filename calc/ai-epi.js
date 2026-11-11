@@ -1,5 +1,5 @@
 // Asystent SOR 5.2 – PILOT „Epikryza (AI)” (Zapalenie płuc). Logika bez interfejsu: biała lista danych, prompt, zapytanie, parsowanie.
-// RODO: do modelu trafiają WYŁĄCZNIE dane kliniczne z białej listy (whitelist). Imię, nazwisko, PESEL, czas przyjęcia
+// RODO: do modelu trafiają WYŁĄCZNIE dane kliniczne z białej listy (whitelist). Imię, nazwisko, czas przyjęcia
 // ani żaden identyfikator NIGDY nie są kopiowane do ładunku; pola tekstowe są dodatkowo czyszczone (scrub), a gotowe body
 // sprawdzane (assertClean) – przy wykryciu identyfikatora zapytanie NIE jest wysyłane.
 (function(r,f){var m=f();if(typeof module==='object'&&module.exports)module.exports=m;else r.SORAIEpi=m;})(this,function(){
@@ -24,14 +24,12 @@ function idTokens(ids){ids=ids||{};var t=[];String(ids.name||'').split(/[\s,;.\-
  if(String(ids.name||'').trim().length>=2)t.unshift(String(ids.name).trim());return t;}
 function scrub(s,ids){s=String(s==null?'':s);ids=ids||{};
  s=s.replace(/\b\d{11}\b/g,'[usunięto]');
- var pes=String(ids.pesel||'').replace(/\D/g,'');if(pes.length>=6)s=s.split(pes).join('[usunięto]');
  if(ids.adm&&String(ids.adm).trim().length>=4)s=s.split(String(ids.adm).trim()).join('[usunięto]');
  s=s.replace(/\b\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4},?\s*(godz\.?\s*)?\d{1,2}:\d{2}\b/g,'[usunięto]');
- s=s.replace(/PESEL\s*[:=]?\s*\S*/gi,'[usunięto]');
  idTokens(ids).forEach(function(tok){s=s.replace(new RegExp('(^|[^\\p{L}])'+esc(tok)+'(?=$|[^\\p{L}])','giu'),'$1[usunięto]');});
  return s;}
-function assertClean(body,ids){var b=String(body),bad=[];ids=ids||{};var pes=String(ids.pesel||'').replace(/\D/g,'');
- if(pes.length>=6&&b.indexOf(pes)>=0)bad.push('PESEL');if(/\b\d{11}\b/.test(b))bad.push('11-cyfrowy numer');
+function assertClean(body,ids){var b=String(body),bad=[];ids=ids||{};
+ if(/\b\d{11}\b/.test(b))bad.push('11-cyfrowy numer');
  idTokens(ids).forEach(function(tok){if(new RegExp('(^|[^\\p{L}])'+esc(tok)+'(?=$|[^\\p{L}])','iu').test(b))bad.push('imię/nazwisko');});
  if(ids.adm&&String(ids.adm).trim().length>=4&&b.indexOf(String(ids.adm).trim())>=0)bad.push('czas przyjęcia');
  if(bad.length)throw new Error('Zablokowano wysyłkę: w danych wykryto identyfikator pacjenta ('+bad.filter(function(x,i,a){return a.indexOf(x)===i;}).join(', ')+').');return true;}
@@ -45,7 +43,7 @@ var RISK=[['mrsa','ryzyko MRSA'],['pseudo','ryzyko Pseudomonas'],['recent','hosp
 var ALLERGY={none:'brak alergii na β-laktamy (potwierdzone)',late:'alergia na penicyliny – reakcja późna / łagodna',imm:'alergia na penicyliny – reakcja natychmiastowa (IgE-zależna)'};
 var PLACE={home:'Leczenie domowe',obs:'Krótka hospitalizacja / obserwacja lub dom ze ścisłą kontrolą (decyzja lekarza)',ward:'Hospitalizacja – oddział',icu:'Ciężkie PZP – OIOM / OIT rozważany'};
 var RANK={home:0,obs:0,ward:1,icu:2};
-// src: {bar:SKS.P(), assess:{i,r}, zp:{allergy,o,place}, abx:'tekst planu', notes:'tekst'}  ids: {name,pesel,adm} – używane TYLKO do czyszczenia
+// src: {bar:SKS.P(), assess:{i,r}, zp:{allergy,o,place}, abx:'tekst planu', notes:'tekst'}  ids: {name,adm} – używane TYLKO do czyszczenia
 function buildPayload(src,ids){src=src||{};var b=src.bar||{},A=src.assess||{},i=A.i||{},r=A.r||{},a=r.assess||{},zp=src.zp||{},o=zp.o||{};
  var P={modul:'Zapalenie płuc (PZP) u dorosłego – SOR',pacjent:{},parametry:{},badania:{},wywiad_PSI:{},kryteria_ciezkosci:{},wyniki_programu:{},antybiotykoterapia:[],alergia:'',czynniki_ryzyka:[],notatki_lekarza:''};
  var age=fin(i.age)?i.age:b.age;if(fin(age))P.pacjent.wiek_lata=Math.round(age);

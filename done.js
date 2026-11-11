@@ -29,7 +29,7 @@
   var RX_PROC=/\b(cewnik|wkłuci|kaniul|intubac|kardiowersj|defibryl|sond[aęy]|opatrun|szyci|unieruchom|gips|drenaż|nakłuci|punkcj|tlenoterap|tlen\b|niv\b|monitorowan|konsultacj|transfuzj|toaleta|płukani|ułożeni|izolac|pomiar|rr co|diureza)/i;
   function parseOrders(text){var rows=[],lines=String(text||'').replace(/\r/g,'').split('\n'),lastT='',seq=0;
     lines.forEach(function(raw){var l=raw.replace(/\u00a0/g,' ').replace(/\t+/g,'  ').replace(/\s+$/,'').trim();if(!l||l.length<3)return;
-      if(/^karta zleceń/i.test(l))return;if(/^(karta zleceń|zlecenia|lp\.?|data|godz|nazwa|pacjent|pesel|oddział|lekarz)\b[^0-9]*$/i.test(l))return;
+      if(/^karta zleceń/i.test(l))return;if(/^(karta zleceń|zlecenia|lp\.?|data|godz|nazwa|pacjent|oddział|lekarz)\b[^0-9]*$/i.test(l))return;if(/\b\d{11}\b/.test(l)&&!/\d\s*(mg|g|ml|µg|mcg|j\.?m\.?)\b/i.test(l))return;/* wiersz z 11-cyfrowym numerem identyfikacyjnym – nie jest zleceniem, nie zapisujemy */
       var tm=l.match(RX_T),time='',date='';if(tm){time=(tm[4].length<2?'0':'')+tm[4]+':'+tm[5];if(tm[1])date=('0'+tm[1]).slice(-2)+'.'+('0'+tm[2]).slice(-2);l=(l.slice(0,tm.index)+' '+l.slice(tm.index+tm[0].length)).trim();}
       if(!/[a-ząęółśżźćń]{3}/i.test(l)){if(time)lastT=time;return;}
       var dm=l.match(RX_DOSE);if(dm&&/\d+\s*G$/.test(dm[1])&&/wkłuci|kaniul|venflon/i.test(l))dm=null;var rm=l.match(RX_ROUTE),fm=l.match(RX_FREQ);

@@ -12,20 +12,17 @@ await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await pa
 const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja 5.2 w nagłówku',/5\.2 \(testowa\)/.test(ver)&&/09\.11\.2026/.test(ver),ver);
 const go=async id=>{await page.evaluate(id=>{const b=document.querySelector('#side button[data-id="'+id+'"]');b.click();},id);await sleep(700);};
 const frameOf=async src=>{for(let k=0;k<30;k++){const f=page.frames().find(f=>f.url().includes(src));if(f){try{await f.waitForSelector('body');return f;}catch(e){}}await sleep(200);}return null;};
-// ---- pasek pacjenta + PESEL
-await page.type('#pbName','Jan Testowy');await page.type('#pbPesel','44051401359');await sleep(300);
-let pa=await page.evaluate(()=>({age:document.querySelector('#pa').value,sex:[...document.querySelectorAll('#psex button.on')].map(b=>b.dataset.s).join(),info:document.querySelector('#pbPeselInfo').textContent}));
-rec('PESEL poprawny → wiek/płeć',pa.age==='82'&&pa.sex==='m',JSON.stringify(pa));
-await page.$eval('#pbPesel',e=>{e.value='';});await page.type('#pbPesel','44051401358');await sleep(200);
-let bad=await page.$eval('#pbPesel',e=>e.classList.contains('bad'));const binf=await page.$eval('#pbPeselInfo',e=>e.textContent);rec('PESEL zła suma → oznaczony',bad&&/nieprawidłowy/.test(binf),binf);
-await page.$eval('#pbPesel',e=>{e.value='';});await page.type('#pbPesel','44051401359');await sleep(200);
+// ---- pasek pacjenta: imię i nazwisko, wiek (ręcznie), płeć – bez numeru identyfikacyjnego (RODO)
+await page.type('#pbName','Jan Testowy');await page.type('#pa','82');await page.evaluate(()=>document.querySelector('#psex [data-s="m"]').click());await sleep(300);
+let pa=await page.evaluate(()=>({age:document.querySelector('#pa').value,sex:[...document.querySelectorAll('#psex button.on')].map(b=>b.dataset.s).join(),n:document.querySelectorAll('#pbar input').length,id:!!document.querySelector('[id*="Pe'+'sel"]')}));
+rec('Pasek: wiek wpisany ręcznie + płeć; brak pola numeru identyfikacyjnego',pa.age==='82'&&pa.sex==='m'&&!pa.id,JSON.stringify(pa));
 // propagacja do troponiny (ramka)
 await go('trop');let tf=await frameOf('mod/troponina');await sleep(800);
-let tv=tf?await tf.evaluate(()=>({n:document.getElementById('pname')&&document.getElementById('pname').value,p:document.getElementById('pesel')&&document.getElementById('pesel').value,a:document.getElementById('age')&&document.getElementById('age').value})):null;
-rec('Propagacja → Troponina (ramka)',tv&&tv.n==='Jan Testowy'&&tv.p==='44051401359'&&tv.a==='82',JSON.stringify(tv));
+let tv=tf?await tf.evaluate(()=>({n:document.getElementById('pname')&&document.getElementById('pname').value,a:document.getElementById('age')&&document.getElementById('age').value})):null;
+rec('Propagacja → Troponina (ramka)',tv&&tv.n==='Jan Testowy'&&tv.a==='82',JSON.stringify(tv));
 // propagacja do modułu natywnego z #pname (neurologia)
 const nid=await page.evaluate(()=>{const m=SKM.list.find(m=>m&&m.render&&/neuro/i.test(m.id));return m&&m.id;});
-if(nid){await go(nid);await sleep(500);const nv=await page.evaluate(()=>{const e=document.querySelector('#main #pname');const f=document.querySelector('#main #pesel');return e?{n:e.value,p:f&&f.value}:null;});rec('Propagacja → '+nid+' (natywny)',nv===null||nv.n==='Jan Testowy',JSON.stringify(nv)+(nv===null?' (moduł bez pola na 1. ekranie)':''));}
+if(nid){await go(nid);await sleep(500);const nv=await page.evaluate(()=>{const e=document.querySelector('#main #pname');return e?{n:e.value}:null;});rec('Propagacja → '+nid+' (natywny)',nv===null||nv.n==='Jan Testowy',JSON.stringify(nv)+(nv===null?' (moduł bez pola na 1. ekranie)':''));}
 // ---- WSZYSTKIE moduły: błędy konsoli
 const ids=await page.evaluate(()=>SKM.list.filter(m=>m&&!m.sep&&m.id).map(m=>m.id));
 const before=errs.length;const perMod={};
@@ -90,7 +87,7 @@ await page.evaluate(()=>{SORReport.capture(SKS.active());SORReport.fill([{module
 await page.emulateMediaType('print');const pdf=await page.pdf({format:'A4',printBackground:true});await page.emulateMediaType('screen');
 const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;fs.writeFileSync('/workspace/print_cap.pdf',pdf);
 const ph=await page.evaluate(()=>document.getElementById('printArea').textContent);
-rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez sekcji blokady wypisu',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/44051401359/.test(ph)&&!/WSTRZYMAJ|wstrzymaj wypis/i.test(ph),'stron: '+pages);
+rec('Druk A4 modułu: 1–2 strony, nagłówek pacjenta, bez sekcji blokady wypisu',pages>=1&&pages<=2&&/Jan Testowy/.test(ph)&&/wiek:\s*\d+ lat/.test(ph)&&/płeć:/.test(ph)&&!/WSTRZYMAJ|wstrzymaj wypis/i.test(ph),'stron: '+pages);
 const navp=await page.$('#skPrint');rec('Przycisk „Drukuj do dokumentacji (A4)” w module',!!navp,'');
 // ---- DKA: wynik bez mechanizmu blokady wypisu
 await go('dka');await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>{const e=f.querySelector('#'+id);if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}};set('glu','450');set('ket','5');set('ph','7.1');set('hco3','10');set('k','4.5');set('na','135');});await sleep(400);
@@ -102,9 +99,9 @@ const eIds=await ef.evaluate(()=>[...document.querySelectorAll('input')].map(i=>
 await page.evaluate(()=>{localStorage.setItem('el1state:test','{"a":1}');});
 await go('dashboard');
 await Promise.all([page.waitForNavigation({waitUntil:'networkidle0'}),page.evaluate(()=>document.getElementById('nextPt').click())]);await sleep(500);
-const after=await page.evaluate(()=>({keys:Object.keys(localStorage),ss:Object.keys(sessionStorage),name:document.querySelector('#pbName').value,pesel:document.querySelector('#pbPesel').value,age:document.querySelector('#pa').value}));
+const after=await page.evaluate(()=>({keys:Object.keys(localStorage),ss:Object.keys(sessionStorage),name:document.querySelector('#pbName').value,age:document.querySelector('#pa').value}));
 const leftover=after.keys.filter(k=>/^(zp1state|zp_handoff|el1state:|se4state:|sk_patient|sk_m_)/.test(k)&&k!=='sk_m_dka_cfg');
-rec('Następny pacjent: pełny reset (także zp1state/zp_handoff/el1state:)',leftover.length===0&&!after.name&&!after.pesel&&!after.age,JSON.stringify(after).slice(0,400));
+rec('Następny pacjent: pełny reset (także zp1state/zp_handoff/el1state:)',leftover.length===0&&!after.name&&!after.age,JSON.stringify(after).slice(0,400));
 await go('cap');await clickTab('abx51');const zf3=await frameOf('mod/zp');await sleep(800);
 const z8=await zf3.evaluate(()=>({on:[...document.querySelectorAll('[data-pl].on')].map(b=>b.dataset.pl),spo2:document.getElementById('spo2').value,age:document.getElementById('age').value}));
 rec('ZP-8 po „Następny pacjent”: pusty stan, brak wybranego miejsca',z8.on.length===0&&z8.spo2===''&&z8.age==='',JSON.stringify(z8));

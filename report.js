@@ -58,7 +58,7 @@
         if(!fr.length&&prev&&prev.sub&&!prev.subAuto){sub=prev.sub;subName=prev.subName||'';}}
       // 5.2 etap 4 (zaakceptowane 09.11.2026): wydruk zapalenia płuc ZAWSZE z antybiotykoterapią – gdy ramka nie była otwierana, wylicz ze wspólnego silnika
       var subAuto=false;if(mod.id==='cap'&&!sub&&r.filled>0&&root.SORZpPrint){try{sub=root.SORZpPrint.text({full:true});}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}
-      // pilot AI (10.11.2026): epikryza AI (tylko blok do wklejenia, bez UWAG) – w wydruku A4; nagłówek pacjenta (imię/PESEL) dodaje lokalnie wydruk
+      // pilot AI (10.11.2026): epikryza AI (tylko blok do wklejenia, bez UWAG) – w wydruku A4; nagłówek pacjenta (imię i nazwisko, wiek, płeć) dodaje lokalnie wydruk
       var ai=(mod.id==='cap'&&root.SORAIUI&&root.SORAIUI.printText)?root.SORAIUI.printText():'';if(ai)r.filled=Math.max(r.filled,1);
       if((r.filled>0&&r.text)||sub){all[mod.id]={name:mod.name,ts:Date.now(),text:r.text.slice(0,12000)};if(sub){all[mod.id].sub=sub.slice(0,12000);all[mod.id].subName=subName||'Moduł osadzony';if(subAuto)all[mod.id].subAuto=true;}if(ai)all[mod.id].ai=ai.slice(0,8000);}else delete all[mod.id];
       jset(SNAP,all);}catch(e){}}
@@ -69,8 +69,8 @@
     function f(x,d){return isFinite(x)?C.fmt(x,d):'—';}
     var cr=isFinite(p.crMg)?U.round('crea',U.fromSI('crea',U.toSI('crea',p.crMg,'conv'),S.units),S.units)+' '+U.label('crea',S.units):'—';
     var co=[['liver','wątroba'],['renal','nerki'],['heart','serce'],['preg','ciąża']].filter(function(x){return p.co&&p.co[x[0]];}).map(function(x){return x[1];});
-    var I=root.SKS&&root.SKS.PID?root.SKS.PID():{name:'',pesel:''};
-    return '<table><tr><th>Imię i nazwisko</th><td>'+(I.name?'<b>'+esc(I.name)+'</b>':'— (nie wpisano)')+'</td><th>PESEL</th><td>'+(I.pesel?esc(I.pesel)+(I.peselOk?' (ur. '+esc(I.birth)+')':' – NIEPRAWIDŁOWY'):'—')+'</td></tr><tr><th>Przyjęcie do SOR</th><td colspan="3">'+(I.adm?esc(String(I.adm).replace('T',' ')):'—')+'</td></tr><tr><th>Wiek / płeć</th><td>'+f(p.age,0)+' lat / '+({m:'M',f:'K'}[p.sex]||'—')+'</td><th>Masa / wzrost / BMI</th><td>'+(isFinite(p.w)?f(p.w,1):isFinite(p.wRaw)?f(p.wRaw,1)+' (nierealna – nie użyta w obliczeniach)':'—')+' kg / '+f(p.h,0)+' cm / '+(isFinite(p.bmi)?p.bmi.toFixed(1).replace('.',','):'—')+'</td></tr><tr><th>Kreatynina</th><td>'+esc(cr)+'</td><th>CrCl / eGFR</th><td>'+f(p.crcl,0)+' ml/min / '+f(p.egfr,0)+' ml/min/1,73 m²</td></tr><tr><th>Obciążenia</th><td colspan="3">'+(co.length?esc(co.join(', ')):'nie zaznaczono')+'</td></tr></table>';}
+    var I=root.SKS&&root.SKS.PID?root.SKS.PID():{name:''};
+    return '<table><tr><th>Imię i nazwisko</th><td>'+(I.name?'<b>'+esc(I.name)+'</b>':'— (nie wpisano)')+'</td><th>Wiek / płeć</th><td>'+f(p.age,0)+' lat / '+({m:'M',f:'K'}[p.sex]||'—')+'</td></tr><tr><th>Przyjęcie do SOR</th><td colspan="3">'+(I.adm?esc(String(I.adm).replace('T',' ')):'—')+'</td></tr><tr><th>Masa / wzrost / BMI</th><td colspan="3">'+(isFinite(p.w)?f(p.w,1):isFinite(p.wRaw)?f(p.wRaw,1)+' (nierealna – nie użyta w obliczeniach)':'—')+' kg / '+f(p.h,0)+' cm / '+(isFinite(p.bmi)?p.bmi.toFixed(1).replace('.',','):'—')+'</td></tr><tr><th>Kreatynina</th><td>'+esc(cr)+'</td><th>CrCl / eGFR</th><td>'+f(p.crcl,0)+' ml/min / '+f(p.egfr,0)+' ml/min/1,73 m²</td></tr><tr><th>Obciążenia</th><td colspan="3">'+(co.length?esc(co.join(', ')):'nie zaznaczono')+'</td></tr></table>';}
   function section(title,html){return html?'<h2>'+esc(title)+'</h2>'+html:'';}
   function docHtml(){var W=root.SORWorkbench&&root.SORWorkbench.getState?root.SORWorkbench.getState():null;if(!W)return '';
     var txt=W.draft&&W.draft.trim()?W.draft:W.compose;if(!txt||!txt.trim())return '';
@@ -101,7 +101,8 @@
   var HOSP='Podhalański Szpital Specjalistyczny im. Jana Pawła II w Nowym Targu',SOR='Szpitalny Oddział Ratunkowy',LOGO='img/pszs-logo.svg';
   var FOOT='Dokument wygenerowany pomocniczo poza systemem szpitalnym – zatwierdzam: ............................................ (pieczątka i podpis lekarza)';
   try{if(typeof Image!=='undefined'){var _pre=new Image();_pre.src=LOGO;}}catch(e){}
-  function pidLine(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():null;if(!I)return '';return '<div class="pid-h">Pacjent: <b>'+esc(I.name||'— (nie wpisano)')+'</b> · PESEL: <b>'+esc(I.pesel||'—')+'</b>'+(I.adm?' · przyjęcie: '+esc(String(I.adm).replace('T',' ')):'')+'</div>';}
+  function pidAge(){var p=root.SKS&&root.SKS.P?root.SKS.P():{};var a=isFinite(p.age)?' · wiek: <b>'+Math.round(p.age)+' lat</b>':'';var x={m:'M',f:'K'}[p.sex];return a+(x?' · płeć: <b>'+x+'</b>':'');}
+  function pidLine(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():null;if(!I)return '';return '<div class="pid-h">Pacjent: <b>'+esc(I.name||'— (nie wpisano)')+'</b>'+pidAge()+(I.adm?' · przyjęcie: '+esc(String(I.adm).replace('T',' ')):'')+'</div>';}
   function brandHead(){return '<div class="brand-h"><img src="'+LOGO+'" alt="Logo PSZS"><div><b>'+esc(HOSP)+'</b><span>'+esc(SOR)+'</span></div><div class="bt">Data i godzina wydruku:<br><b>'+esc(now())+'</b></div></div>'+pidLine();}
   function brandFoot(){return '<div class="brand-f">'+esc(FOOT)+'</div>';}
   function brand(a){if(!a)return a;a.querySelectorAll('.brand-h,.brand-f,.pid-h').forEach(function(x){x.remove();});a.insertAdjacentHTML('afterbegin',brandHead());a.insertAdjacentHTML('beforeend',brandFoot());return a;}
@@ -109,7 +110,7 @@
   function fill(parts){var a=document.getElementById('printArea');if(!a){a=document.createElement('div');a.id='printArea';document.body.appendChild(a);}a.innerHTML=build(parts);a.classList.toggle('compact',!!(parts&&parts.length===1&&parts[0]&&parts[0].module));brand(a);return a;}
   // 5.2 etap 2: pasek pacjenta na ekranie modułu (Bilans płynów, Antykoagulacja) + przycisk wydruku
   function ptStrip(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():{},p=root.SKS&&root.SKS.P?root.SKS.P():{},C=root.SK&&root.SK.core;function f(x,d){return isFinite(x)&&C?C.fmt(x,d):'—';}
-    return '<div class="ptstrip" id="ptStrip">👤 <b>'+esc(I.name||'— (nie wpisano)')+'</b> · PESEL '+esc(I.pesel||'—')+' · wiek '+f(p.age,0)+' · płeć '+({m:'M',f:'K'}[p.sex]||'—')+' · masa '+(isFinite(p.w)?f(p.w,0)+' kg':'—')+' · CrCl '+(isFinite(p.crcl)?f(p.crcl,0)+' ml/min':'—')+'</div>';}
+    return '<div class="ptstrip" id="ptStrip">👤 <b>'+esc(I.name||'— (nie wpisano)')+'</b> · wiek '+f(p.age,0)+' · płeć '+({m:'M',f:'K'}[p.sex]||'—')+' · masa '+(isFinite(p.w)?f(p.w,0)+' kg':'—')+' · CrCl '+(isFinite(p.crcl)?f(p.crcl,0)+' ml/min':'—')+'</div>';}
   function printBtn(l){return '<button type="button" class="tabPrint primary-action" onclick="var b=document.getElementById(\'printMod\');if(b)b.click();">🖨 '+esc(l||'Drukuj tę zakładkę (A4)')+'</button>';}
   function print(parts){var cur=root.SKS&&root.SKS.active?root.SKS.active():null;if(cur)capture(cur);fill(parts);root.print();}
   return{brand:brand,brandHead:brandHead,brandFoot:brandFoot,HOSP:HOSP,FOOT:FOOT,esc:esc,pumpList:pumpList,addPump:addPump,clearPumps:clearPumps,snapText:snapText,capture:capture,snaps:snaps,clearSnaps:clearSnaps,build:build,fill:fill,print:print,ptStrip:ptStrip,printBtn:printBtn,SKIP:SKIP};

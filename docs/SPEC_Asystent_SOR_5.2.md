@@ -92,7 +92,7 @@ Moduł `zp` czyta pasek pacjenta tylko przy załadowaniu (`bar()`). Alarm z ramk
 **Co:** u góry aplikacji jeden pasek z polami:
 
 - imię i nazwisko;
-- PESEL, opcjonalnie; z niego automatycznie wiek, płeć i data urodzenia z kontrolą sumy (gotowa funkcja `pesel()` jest w `mod/troponina/index.html`);
+- ~~nr identyfikacyjny pacjenta~~ – USUNIĘTY 11.11.2026 (RODO): wiek (lata) i płeć wpisywane ręcznie w pasku pacjenta, przenoszone do wszystkich modułów;
 - wiek;
 - płeć K/M;
 - masa [kg], wzrost [cm], BMI (wyliczane);
@@ -102,19 +102,19 @@ Moduł `zp` czyta pasek pacjenta tylko przy załadowaniu (`bar()`). Alarm z ramk
 
 Dane same przechodzą do wszystkich modułów i nie trzeba ich wpisywać ponownie.
 
-**Stan obecny:** pasek `#pbar` już istnieje. Ma masę, wzrost, BMI, wiek, płeć, kreatyninę, CrCl, eGFR i przełączniki. **Brakuje imienia i nazwiska, PESEL-u i godziny przyjęcia.** Lokalne pola „Imię i nazwisko / PESEL” są tylko w Troponinie (`mod/troponina/index.html`, `#pname`, `#pesel`) i w Neurologii (`mods5.js`, `#pname`, `#pesel`).
+**Stan obecny:** pasek `#pbar` już istnieje. Ma masę, wzrost, BMI, wiek, płeć, kreatyninę, CrCl, eGFR i przełączniki. **Brakuje imienia i nazwiska, nr. identyfikacyjnego [usunięty 11.11.2026] i godziny przyjęcia.** Lokalne pola „Imię i nazwisko / nr identyfikacyjny [usunięty 11.11.2026]” są tylko w Troponinie (`mod/troponina/index.html`, `#pname`) i w Neurologii (`mods5.js`, `#pname`).
 
 **Gdzie i jak:**
 
-- `index.html`: do `#pbar` dodać `#pname`, `#ppesel`, `#padm` (datetime-local). Napis marki zwęzić i lekko przesunąć w prawo (`.brand` z mniejszym `small`), a pasek zrobić dwuwierszowy na wąskich ekranach i przyklejony do góry (`position: sticky`).
+- `index.html`: do `#pbar` dodać `#pname`, `#padm` (datetime-local). Napis marki zwęzić i lekko przesunąć w prawo (`.brand` z mniejszym `small`), a pasek zrobić dwuwierszowy na wąskich ekranach i przyklejony do góry (`position: sticky`).
 - `shell.js`:
-  - rozszerzyć `PT` o `name, pesel, adm`;
-  - imię, nazwisko i PESEL trzymać w `sessionStorage`, a nie w `localStorage` (dane osobowe nie mogą przetrwać zamknięcia karty) i czyścić je przy „Następny pacjent”;
+  - rozszerzyć `PT` o `name, adm`;
+  - imię, nazwisko i nr identyfikacyjny [usunięty 11.11.2026] trzymać w `sessionStorage`, a nie w `localStorage` (dane osobowe nie mogą przetrwać zamknięcia karty) i czyścić je przy „Następny pacjent”;
   - rozszerzyć `SKS.P()`;
-  - w `sync()` przekazywać do **wszystkich** ramek wiek, płeć, masę, wzrost, kreatyninę, imię i nazwisko, PESEL oraz choroby współistniejące (dziś tylko wybiórczo);
+  - w `sync()` przekazywać do **wszystkich** ramek wiek, płeć, masę, wzrost, kreatyninę, imię i nazwisko, nr identyfikacyjny [usunięty 11.11.2026] oraz choroby współistniejące (dziś tylko wybiórczo);
   - dodać zdarzenie `sk-patient` (`CustomEvent`) wysyłane przy każdej zmianie, na które moduły natywne odświeżają widok;
   - moduł `zp` ma reagować na zmianę paska na żywo, a nie tylko przy załadowaniu.
-- Troponina i Neurologia: lokalne pola imienia i PESEL-u powiązać z paskiem globalnym w obie strony albo zastąpić je odczytem z paska.
+- Troponina i Neurologia: lokalne pola imienia i nr. identyfikacyjnego [usunięty 11.11.2026] powiązać z paskiem globalnym w obie strony albo zastąpić je odczytem z paska.
 - `wipe()` ma usuwać **wszystkie** stany modułów: dodać `zp1state`, `zp_handoff`, `el1state:` oraz ogólną regułę „każdy klucz z prefiksem wersji” (patrz pkt 1.3).
 
 **Ochrona danych:** w stopce paska krótka informacja: „Dane pacjenta tylko w tej karcie przeglądarki; czyszczone przy »Następny pacjent« i zamknięciu karty”. Obecny tekst w module Zatrucia („aplikacja nie zbiera identyfikatorów pacjenta”) trzeba zaktualizować.
@@ -123,7 +123,7 @@ Dane same przechodzą do wszystkich modułów i nie trzeba ich wpisywać ponowni
 
 1. Wpisz masę 70, wiek 40 i płeć M, otwórz Pompy, Stan padaczkowy, Elektrolity, Troponinę, Zapalenie płuc i Omdlenie. W każdym są te same wartości, nic nie trzeba wpisywać.
 2. Zmiana masy w pasku przy otwartym module zmienia dawki na żywo.
-3. PESEL z błędną sumą kontrolną daje ostrzeżenie i niczego nie uzupełnia.
+3. nr identyfikacyjny [usunięty 11.11.2026] z błędną sumą kontrolną daje ostrzeżenie i niczego nie uzupełnia.
 4. „Następny pacjent” zostawia puste wszystkie pola we wszystkich modułach, łącznie z Zapaleniem płuc i Elektrolitami. Zamknięcie karty usuwa imię i nazwisko.
 
 ## Punkt 2. Wydruk z każdego modułu do dokumentacji (1–2 strony A4) – P1
@@ -133,7 +133,7 @@ Dane same przechodzą do wszystkich modułów i nie trzeba ich wpisywać ponowni
 **Nagłówek:**
 
 - logo szpitala i nazwa oddziału;
-- imię i nazwisko, PESEL (jeśli wpisany), wiek, płeć, masa, wzrost, BMI, CrCl;
+- imię i nazwisko, nr identyfikacyjny [usunięty 11.11.2026] (jeśli wpisany), wiek, płeć, masa, wzrost, BMI, CrCl;
 - data i godzina wydruku, godzina przyjęcia;
 - moduł i wersja.
 
@@ -612,7 +612,7 @@ Dostają **tylko** wspólne elementy z pkt 1 i 2.
 5. Preparat tiaminy dostępny w SOR (nazwa, stężenie, objętość ampułki) – do potwierdzenia z apteką szpitalną.
 6. Receptura wlewu adrenaliny w anafilaksji: 1 mg/50 ml (20 µg/ml) czy lokalna 5 mg/50 ml (100 µg/ml) z „Pomp SOR”?
 7. Które kalkulatory z listy w pkt 17 wdrożyć w pierwszej kolejności?
-8. Czy PESEL ma być w pasku (wygoda: automatyczny wiek i płeć) czy tylko imię i nazwisko (mniej danych osobowych)?
+8. Czy nr identyfikacyjny [usunięty 11.11.2026] ma być w pasku (wygoda: automatyczny wiek i płeć) czy tylko imię i nazwisko (mniej danych osobowych)? **Decyzja 11.11.2026 (RODO): tylko imię i nazwisko; nr identyfikacyjny usunięty z aplikacji, wiek i płeć ręcznie.**
 
 # 7. Źródła
 

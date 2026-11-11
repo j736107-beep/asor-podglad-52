@@ -12,7 +12,7 @@ await page.goto(BASE,{waitUntil:'networkidle0'});await page.evaluate(()=>{localS
 const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 2+',/5\.2 \(testowa\) · etap [2-9] · 09\.11\.2026/.test(ver),ver);
 const go=async id=>{await page.evaluate(id=>{document.querySelector('#side button[data-id="'+id+'"]').click();},id);await sleep(800);};
 const frameOf=async src=>{for(let k=0;k<30;k++){const f=page.frames().find(f=>f.url().includes(src));if(f){try{await f.waitForSelector('body');return f;}catch(e){}}await sleep(200);}return null;};
-await page.type('#pbName','Anna Testowa');await page.type('#pbPesel','44051401359');
+await page.type('#pbName','Anna Testowa');
 await page.evaluate(()=>{const w=document.querySelector('#pw');w.value='70';w.dispatchEvent(new Event('input'));const a=document.querySelector('#pa');a.value='40';a.dispatchEvent(new Event('input'));});await sleep(300);
 // ===== SE
 await go('se');let f=await frameOf('mod/se');await sleep(800);
@@ -94,7 +94,7 @@ await page.evaluate(()=>{const f=document.querySelector('#f');const set=(id,v)=>
 rec('DKA: wydruk zawiera pełne polskie nazwy',/Kwasica ketonowa \(DKA\) \/ Stan hiperosmolarny \(HHS\)/.test(pd),'');
 // ===== Bilans płynów + Antykoagulacja
 await go('fluid');let fl=await page.evaluate(()=>({s:(document.getElementById('ptStrip')||{}).textContent||'',b:!!document.querySelector('#main .tabPrint')}));
-rec('Bilans płynów: pasek pacjenta + przycisk wydruku',/Anna Testowa/.test(fl.s)&&/44051401359/.test(fl.s)&&fl.b,fl.s);
+rec('Bilans płynów: pasek pacjenta + przycisk wydruku',/Anna Testowa/.test(fl.s)&&/wiek 40/.test(fl.s)&&fl.b,fl.s);
 await go('acoag');const tabs=await page.evaluate(()=>[...document.querySelectorAll('#main .tabs button')].map(b=>b.dataset.t));let okA=[];
 for(const t of tabs){await page.evaluate(t=>document.querySelector('#main .tabs button[data-t="'+t+'"]').click(),t);await sleep(300);const x=await page.evaluate(()=>({s:(document.getElementById('ptStrip')||{}).textContent||'',b:!!document.querySelector('#main .tabPrint')}));if(/Anna Testowa/.test(x.s)&&x.b)okA.push(t);}
 rec('Antykoagulacja: pasek pacjenta + wydruk w każdej zakładce ('+tabs.length+')',okA.length===tabs.length&&tabs.length===8,okA.join(','));

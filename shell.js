@@ -7,6 +7,9 @@ var S=load('sk_settings',DEF),PT=load('sk_patient',{w:'',age:'',sex:'',crea:'',h
 if(S.uv!==38){if(PT.crMg==null&&PT.crea!==''&&PT.crea!=null){var _c=C.num(PT.crea);PT.crMg=isFinite(_c)?(S.crea==='umol'?_c/88.42:_c):'';}S.units='conv';delete S.crea;S.uv=38;localStorage.setItem('sk_settings',JSON.stringify(S));}
 if(PT.crMg==null)PT.crMg='';delete PT.crea;
 cur='dashboard',muted=false,alarms={};
+// RODO (11.11.2026): numer identyfikacyjny pacjenta usunięty z aplikacji – jednorazowe czyszczenie zapisanych wcześniej danych (klucze i pola „pesel”, „pz”)
+(function purgeId(){function clean(o){var ch=false;if(o&&typeof o==='object'){Object.keys(o).forEach(function(k){if(/pesel/i.test(k)||k==='pz'){delete o[k];ch=true;}else if(o[k]&&typeof o[k]==='object'){if(clean(o[k]))ch=true;}});}return ch;}
+ [window.localStorage,window.sessionStorage].forEach(function(S0){try{Object.keys(S0).forEach(function(k){if(/pesel/i.test(k)){S0.removeItem(k);return;}var v=S0.getItem(k);if(!v||!/pesel|"pz"/i.test(v))return;try{var o=JSON.parse(v);if(clean(o))S0.setItem(k,JSON.stringify(o));}catch(e){}});}catch(e){}});})();
 function saveS(){localStorage.setItem('sk_settings',JSON.stringify(S))}function saveP(){localStorage.setItem('sk_patient',JSON.stringify(PT))}
 window.SKS={get S(){return S},P:function(){var p=C.patient({w:PT.w,h:PT.h,age:PT.age,sex:PT.sex,crea:PT.crMg,creaU:'mgdl',co:PT.co});return p;},alarm:alarm,saveS:saveS,legacy:function(){return LEG},DEF:DEF,setS:function(k,v){S[k]=v;saveS();applyS();}};
 // ---------- alarm: czerwona lampa + syrena ----------
@@ -38,30 +41,18 @@ $('#pc').oninput=function(){var x=C.num(this.value);PT.crMg=isFinite(x)?UN.conv(
 document.querySelectorAll('#psex button').forEach(function(b){b.onclick=function(){PT.sex=b.dataset.s;saveP();patBar();refresh();}});
 document.querySelectorAll('.tg').forEach(function(b){b.onclick=function(){PT.co[b.dataset.c]=!PT.co[b.dataset.c];saveP();patBar();refresh();}});
 // ---------- 5.2: dane identyfikacyjne pacjenta (tylko ta karta – sessionStorage; czyszczone przez „Następny pacjent”) ----------
-function loadPID(){try{return Object.assign({name:'',pesel:'',adm:''},JSON.parse(sessionStorage.getItem('sk_pid')||'{}'));}catch(e){return{name:'',pesel:'',adm:''};}}
+function loadPID(){try{var o=JSON.parse(sessionStorage.getItem('sk_pid')||'{}');return{name:o.name||'',adm:o.adm||''};}catch(e){return{name:'',adm:''};}}
 var PID=loadPID();function savePID(){try{sessionStorage.setItem('sk_pid',JSON.stringify(PID));}catch(e){}}
-function peselInfo(p){p=String(p||'').replace(/\s/g,'');if(!/^\d{11}$/.test(p))return null;var d=p.split('').map(Number),w=[1,3,7,9,1,3,7,9,1,3],s=0;for(var i=0;i<10;i++)s+=d[i]*w[i];var ok=(10-s%10)%10===d[10];
- var yy=d[0]*10+d[1],mm=d[2]*10+d[3],dd=d[4]*10+d[5],cent=mm>80?1800:mm>60?2200:mm>40?2100:mm>20?2000:1900;mm=mm%20;var y=cent+yy,bd=new Date(y,mm-1,dd);
- if(!ok||bd.getMonth()!==mm-1||bd.getDate()!==dd)return{ok:false};var t=new Date(),age=t.getFullYear()-y-((t.getMonth()<mm-1||(t.getMonth()===mm-1&&t.getDate()<dd))?1:0);
- return{ok:true,age:age,sex:d[9]%2?'m':'f',birth:('0'+dd).slice(-2)+'.'+('0'+mm).slice(-2)+'.'+y};}
 function tsLocal(ms){var d=new Date(ms);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
 if(!PID.adm){var t0=+localStorage.getItem('sk_t0');if(t0)PID.adm=tsLocal(t0);savePID();}
-var pesAuto={};
-function pidPaint(){$('#pbName').value=PID.name;$('#pbPesel').value=PID.pesel;$('#pbAdm').value=PID.adm;var inf=peselInfo(PID.pesel),b=$('#pbPeselInfo'),e=$('#pbPesel');
- e.classList.toggle('bad',!!PID.pesel&&(!inf||!inf.ok));b.hidden=!PID.pesel;b.textContent=!PID.pesel?'':!inf?'PESEL: 11 cyfr':!inf.ok?'PESEL nieprawidłowy (suma kontrolna)':'ur. '+inf.birth+' · '+inf.age+' l. · '+(inf.sex==='m'?'M':'K');b.style.background=PID.pesel&&(!inf||!inf.ok)?'#ffd9de':'';}
-function pesApply(){var inf=peselInfo(PID.pesel);if(!inf||!inf.ok)return;var ch=false;
- if(PT.age===''||String(PT.age)===String(pesAuto.age)){if(String(PT.age)!==String(inf.age)){PT.age=String(inf.age);$('#pa').value=PT.age;ch=true;}pesAuto.age=inf.age;}
- if(!PT.sex||PT.sex===pesAuto.sex){if(PT.sex!==inf.sex){PT.sex=inf.sex;ch=true;}pesAuto.sex=inf.sex;}
- if(ch){saveP();patBar();}}
-function pidChanged(){savePID();pidPaint();pesApply();refresh();fillNative();document.dispatchEvent(new CustomEvent('sk-patient',{detail:{name:PID.name,pesel:PID.pesel,adm:PID.adm}}));}
+function pidPaint(){$('#pbName').value=PID.name;$('#pbAdm').value=PID.adm;}
+function pidChanged(){savePID();pidPaint();refresh();fillNative();document.dispatchEvent(new CustomEvent('sk-patient',{detail:{name:PID.name,adm:PID.adm}}));}
 $('#pbName').oninput=function(){PID.name=this.value;savePID();fillNative();refresh();document.dispatchEvent(new CustomEvent('sk-patient'));};
-$('#pbPesel').oninput=function(){PID.pesel=this.value.replace(/\D/g,'').slice(0,11);pidChanged();};
 $('#pbAdm').onchange=function(){PID.adm=this.value;pidChanged();};
 pidPaint();
-// propagacja do modułów natywnych (np. Neurologia – #pname/#pesel): wpis tylko w puste pole lub poprzednio przeniesione
-var natLast={};function fillNative(){var root=$('#main');if(!root)return;[['pname','name'],['pesel','pesel']].forEach(function(a){var e=root.querySelector('#'+a[0]);if(!e||e.closest('#pbar'))return;var v=PID[a[1]]||'';if(!v||e.value===v)return;if(e.value!==''&&e.value!==natLast[a[0]])return;e.value=v;natLast[a[0]]=v;e.dispatchEvent(new Event('input',{bubbles:true}));});}
-window.SKS.PID=function(){var inf=peselInfo(PID.pesel);return{name:PID.name,pesel:PID.pesel,peselOk:!!(inf&&inf.ok),birth:inf&&inf.ok?inf.birth:'',adm:PID.adm};};
-window.SKS.peselInfo=peselInfo;
+// propagacja do modułów natywnych (np. Neurologia – #pname): wpis tylko w puste pole lub poprzednio przeniesione
+var natLast={};function fillNative(){var root=$('#main');if(!root)return;[['pname','name']].forEach(function(a){var e=root.querySelector('#'+a[0]);if(!e||e.closest('#pbar'))return;var v=PID[a[1]]||'';if(!v||e.value===v)return;if(e.value!==''&&e.value!==natLast[a[0]])return;e.value=v;natLast[a[0]]=v;e.dispatchEvent(new Event('input',{bubbles:true}));});}
+window.SKS.PID=function(){return{name:PID.name,adm:PID.adm};};
 // ---------- nawigacja ----------
 // pw25: klasyczne Elektrolity (elyte) ukryte – jedna wersja: Elektrolity SOR (el)
 (function(L){
@@ -110,7 +101,8 @@ function sync(f,m){var d;try{d=f.contentWindow.document}catch(e){return}if(!d||!
  if(m.id==='el'){var ea=d.getElementById('age');if(ea&&PT.age!=='')setVal(ea,String(PT.age),m,'age');if(PT.sex){var eb=d.querySelector('.sx[data-s="'+(PT.sex==='k'||PT.sex==='f'?'f':'m')+'"]');if(eb&&!eb.classList.contains('on'))eb.click();}}
  if(m.id==='trends'){var pa=d.getElementById('age');if(pa&&PT.age!==''){if(m._age===undefined)m._age=pa.value;setVal(pa,String(PT.age),m,'age');}}
  if(m.id==='trop'){var ag=d.getElementById('age'),sx=d.getElementById('sex');if(ag&&PT.age!=='')setVal(ag,String(PT.age),m,'age');if(sx&&PT.sex)setVal(sx,PT.sex,m,'sex');}
- ['pname','pesel'].forEach(function(k){var e=d.getElementById(k);var v=k==='pname'?PID.name:PID.pesel;if(e&&v)setVal(e,v,m,'id_'+k);});
+ var pn=d.getElementById('pname');if(pn&&PID.name)setVal(pn,PID.name,m,'id_pname');
+ try{f.contentWindow.SKSexGuard&&f.contentWindow.SKSexGuard.apply();}catch(e){}
  if(m.red)alarm(m.id+':dom',!!d.querySelector(m.red));}
 // ---------- start ----------
 applyS();patBar();show();

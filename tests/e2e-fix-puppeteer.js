@@ -1,4 +1,4 @@
-/* 11.11.2026: Sepsa – antybiotyki wg KAŻDEGO ogniska; Zapalenie płuc – CrCl na żywo (pola / PESEL), CURB-65 = 2 → dom wybieralny z rekomendacją; brak blokady wypisu.
+/* 11.11.2026: Sepsa – antybiotyki wg KAŻDEGO ogniska; Zapalenie płuc – CrCl na żywo (pola / wiek i płeć z paska), CURB-65 = 2 → dom wybieralny z rekomendacją; brak blokady wypisu.
    BASE=http://localhost:8765/ node e2e-fix-puppeteer.js */
 const puppeteer=require('puppeteer-core');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const BASE=process.env.BASE||'http://localhost:8765/';let n=0,fail=0;function ok(c,m,d){n++;console.log((c?'PASS ':'FAIL ')+m+(c||!d?'':' — '+String(d).slice(0,300)));if(!c)fail++;}
@@ -30,11 +30,11 @@ const BASE=process.env.BASE||'http://localhost:8765/';let n=0,fail=0;function ok
  c=await zf.evaluate(()=>document.getElementById('crclLive').textContent);ok(/CrCl: 65 ml\/min/.test(c),'ZP: kreatynina 106 µmol/l → 65 ml/min',c);
  await zf.evaluate(()=>document.querySelector('[data-cu="mgdl"]').click());await typ('crea','2,4');await sleep(300);await zf.evaluate(()=>document.querySelector('[data-al="none"]').click());await sleep(200);await zf.evaluate(()=>document.querySelector('[data-pl="ward"]').click());await sleep(300);
  c=await zf.evaluate(()=>({live:document.getElementById('crclLive').textContent,res:document.getElementById('res').innerText}));ok(/CrCl: 32 ml\/min/.test(c.live)&&/CrCl: 32 ml\/min/.test(c.res),'ZP: kreatynina 2,4 → 32 ml/min, schemat liczony z tym CrCl',c.live);
- // PESEL → wiek i płeć → CrCl
- await fresh();await page.evaluate(()=>{const e=document.getElementById('pbPesel');e.value='44051401359';e.dispatchEvent(new Event('input',{bubbles:true}));const w=document.getElementById('pw');w.value='80';w.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(300);
+ // wiek i płeć z paska (wpis ręczny) → CrCl
+ await fresh();await page.evaluate(()=>{const e=document.getElementById('pa');e.value='82';e.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#psex [data-s="m"]').click();const w=document.getElementById('pw');w.value='80';w.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(300);
  await go('cap');await tab('Antybiotykoterapia');zf=page.frames().find(f=>/mod\/zp/.test(f.url()));await typ('crea','1,2');await sleep(300);
  const exp=await page.evaluate(()=>{const a=SKS.P().age;return Math.round((140-a)*80/(72*1.2));});
- c=await zf.evaluate(()=>document.getElementById('crclLive').textContent);ok(new RegExp('CrCl: '+exp+' ml/min').test(c),'ZP: wiek i płeć z PESEL → CrCl '+exp+' ml/min',c);
+ c=await zf.evaluate(()=>document.getElementById('crclLive').textContent);ok(new RegExp('CrCl: '+exp+' ml/min').test(c),'ZP: wiek 82 i płeć M z paska → CrCl '+exp+' ml/min',c);
  // CURB-65 = 2 → dom wybieralny, rekomendacja z uzasadnieniem
  await fresh();await go('cap');await tab('Skale i hospitalizacja');
  await page.evaluate(()=>{const f=document.querySelector('.clinical-form');const set=(k,v)=>{const e=f.querySelector('#'+k);if(!e)return;if(e.tagName==='SELECT'){e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}else{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));}};
