@@ -9,7 +9,3 @@
 .mut{color:#222!important}
 header .tg,header small,.brand small,label,.pill,.seg button,.tgs .tg{font-size:15px!important}
 .module-tile b{font-size:17px!important}
-/* pw19: nagłówek szpitala (11.11.2026: logo usunięte z UI) */
-.hosp-card{flex-direction:row!important;align-items:center!important;gap:12px!important}
-.hc-t b{font-size:15px!important;line-height:1.25!important}
-.hc-t span{font-size:14px!important}

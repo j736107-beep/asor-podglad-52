@@ -13,7 +13,7 @@ window.SKN={print:function(){if(!LAST){alert('Otwórz zakładkę „Algorytm: po
  var ac={'':'brak',vka:'VKA',dabi:'dabigatran',xa:'anty-Xa',lmwh:'HDCz'}[i.ac||''];
  var ot=N.ottawa({age:P.age,neck:s.neck,loc:s.loc,ex:i.o.ex,inst:i.o.inst,flex:i.o.flex});
  var row=function(a,b){return '<tr><th>'+a+'</th><td>'+b+'</td></tr>'};
- var h='<h1>Protokół postępowania – podejrzenie udaru</h1><div class="sub">SOR Szpital w Nowym Targu · wydruk '+new Date().toLocaleString('pl-PL')+'</div><table>'+
+ var h='<h1>Protokół postępowania – podejrzenie udaru</h1><div class="sub">Wydruk '+new Date().toLocaleString('pl-PL')+'</div><table>'+
   row('Pacjent',esc(L.name)||'..............................................')+row('Wiek / płeć',F2(P.age)+' lat / '+({m:'M',f:'K'}[P.sex]||'—'))+
   row('Przyjęcie na SOR',esc(L.adm))+row('Ostatnio widziany zdrowy (LKW)',lkw)+
   row('Objawy',sym.join(', ')||'—')+row('RACE (0–9)',L.rc.n?L.rc.score+(L.rc.lvo?' – podejrzenie LVO':''):'—')+row('NIHSS (0–42)',F2(L.nih))+row('HINTS',{'':'nie badano',central:'centralny',peripheral:'obwodowy'}[i.hints||''])+
