@@ -9,10 +9,10 @@ function store(id){var k='sk_m_'+id;return{get:function(){try{return JSON.parse(
 function bind(el,id,upd){var s=store(id),v=s.get(),UN=SK.units,sys=USYS();
  // migracja: dawniej zapisywano wartości w jednostce wyświetlanej; teraz wartości z jednostką (data-u) przechowywane kanonicznie w SI
  if(v.__si!==1){var leg=window.SKS&&SKS.legacy?SKS.legacy():'conv';el.querySelectorAll('input[data-u]').forEach(function(i){if(v[i.id]!=null&&v[i.id]!==''){var x=N(v[i.id]);v[i.id]=isFinite(x)?String(UN.toSI(i.dataset.u,x,leg)):''}});v.__si=1;s.set(v);}
- el.querySelectorAll('input[id],select[id]').forEach(function(i){if(i.tagName==='SELECT'){if(v[i.id]!=null)i.value=v[i.id];i.onchange=function(){v[i.id]=i.value;s.set(v);upd()}}else if(i.type==='checkbox'){i.checked=!!v[i.id];i.onchange=function(){v[i.id]=i.checked;s.set(v);upd()}}
+ el.querySelectorAll('input[id],select[id],textarea[id]').forEach(function(i){if(i.tagName==='TEXTAREA'){if(v[i.id]!=null)i.value=v[i.id];i.oninput=function(){v[i.id]=i.value;s.set(v);upd()};return;}if(i.tagName==='SELECT'){if(v[i.id]!=null)i.value=v[i.id];i.onchange=function(){v[i.id]=i.value;s.set(v);upd()}}else if(i.type==='checkbox'){i.checked=!!v[i.id];i.onchange=function(){v[i.id]=i.checked;s.set(v);upd()}}
   else if(i.dataset.u){var a=i.dataset.u;if(v[i.id]!=null&&v[i.id]!=='')i.value=UN.round(a,UN.fromSI(a,+v[i.id],sys),sys);i.oninput=function(){var x=N(i.value);v[i.id]=isFinite(x)?String(UN.toSI(a,x,USYS())):'';s.set(v);upd()}}
   else{if(v[i.id]!=null)i.value=v[i.id];i.oninput=function(){v[i.id]=i.value;s.set(v);upd()}}});
- return function(id){var e=el.querySelector('#'+id);if(!e)return undefined;/* 5.2: brak pola = brak danych (naprawa błędu Sepsa) */if(e.tagName==='SELECT')return e.value;if(e.type==='checkbox')return e.checked;if(e.dataset.u){var x=v[id];return x==null||x===''?NaN:+x}return N(e.value)};}
+ return function(id){var e=el.querySelector('#'+id);if(!e)return undefined;/* 5.2: brak pola = brak danych (naprawa błędu Sepsa) */if(e.tagName==='SELECT')return e.value;if(e.tagName==='TEXTAREA')return e.value;if(e.type==='checkbox')return e.checked;if(e.dataset.u){var x=v[id];return x==null||x===''?NaN:+x}if(e.getAttribute('inputmode')!=='decimal')return e.value;return N(e.value)};}
 function infoToggle(el,html){var b=el.querySelector('.info'),d=el.querySelector('.infobox');b.onclick=function(){d.hidden=!d.hidden};d.innerHTML=html;}
 // ================= DKA / HHS =================
 var DKA={id:'dka',icon:'🍬',name:'Kwasica ketonowa (DKA) / Stan hiperosmolarny (HHS)',render:function(el,X){var S=X.S;
