@@ -32,7 +32,7 @@ t('TL-4 PSSE Nowy Targ 18 266 29 14 nadal w książce, z adresem',()=>{
   return has&&/Jana Kazimierza 6/.test(p.adres||'')?true:JSON.stringify(p&&{adres:p.adres,nrs:p.numery.map(n=>n.nr)});
 });
 t('TL-5 nowe wewnętrzne SOR/OIT/kardio/portier/apteka z aktualnej listy',()=>{
-  const need=['3200','3210','3202','3201','3104','3230','3231','3232','3233','3234','573900862','503735714','503736372','519091100','519097100','122633000','3087','503735942','503735978','503453860','3370','3270','664775084'];
+  const need=['3200','3210','3202','3201','3104','3230','3231','3232','3233','3234','573900862','503735714','503736372','519091100','3217','122633000','3087','503735942','503735978','503453860','3370','3270','664775084'];
   const miss=need.filter(x=>!nrs.has(x));
   const inSzp=need.filter(x=>szp.some(s=>s.n.nr===x));
   return miss.length===0&&inSzp.length===need.length?true:'brak '+miss.join(',')+' szp='+inSzp.length;
@@ -52,9 +52,13 @@ t('TL-8 TRANSPORT 32-10 nie wpisany (kolizja z TRIAGE 3210); 3210 tylko jako tri
   const t3210=szp.filter(x=>x.n.nr==='3210');
   return t3210.length===1&&/triage/i.test(t3210[0].n.opis||'')&&t3210[0].p.toLowerCase().includes('triage')?true:JSON.stringify(t3210);
 });
-t('TL-9 rozbieżność kardiologii 091 vs 097: oba numery, do potwierdzenia / rozb',()=>{
-  const a=szp.find(x=>x.n.nr==='519091100'),b=szp.find(x=>x.n.nr==='519097100');
-  return a&&b&&a.n.st==='rozb'&&b.n.st==='rozb'&&/do potwierdzenia/.test(a.n.uwaga||'')&&/do potwierdzenia/.test(b.n.uwaga||'')?true:'flags';
+t('TL-9 kardiologia: II lekarz wew. 3217 i kom. 519 091 100 potwierdzone; 519 097 100 usunięty wszędzie',()=>{
+  const a=szp.find(x=>x.n.nr==='519091100'),w=szp.find(x=>x.n.nr==='3217');
+  const any097=[...N].some(x=>x.n.nr==='519097100');
+  return a&&w&&a.p==='Oddział Kardiologiczny'&&w.p==='Oddział Kardiologiczny'
+    &&a.n.st==='lok'&&!a.n.uwaga&&/II lekarz/.test(a.n.opis||'')
+    &&w.n.st==='lok'&&/II lekarz/.test(w.n.opis||'')&&w.n.typ==='wew'
+    &&!any097?true:JSON.stringify({a:a&&a.n,w:w&&w.n,any097});
 });
 t('TL-10 portier 12 263 30 00 oznaczony do potwierdzenia (kierunkowy 12)',()=>{
   const p=szp.find(x=>x.n.nr==='122633000');
@@ -91,6 +95,10 @@ t('TL-15 Laboratorium 503 736 186 dopisany do istniejącego wpisu; Serologia 503
     &&ser.some(x=>x.n.nr==='503736374')&&!ser.some(x=>x.n.nr==='3546')
     &&mik.some(x=>x.n.nr==='503736494')&&!mik.some(x=>x.n.nr==='502140524')&&!mik.some(x=>x.n.nr==='604897088')
     &&ser.length===1&&mik.length===1?true:JSON.stringify({lab:[...labNrs],ser:ser.map(x=>x.n.nr),mik:mik.map(x=>x.n.nr)});
+});
+t('TL-16 Dyrektor Szpitala ds. Medycznych — Chowaniec, pryw. 601 391 710; brak PIN/PUK',()=>{
+  const d=szp.filter(x=>/Chowaniec/.test(x.p)&&x.n.nr==='601391710');
+  return d.length===1&&d[0].n.typ==='tel'&&d[0].n.st==='lok'&&/pryw/.test(d[0].n.opis||'')&&/Dyrektor Szpitala ds\. Medycznych/.test(d[0].p)?true:JSON.stringify(d);
 });
 console.log(pass+'/'+(pass+fail)+(fail?' FAIL':' PASS'));
 process.exit(fail?1:0);

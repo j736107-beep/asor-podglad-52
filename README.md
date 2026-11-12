@@ -133,6 +133,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Kody PIN/PUK nie są wpisywane. Rozbieżności i niepewne odczyty oznaczone „do potwierdzenia”. Numery pełne z linkiem `tel:`, wewnętrzne jako „wew.”.
 - Apteka w module Zatrucia (grzyby): tylko wew. 3087 (zgodnie z listą). SW asor-v52-fix11.
 - Dopisek lekarza 12.11.2026: Laboratorium – dopisany kom. 503 736 186 do istniejącego wpisu (wew. 3541/3542/3549 zostają); przywrócone Pracownia Serologii 503 736 374 (nie stary wew. 3546) i Pracownia Mikrobiologii 503 736 494 (tylko ten numer, bez starych 502 140 524 / 604 897 088). SW asor-v52-fix12.
+- Dopisek lekarza 12.11.2026 (2): kardiologia – II lekarz wew. 3217 i kom. 519 091 100 (potwierdzony, bez „do potwierdzenia”); 519 097 100 usunięty wszędzie (także z Pracowni Kardiologii Inwazyjnej NT). Dyrektor Szpitala ds. Medycznych — Chowaniec, pryw. 601 391 710. SW asor-v52-fix13.
 
 ## Poprawki 11.11.2026 (7) – usunięcie ramki szpitalnej
 - Cała karta szpitala na Pulpicie (nazwa „Podhalański Szpital Specjalistyczny…”, „Szpitalny Oddział Ratunkowy”, czerwona ramka) usunięta – nie zostaje puste miejsce. To samo w nagłówku wydruku (`report.js`) i w podtytule wydruku protokołu udaru (`mods5.js`). CSS karty usunięty. SW asor-v52-fix10. Ikony PWA bez zmian.

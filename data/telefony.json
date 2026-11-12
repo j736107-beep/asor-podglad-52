@@ -452,18 +452,16 @@
               "st": "lok"
             },
             {
-              "typ": "tel",
-              "nr": "519091100",
-              "opis": "zawałowy (pierwsza kartka)",
-              "st": "rozb",
-              "uwaga": "do potwierdzenia — na drugiej kartce kardiolog/HEMO 519 097 100 (rozbieżność 091 vs 097)"
+              "typ": "wew",
+              "nr": "3217",
+              "opis": "II lekarz",
+              "st": "lok"
             },
             {
               "typ": "tel",
-              "nr": "519097100",
-              "opis": "kardiolog / HEMO (druga kartka)",
-              "st": "rozb",
-              "uwaga": "do potwierdzenia — na pierwszej kartce zawałowy 519 091 100 (rozbieżność 091 vs 097)"
+              "nr": "519091100",
+              "opis": "II lekarz, kom.",
+              "st": "lok"
             },
             {
               "typ": "wew",
@@ -1264,6 +1262,24 @@
             {
               "typ": "wew",
               "nr": "3154",
+              "st": "lok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dyrekcja",
+      "modul": "szpital",
+      "nazwa": "Nasz szpital (PSZS Nowy Targ) – dyrekcja",
+      "pozycje": [
+        {
+          "nazwa": "Dyrektor Szpitala ds. Medycznych — Chowaniec",
+          "numery": [
+            {
+              "typ": "tel",
+              "nr": "601391710",
+              "opis": "pryw.",
               "st": "lok"
             }
           ]
@@ -3058,16 +3074,6 @@
       "id": "kardint",
       "nazwa": "Małopolska – kardiologia / radiologia interwencyjna",
       "pozycje": [
-        {
-          "nazwa": "Nowy Targ – Pracownia Kardiologii Inwazyjnej",
-          "numery": [
-            {
-              "typ": "tel",
-              "nr": "519097100",
-              "st": "lok"
-            }
-          ]
-        },
         {
           "nazwa": "Zakopane – Pracownia Kardiologii Inwazyjnej",
           "numery": [
