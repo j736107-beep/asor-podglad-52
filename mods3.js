@@ -173,7 +173,7 @@ var GI=(function(){
     if(window.SKGCS)SKGCS.mount(f);self.update=upd;
     if(tab==='v'){
       var btn=f.querySelector('#gi-analizuj');
-      function run(){if(!SK.giEndo)return;lock=true;var ta=f.querySelector('#gastro');applyParse(f,SK.giEndo.parse(ta?ta.value:''));lock=false;upd();}
+      function run(){if(!SK.giEndo)return;lock=true;var ta=f.querySelector('#gastro');applyParse(f,SK.giEndo.parse(ta?ta.value:''));lock=false;if(window.SORReport&&SORReport.noteAction)SORReport.noteAction('gib','analizuj');if(window.SORReport&&SORReport.capture)SORReport.capture(self);upd();}
       if(btn)btn.onclick=function(ev){if(ev)ev.preventDefault();run();};
       var ta=f.querySelector('#gastro');
       var empty=true;for(var i=0;i<4;i++){var e=f.querySelector('#gi_type'+i);if(e&&e.value)empty=false;}

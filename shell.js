@@ -87,8 +87,8 @@ function mkNav(m){var pv=navS.length&&MODS.filter(function(x){return x.id===navS
  navBot=null; /* pw26: jeden pełny wipe = #nextPt „Następny pacjent”; bez #skClear w dole */}
 function ensureNav(){var el=$('#main');if(!navBar)return;if(el.firstChild!==navBar)el.insertBefore(navBar,el.firstChild);if(navBot&&el.lastChild!==navBot)el.appendChild(navBot);}
 function show(){if(window.SORReport&&active)SORReport.capture(active);side();alarms={};alarm('_',false);var m=MODS.filter(function(x){return x.id===cur})[0]||MODS[0],el=$('#main');active=m;el.className='';if(navObs)navObs.disconnect();el.innerHTML='';mkNav(m);el.appendChild(navBar);
- if(m.frame){el.className='fr';var f=document.createElement('iframe');f.src=m.frame;f.onload=function(){bridge(f,m)};el.appendChild(f);m.sync=function(){sync(f,m)};}
- else{m.render(el,SKS);setTimeout(fillNative,0);}
+ if(m.frame){el.className='fr';var f=document.createElement('iframe');f.src=m.frame;f.onload=function(){bridge(f,m);try{if(window.SORReport&&SORReport.rememberBaseline)SORReport.rememberBaseline(m,f.contentDocument&&f.contentDocument.body);}catch(e){}};el.appendChild(f);m.sync=function(){sync(f,m)};}
+ else{m.render(el,SKS);setTimeout(function(){fillNative();if(window.SORReport&&SORReport.rememberBaseline&&active)SORReport.rememberBaseline(active,el);},0);}
  ensureNav();if(!navObs)navObs=new MutationObserver(function(){ensureNav()});navObs.observe(el,{childList:true});}
 function refresh(){if(active&&active.sync)active.sync();else if(active&&active.update)active.update();}
 // ---------- most do modułów v6/v4 (ten sam origin) ----------
@@ -133,6 +133,7 @@ $('#pcu').onclick=function(){SKS.setUnits(S.units==='si'?'conv':'si');};
 window.SKS.setP=function(o){var ch=false;if(o.age!=null&&String(PT.age)!==String(o.age)){PT.age=String(o.age);$('#pa').value=PT.age;ch=true}if(o.sex&&PT.sex!==o.sex){PT.sex=o.sex;ch=true}if(o.w!=null&&String(PT.w)!==String(o.w)){PT.w=String(o.w);$('#pw').value=PT.w;ch=true}if(o.crMg!=null&&String(PT.crMg)!==String(o.crMg)){PT.crMg=o.crMg;pcShow();ch=true}if(ch){saveP();patBar();setTimeout(refresh,0);}};
 function wipe(){window.SKS.pwMem=null;window.SKS.ordMem=null;try{window.SORClinicalUI?.reset();}catch(e){}
  if(window.SORClearCase)window.SORClearCase();
+ if(window.SORReport&&SORReport.clearUsed)try{SORReport.clearUsed();}catch(e){}
  // 5.2: pełny reset – WSZYSTKIE dane pacjenta we wszystkich modułach (także zp1state, zp_handoff, el1state:, se4state:, zakładki modułów); zostają tylko ustawienia i ulubione
  var KEEP=['sk_settings','omdl_settings','sor_favorites','sor_local_cfg','sor_leki_wlasne','sor_icd_recent','sor_pompy_zatw_v2','sk_m_dka_cfg'];
  Object.keys(localStorage).forEach(function(k){if(KEEP.indexOf(k)>=0||k.indexOf('discAccepted')===0||k.indexOf('sor_cfg')===0||k.indexOf('v52:ai_cfg')===0)return;localStorage.removeItem(k);});
