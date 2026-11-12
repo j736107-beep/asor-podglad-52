@@ -80,9 +80,11 @@ let n=0,fail=0;const rec=(name,ok,info)=>{n++;if(!ok)fail++;console.log((ok?'PAS
   const gi=await report();
   const giOk=/Forrest IIa/.test(gi.text)&&(/Pantoprazol|wysokodawkowy|8 mg\/h/.test(gi.text))&&/Krwawienie z GI|górnego odcinka/.test(gi.text);
   const giOnly=giOk&&!/Anafilaksja/.test(gi.text)&&!/Kwasica ketonowa/.test(gi.text)&&!/Sepsa/.test(gi.text)&&!/Zatorowość/.test(gi.text)&&!/Troponina/.test(gi.text)&&!/Omdlenie SOR/.test(gi.text)&&!/Stan padaczkowy/.test(gi.text)&&!/Antykoagulacja/.test(gi.text)&&!/Zapalenie płuc/.test(gi.text);
+  // ODCZYT musi mieć klasę z parsera (nie „nieokreślony” z pustych selectów), plan wysokodawkowy
+  const odczyt=/owrzodzenie/.test(gi.text)&&/Forrest IIa/.test(gi.text)&&!/Forrest nieokreślony/.test(gi.text)&&!/Nie udało się jednoznacznie określić klasy Forrest/.test(gi.text)&&(/8 mg\/h = 2 ml\/h/.test(gi.text)||/schemat wysokodawkowy/.test(gi.text));
   rec('Tylko panel krwawienia z GI (GBS + gastroskopia + Analizuj): raport zawiera wyłącznie ten panel',
-    giOnly&&gi.used.indexOf('gib')>=0&&gi.used.every(x=>x==='gib'||x==='pompy'),
-    JSON.stringify({used:gi.used,snaps:gi.snaps,hasForrest:/Forrest IIa/.test(gi.text),slice:gi.text.slice(0,400)}));
+    giOnly&&odczyt&&gi.used.indexOf('gib')>=0&&gi.used.every(x=>x==='gib'||x==='pompy'),
+    JSON.stringify({used:gi.used,snaps:gi.snaps,hasForrest:/Forrest IIa/.test(gi.text),odczyt,slice:gi.text.slice(0,800)}));
   if(SHOTS){
     await page.evaluate(()=>{
       const pa=document.getElementById('printArea');

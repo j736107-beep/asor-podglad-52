@@ -159,8 +159,8 @@ var GI=(function(){
     var E=SK.giEndo,d=E.summaryEditableDefaults(p);
     Object.keys(d).forEach(function(k){
       var e=f.querySelector('#'+k);if(!e)return;
-      if(e.type==='checkbox'){e.checked=!!d[k];e.dispatchEvent(new Event('change',{bubbles:true}));}
-      else{e.value=d[k]==null?'':String(d[k]);e.dispatchEvent(new Event('input',{bubbles:true}));}
+      if(e.type==='checkbox'){e.checked=!!d[k];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}
+      else{e.value=d[k]==null?'':String(d[k]);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}
     });
   }
   return {id:mod.id,icon:mod.icon,name:mod.name,render:function(el,X){var tab=store(mod.id+'_tab').get().t||tabs[0][0];var self=this;
@@ -173,7 +173,7 @@ var GI=(function(){
     if(window.SKGCS)SKGCS.mount(f);self.update=upd;
     if(tab==='v'){
       var btn=f.querySelector('#gi-analizuj');
-      function run(){if(!SK.giEndo)return;lock=true;var ta=f.querySelector('#gastro');applyParse(f,SK.giEndo.parse(ta?ta.value:''));lock=false;if(window.SORReport&&SORReport.noteAction)SORReport.noteAction('gib','analizuj');if(window.SORReport&&SORReport.capture)SORReport.capture(self);upd();}
+      function run(){if(!SK.giEndo)return;lock=true;var ta=f.querySelector('#gastro');applyParse(f,SK.giEndo.parse(ta?ta.value:''));lock=false;if(window.SORReport&&SORReport.noteAction)SORReport.noteAction('gib','analizuj');upd();if(window.SORReport&&SORReport.capture)SORReport.capture(self);}
       if(btn)btn.onclick=function(ev){if(ev)ev.preventDefault();run();};
       var ta=f.querySelector('#gastro');
       var empty=true;for(var i=0;i<4;i++){var e=f.querySelector('#gi_type'+i);if(e&&e.value)empty=false;}
@@ -187,7 +187,19 @@ var GI=(function(){
     var vs=store('gib_v').get();
     if(!vs.gastro&&!store('gib_g').get().hb&&!store('gib_g').get().urea)return null;
     var P=(window.SKS&&SKS.P)?SKS.P():{co:{},w:NaN,sex:''};
-    var pl=E.plan(giState(null),giContext(P));
+    var gLive=null,host=document.getElementById('main');
+    if(host){
+      var root=host.querySelector('#f')||host;
+      if(root.querySelector('#gastro')||root.querySelector('#gi_type0')||root.querySelector('#urea')){
+        gLive=function(id){
+          var e=root.querySelector('#'+id);if(!e)return undefined;
+          if(e.tagName==='SELECT'||e.tagName==='TEXTAREA')return e.value;
+          if(e.type==='checkbox')return e.checked;
+          return e.value;
+        };
+      }
+    }
+    var pl=E.plan(giState(gLive),giContext(P));
     return {text:pl.epikryza};
   }};
 })();
