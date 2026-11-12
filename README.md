@@ -126,6 +126,13 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Pompy (decyzje lekarza 11.11.2026): dopamina – ampułka 4% (200 mg/5 ml): 50 ml = 3,75 ml + 46,25 ml = 3 mg/ml, 20 ml = 1,25 ml + 18,75 ml = 2,5 mg/ml (w zakresie ChPL 0,4–3,2 mg/ml; ml/h bez zmian). Oktreotyd aktywny (zatwierdzony): 10 µg/ml w NaCl 0,9% (receptury dla amp. 50/100/500 µg/ml), 25 µg/h = 2,5 ml/h, 50 µg/h = 5 ml/h = MAKS. (ChPL 4.4 – blok AV), bolus 50 µg i.v. wyłącznie „DO DECYZJI LEKARZA” (Baveno VII / AGA). Levosimendan – standard lokalny zatwierdzony (bez bramki; można przenieść do rejestru).
 - SW: asor-v52-fix7.
 
+## Poprawki 12.11.2026 – aktualna lista telefonów (PSZS Nowy Targ)
+
+- Cała lista wewnętrzna zakładki „Nasz szpital” / kafelka Telefony zastąpiona aktualną listą ze zdjęć lekarza (12.11.2026): SOR i dyżur, OIT, oddziały, diagnostyka, poradnie, dializy, ambulatoria, portier, apteka wew. 3087 i inne. Nieaktualne numery wewnętrzne usunięte.
+- Dodane / zaktualizowane: komórkowe, Policja, WCZK, WKRM (12 392 11 00 i 11 09; dotychczasowy 12 392 19 09 zachowany), Sanepid (adres), OCD, szpitale zewnętrzne (zakaźne, OIOM, psychiatria, toksykologia, naczyniowa, radiologia, wewnętrzne).
+- Kody PIN/PUK nie są wpisywane. Rozbieżności i niepewne odczyty oznaczone „do potwierdzenia”. Numery pełne z linkiem `tel:`, wewnętrzne jako „wew.”.
+- Apteka w module Zatrucia (grzyby): tylko wew. 3087 (zgodnie z listą). SW asor-v52-fix11.
+
 ## Poprawki 11.11.2026 (7) – usunięcie ramki szpitalnej
 - Cała karta szpitala na Pulpicie (nazwa „Podhalański Szpital Specjalistyczny…”, „Szpitalny Oddział Ratunkowy”, czerwona ramka) usunięta – nie zostaje puste miejsce. To samo w nagłówku wydruku (`report.js`) i w podtytule wydruku protokołu udaru (`mods5.js`). CSS karty usunięty. SW asor-v52-fix10. Ikony PWA bez zmian.
 - Zostają: zakładka „Nasz szpital” / kafel „Telefony szpitalne” (książka telefoniczna), informacje kliniczne (np. brak sylibininy w Nowym Targu, godziny endoskopii, apteka, wysokość n.p.m. w kalkulatorze Aa), wzmianki informacyjne w README / „O programie”.
