@@ -90,6 +90,6 @@ await page.evaluate(()=>localStorage.setItem('zp1state',JSON.stringify({allergy:
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
 rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika z wyborów lekarza (alergia, miejsce)',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix11/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix12/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();

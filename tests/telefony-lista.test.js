@@ -44,7 +44,7 @@ t('TL-6 służby: policja, WCZK, WKRM, OCD',()=>{
 });
 t('TL-7 usunięte nieaktualne numery wewnętrzne (nie ma ich na nowej liście)',()=>{
   // 182633000 = stara centrala (zastąpiona 12 263 30 00 do potwierdzenia)
-  const gone=['504162321','690536728','606968616','517097100','182633000','182633154','790666163','182633600','182633601','182633954','888390673','797488253','781447767','733887052','182611788','503736186','519097103','601510540'];
+  const gone=['504162321','690536728','606968616','517097100','182633000','182633154','790666163','182633600','182633601','182633954','888390673','797488253','781447767','733887052','182611788','519097103','601510540'];
   const still=gone.filter(x=>nrs.has(x));
   return still.length===0?true:'nadal są: '+still.join(',');
 });
@@ -80,6 +80,17 @@ t('TL-13 pełne numery (9 cyfr, nie fax) mają linkowalny typ tel; wew. bez cent
 t('TL-14 Zakopane OIOM: wew. 110 jest, ucięty komórkowy nie został wymyślony',()=>{
   const o=D.grupy.find(g=>g.id==='oiomm').pozycje.find(p=>/Zakopane/.test(p.nazwa));
   return o&&o.numery.some(n=>n.nr==='110')&&o.numery.length===1?true:JSON.stringify(o);
+});
+t('TL-15 Laboratorium 503 736 186 dopisany do istniejącego wpisu; Serologia 503 736 374 i Mikrobiologia 503 736 494 przywrócone (nowe numery)',()=>{
+  const lab=szp.filter(x=>x.p==='Laboratorium');
+  const ser=szp.filter(x=>/Serologii/.test(x.p));
+  const mik=szp.filter(x=>/Mikrobiologii/.test(x.p));
+  const labNrs=new Set(lab.map(x=>x.n.nr));
+  return labNrs.has('503736186')&&labNrs.has('3541')&&labNrs.has('3542')&&labNrs.has('3549')
+    &&lab.length>=4
+    &&ser.some(x=>x.n.nr==='503736374')&&!ser.some(x=>x.n.nr==='3546')
+    &&mik.some(x=>x.n.nr==='503736494')&&!mik.some(x=>x.n.nr==='502140524')&&!mik.some(x=>x.n.nr==='604897088')
+    &&ser.length===1&&mik.length===1?true:JSON.stringify({lab:[...labNrs],ser:ser.map(x=>x.n.nr),mik:mik.map(x=>x.n.nr)});
 });
 console.log(pass+'/'+(pass+fail)+(fail?' FAIL':' PASS'));
 process.exit(fail?1:0);

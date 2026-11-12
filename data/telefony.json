@@ -878,6 +878,34 @@
               "nr": "3549",
               "opis": "CITO",
               "st": "lok"
+            },
+            {
+              "typ": "tel",
+              "nr": "503736186",
+              "opis": "kom.",
+              "st": "lok"
+            }
+          ]
+        },
+        {
+          "nazwa": "Pracownia Serologii",
+          "numery": [
+            {
+              "typ": "tel",
+              "nr": "503736374",
+              "opis": "kom.",
+              "st": "lok"
+            }
+          ]
+        },
+        {
+          "nazwa": "Pracownia Mikrobiologii",
+          "numery": [
+            {
+              "typ": "tel",
+              "nr": "503736494",
+              "opis": "kom.",
+              "st": "lok"
             }
           ]
         }

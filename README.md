@@ -132,6 +132,7 @@ Wersja testowa zbudowana na 5.1 (`asor-podglad-51`, commit 960005f). Dane w prze
 - Dodane / zaktualizowane: komórkowe, Policja, WCZK, WKRM (12 392 11 00 i 11 09; dotychczasowy 12 392 19 09 zachowany), Sanepid (adres), OCD, szpitale zewnętrzne (zakaźne, OIOM, psychiatria, toksykologia, naczyniowa, radiologia, wewnętrzne).
 - Kody PIN/PUK nie są wpisywane. Rozbieżności i niepewne odczyty oznaczone „do potwierdzenia”. Numery pełne z linkiem `tel:`, wewnętrzne jako „wew.”.
 - Apteka w module Zatrucia (grzyby): tylko wew. 3087 (zgodnie z listą). SW asor-v52-fix11.
+- Dopisek lekarza 12.11.2026: Laboratorium – dopisany kom. 503 736 186 do istniejącego wpisu (wew. 3541/3542/3549 zostają); przywrócone Pracownia Serologii 503 736 374 (nie stary wew. 3546) i Pracownia Mikrobiologii 503 736 494 (tylko ten numer, bez starych 502 140 524 / 604 897 088). SW asor-v52-fix12.
 
 ## Poprawki 11.11.2026 (7) – usunięcie ramki szpitalnej
 - Cała karta szpitala na Pulpicie (nazwa „Podhalański Szpital Specjalistyczny…”, „Szpitalny Oddział Ratunkowy”, czerwona ramka) usunięta – nie zostaje puste miejsce. To samo w nagłówku wydruku (`report.js`) i w podtytule wydruku protokołu udaru (`mods5.js`). CSS karty usunięty. SW asor-v52-fix10. Ikony PWA bez zmian.
