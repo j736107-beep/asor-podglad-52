@@ -352,12 +352,13 @@ function fromFields(v){
     var loc=v['gi_loc'+i]||'';
     var sizeRaw=v['gi_size'+i];
     var fr=v['gi_forrest'+i]||'';
-    if(!type && !loc && !fr && (sizeRaw==null||sizeRaw===''))continue;
-    var size=null;
-    if(sizeRaw!=null && String(sizeRaw).trim()!==''){
-      var n=parseFloat(String(sizeRaw).replace(',','.'));
-      if(isFinite(n))size=n;
+    var sizeNum=null;
+    if(sizeRaw!=null && String(sizeRaw).trim()!=='' && String(sizeRaw)!=='NaN'){
+      var nn=parseFloat(String(sizeRaw).replace(',','.'));
+      if(isFinite(nn))sizeNum=nn;
     }
+    if(!type && !loc && !fr && sizeNum==null)continue;
+    var size=sizeNum;
     var organ='';
     var low=(loc+' '+type).toLowerCase();
     if(/dwunast|opusz/.test(low))organ='dwunastnica';

@@ -219,6 +219,22 @@ t('GI-14 epikryza zawiera opis i plan; zalecenia spójne z GBS/Hb',()=>{
   return true;
 });
 
+
+t('GI-16 puste sloty 3–4 (size=NaN z inputmode) nie stają się fikcyjnymi zmianami',()=>{
+  const p=G.parse(CLEAN);
+  const fields=G.summaryEditableDefaults(p);
+  fields.gi_size2=NaN; fields.gi_size3=NaN; fields.gi_type2=''; fields.gi_type3='';
+  fields.gi_loc2=''; fields.gi_loc3=''; fields.gi_forrest2=''; fields.gi_forrest3='';
+  const ed=G.fromFields(Object.assign({gastro:CLEAN},fields));
+  if(ed.lesions.length!==2)return 'n='+ed.lesions.length+' '+JSON.stringify(ed.lesions);
+  const m=G.merge(p,ed);
+  if(m.lesions.length!==2)return 'merge n='+m.lesions.length;
+  const pl=G.plan(m);
+  if(/3\. inna zmiana/.test(pl.summaryText))return 'invented in summary: '+pl.summaryText;
+  if(pl.pathway!=='high')return 'pathway='+pl.pathway;
+  return true;
+});
+
 t('GI-15 źródła z rokiem: ESGE 2021, ACG 2021, Barkun 2019, ChPL, Baveno VII 2022',()=>{
   const s=G.SRC.join(' ');
   if(!/ESGE Guideline – Update 2021/.test(s)&&!/Endoscopy 2021/.test(s))return 'ESGE';
