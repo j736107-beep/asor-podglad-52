@@ -12,11 +12,11 @@ const nrs=new Set(N.map(x=>x.n.nr));
 const blob=JSON.stringify(D);
 const szp=N.filter(x=>x.m==='szpital');
 
-t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-12',()=>{
+t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-13',()=>{
   const m=js.match(/window\.SORTelefony=([\s\S]*)/);
   if(!m)return 'brak window.SORTelefony';
   const J=JSON.parse(m[1].trim().replace(/;+\s*$/,''));
-  return J.wersja===D.wersja&&D.wersja==='2026-11-12'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
+  return J.wersja===D.wersja&&D.wersja==='2026-11-13'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
 });
 t('TL-2 wszystkie numery przechodzą valid(), wew. 2-cyfrowe tylko z centralą 9-cyfrową',()=>{
   const bad=N.filter(x=>!valid(x.n));
@@ -99,6 +99,14 @@ t('TL-15 Laboratorium 503 736 186 dopisany do istniejącego wpisu; Serologia 503
 t('TL-16 Dyrektor Szpitala ds. Medycznych — Chowaniec, pryw. 601 391 710; brak PIN/PUK',()=>{
   const d=szp.filter(x=>/Chowaniec/.test(x.p)&&x.n.nr==='601391710');
   return d.length===1&&d[0].n.typ==='tel'&&d[0].n.st==='lok'&&/pryw/.test(d[0].n.opis||'')&&/Dyrektor Szpitala ds\. Medycznych/.test(d[0].p)?true:JSON.stringify(d);
+});
+t('TL-17 Limanowa OIOM: dopisana dyżurka lekarska 18 330 17 36 (st=lok), dotychczasowy 18 330 17 37 zostaje',()=>{
+  const g=D.grupy.find(g=>g.id==='oiomm');
+  const o=g&&g.pozycje.find(p=>p.nazwa==='Limanowa – OIOM');
+  const nrs=o&&o.numery.map(n=>n.nr);
+  const d=o&&o.numery.find(n=>n.nr==='183301736');
+  return o&&nrs.includes('183301736')&&nrs.includes('183301737')&&o.numery.length===2
+    &&d.typ==='tel'&&d.st==='lok'&&/dyżurka lekarska/.test(d.opis||'')?true:JSON.stringify(o);
 });
 console.log(pass+'/'+(pass+fail)+(fail?' FAIL':' PASS'));
 process.exit(fail?1:0);

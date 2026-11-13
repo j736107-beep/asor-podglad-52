@@ -1,5 +1,5 @@
 {
-  "wersja": "2026-11-12",
+  "wersja": "2026-11-13",
   "zrodlo": "Aktualna lista ze zdjęć lekarza (12.11.2026) – numery wewnętrzne PSZS Nowy Targ, komórkowe, służby i szpitale zewnętrzne. Wcześniejsze źródła (04.11.2026) zachowane dla pozycji spoza nowej listy.",
   "uwagi": "Numery 4-cyfrowe = wewnętrzne naszego szpitala (wew.). Numery 9-cyfrowe = pełne/komórkowe (link tel:). Numery wew. innych szpitali mają pole „centrala” (link dzwoni na centralę i dopisuje numer wew.). Oznaczenia: ✓ sprawdzony przez lekarza = standard lokalny (numer z aktualnej listy 12.11.2026); „do potwierdzenia” = odczyt niepewny lub rozbieżność na kartkach. ",
   "grupy": [
@@ -3884,6 +3884,12 @@
         {
           "nazwa": "Limanowa – OIOM",
           "numery": [
+            {
+              "typ": "tel",
+              "nr": "183301736",
+              "st": "lok",
+              "opis": "dyżurka lekarska"
+            },
             {
               "typ": "tel",
               "nr": "183301737",
