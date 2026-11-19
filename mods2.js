@@ -4,8 +4,8 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
  function draw(){el.innerHTML='<button class="info">ℹ</button><h2>'+title+'</h2>'+(tabs.length>1?'<div class="tabs">'+tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===tab?'on':'')+'">'+t[1]+'</button>'}).join('')+'</div>':'')+'<div id="f"></div><div id="out"></div><div class="infobox" hidden></div><div class="disc">Narzędzie pomocnicze, niecertyfikowane. Każdą dawkę weryfikuje lekarz.</div>';
   el.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){tab=b.dataset.t;store(mod.id+'_tab').set({t:tab});draw()}});
   infoToggle(el,info);var f=el.querySelector('#f');f.innerHTML='<div class="row">'+form(tab)+'</div>';var g=bind(f,mod.id+'_'+tab,upd);if(window.SKGCS)SKGCS.mount(f);self.update=upd;
-  function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=(mod.printTab&&window.SORReport&&SORReport.ptStrip?SORReport.ptStrip()+SORReport.printBtn('Drukuj tę zakładkę: '+((tabs.filter(function(t){return t[0]===tab;})[0]||[])[1]||'')):'')+r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);}upd();}
- draw();}};}
+  function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=(mod.printTab&&window.SORReport&&SORReport.ptStrip?SORReport.ptStrip()+SORReport.printBtn('Drukuj tę zakładkę: '+((tabs.filter(function(t){return t[0]===tab;})[0]||[])[1]||'')):'')+r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);self._lastDose=!!r.dose;}upd();}
+ draw();},doseReady:function(){return !!this._lastDose;}};}
 SKM.util.tabbed=tabbed;SKM.util.chk=chk;
 // ============ ANTYKOAGULACJA ============
 var A=SK.acoag,AS=A.SRC;
@@ -38,7 +38,7 @@ var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true},'Ant
    if(pu.units>0)H+=bx(pu.cap?'orange':'ok','Protamina na UFH','<span class="big">'+F(pu.mg,0)+' mg = '+F(pu.ml,1)+' ml</span> (10 mg/ml) · na '+F(pu.units,0)+' j. z ostatnich 2 h'+(pu.cap?'<div class="o">maks. 50 mg</div>':'')+'<div class="mut">powoli ≤5 mg/min</div>');
    if(pe)H+=bx(pe.cap?'orange':'ok','Protamina na enoksaparynę','<span class="big">'+F(pe.mg,0)+' mg = '+F(pe.ml,1)+' ml</span> ('+F(pe.f)+' mg/1 mg)'+(pe.cap?'<div class="o">maks. 50 mg</div>':''));
    if(!H)H=bx('','','Podaj dawkę heparyny.');}
-  return{H:H,lvl:lvl};},
+  return{H:H,lvl:lvl,dose:(t==='ufh'||t==='enox')&&w>0};},
  '<h3>Źródła</h3>'+src([AS.ACCP,AS.ESCACS,AS.ACC,AS.EHRA,AS.CLX,AS.BER,AS.PRX,AS.OND,AS.PROT,AS.VITK])+'<p><span class="dw">DO WERYFIKACJI</span>: rozcieńczenie heparyny w pompie (25 000 j./50 ml) – protokół szpitala; dostępny w szpitalu 4F-PCC (Beriplex vs Octaplex – inne tabele ChPL); maksymalna dawka PCC 50 j./kg przy anty-Xa; okno 2 h dla protaminy (ACC 2020: 2–3 h); enoksaparyna >100 kg.</p>');
 // ============ ZATOROWOŚĆ PŁUCNA ============
 var PE=SK.pe;

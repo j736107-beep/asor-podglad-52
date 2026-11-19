@@ -22,15 +22,22 @@ function gate(g){return g('review')===true;}
 function transfer(label,payload,enabled){const id='seed-'+Math.random().toString(36).slice(2);currentButtons.push([id,payload]);return '<button class="primary-action" id="'+id+'" '+(!enabled?'disabled':'')+'>'+label+'</button>';}
 let currentButtons=[];
 function drugNote(){return '<p class="mut">Przed podaniem: wiek, masa, alergie, ciąża/karmienie, parametry życiowe, morfologia/PLT, nerki, wątroba, elektrolity, krzepnięcie i leki już przyjęte. Brak lokalnych kart 01_LEKI_SOR / POMPA_50ML: dostępność i stężenia wymagają potwierdzenia.</p>';}
+function makeG(form){return function g(id){const e=form.querySelector('#'+id);if(!e)return undefined;if(e.type==='checkbox')return e.checked;if(e.tagName==='SELECT')return e.value==='yes'?true:e.value==='no'?false:e.value===''?undefined:e.value;if(!e.hasAttribute('data-min'))return e.value;let n=N(e.value);if(e.dataset.u&&Number.isFinite(n))n=SK.units.toSI(e.dataset.u,n,UNS());return n>=+e.dataset.min&&n<=+e.dataset.max?n:NaN;};}
+function applyVal(e,state,key){if(Object.hasOwn(state.values,key)){if(e.type==='checkbox')e.checked=state.values[key];else if(e.dataset.u&&Number.isFinite(+state.values[key])&&state.values[key]!=='')e.value=SK.units.round(e.dataset.u,SK.units.fromSI(e.dataset.u,+state.values[key],UNS()),UNS());else e.value=e.dataset.u&&state.values[key]!==''&&!Number.isFinite(+state.values[key])?state.values[key]:(e.dataset.u?'':state.values[key]);}}
+// fix19: stan zakładki poza ekranem (wydruk): formularz w pamięci z zapisanymi wartościami; touched = pola zmienione przez lekarza względem domyślnych
+function tabCtx(t,state){const box=document.createElement('div');box.innerHTML=t.form();let touched=0;
+ box.querySelectorAll('input,select,textarea').forEach(e=>{if(!e.id)return;const key=t.id+':'+e.id;const def=e.type==='checkbox'?e.checked:e.value;applyVal(e,state,key);const now=e.type==='checkbox'?e.checked:e.value;if(e.id!=='review'&&String(now)!==String(def)&&!(e.type!=='checkbox'&&String(now).trim()===''))touched++;});
+ return{g:makeG(box),touched,seen:!!(state.seen&&state.seen[t.id])};}
+function dueText(value,hours){if(!value)return '';try{const iso=SORTreatmentEngine.fromWall(value);if(new Date(iso)>new Date())return '';const d=new Date(new Date(iso).getTime()+hours*3600000);return 'start / zmiana: '+SORTreatmentEngine.formatTime(iso)+' → kontrola APTT: '+SORTreatmentEngine.formatTime(d.toISOString());}catch(e){return '';}}
 function install(meta,tabs){
  const mod={...meta,render(el,X){
   const state=mem[meta.id]||(mem[meta.id]={tab:tabs[0].id,values:{}});
   function draw(){
    const t=tabs.find(t=>t.id===state.tab)||tabs[0];
    el.innerHTML='<div class="eyebrow">SOR / MODUŁ KLINICZNY 4.2</div><h2>'+meta.name+'</h2><p class="lead">Obliczenia i propozycje do decyzji lekarza. Potwierdzone wykonanie zapisujesz w rejestrze leczenia.</p>'+(meta.banner?meta.banner():'')+'<div class="wb-tabs clinical-tabs">'+tabs.map(t=>'<button data-clin-tab="'+t.id+'" class="'+(t.id===state.tab?'on':'')+'">'+t.name+'</button>').join('')+'</div><div class="clinical-form">'+t.form()+'</div><div class="clinical-invalid" role="status"></div><div class="clinical-out" aria-live="polite"></div>';
-   const form=el.querySelector('.clinical-form');
-   function g(id){const e=form.querySelector('#'+id);if(!e)return undefined;if(e.type==='checkbox')return e.checked;if(e.tagName==='SELECT')return e.value==='yes'?true:e.value==='no'?false:e.value===''?undefined:e.value;if(!e.hasAttribute('data-min'))return e.value;let n=N(e.value);if(e.dataset.u&&Number.isFinite(n))n=SK.units.toSI(e.dataset.u,n,UNS());return n>=+e.dataset.min&&n<=+e.dataset.max?n:NaN;}
-   form.querySelectorAll('input,select,textarea').forEach(e=>{const key=t.id+':'+e.id;if(Object.hasOwn(state.values,key)){if(e.type==='checkbox')e.checked=state.values[key];else if(e.dataset.u&&Number.isFinite(+state.values[key])&&state.values[key]!=='')e.value=SK.units.round(e.dataset.u,SK.units.fromSI(e.dataset.u,+state.values[key],UNS()),UNS());else e.value=e.dataset.u&&state.values[key]!==''&&!Number.isFinite(+state.values[key])?state.values[key]:(e.dataset.u?'':state.values[key]);}const event=e.tagName==='SELECT'||e.type==='checkbox'?'change':'input';e.addEventListener(event,()=>{state.values[key]=e.type==='checkbox'?e.checked:e.dataset.u?(Number.isFinite(N(e.value))?String(SK.units.toSI(e.dataset.u,N(e.value),UNS())):e.value):e.value;if(e.id!=='review'&&form.querySelector('#review')){form.querySelector('#review').checked=false;state.values[t.id+':review']=false;}update();});});
+   const form=el.querySelector('.clinical-form');state.seen=state.seen||{};state.seen[t.id]=true;
+   const g=makeG(form);
+   form.querySelectorAll('input,select,textarea').forEach(e=>{const key=t.id+':'+e.id;applyVal(e,state,key);const event=e.tagName==='SELECT'||e.type==='checkbox'?'change':'input';e.addEventListener(event,()=>{state.values[key]=e.type==='checkbox'?e.checked:e.dataset.u?(Number.isFinite(N(e.value))?String(SK.units.toSI(e.dataset.u,N(e.value),UNS())):e.value):e.value;if(e.id!=='review'&&form.querySelector('#review')){form.querySelector('#review').checked=false;state.values[t.id+':review']=false;}update();});});
    if(window.SKGCS&&form.querySelector('.gcsw'))SKGCS.mount(form);
    function update(){
     const bad=[];form.querySelectorAll('input[data-min]').forEach(e=>{const invalid=e.value.trim()!==''&&!Number.isFinite(g(e.id));e.setAttribute('aria-invalid',String(invalid));if(invalid)bad.push(e.closest('label').firstChild.textContent);});
@@ -46,11 +53,17 @@ function install(meta,tabs){
    update();
   }draw();
  }};
+ if(typeof meta.print==='function'){
+  mod.snapshot=function(ctx){const state=mem[meta.id];if(!state)return{text:'',used:false,own:true};const T={};tabs.forEach(t=>{T[t.id]=tabCtx(t,state);});
+   let r;try{r=meta.print({tabs:T,P:window.SKS&&SKS.P?SKS.P():{},current:state.tab,E,due:dueText});}catch(e){return{text:'',used:false,own:true};}
+   const used=!!r.text&&(r.touched>=2||(r.dose&&(r.reviewed||!!(ctx&&ctx.print))));return{text:r.text,used,dose:!!r.dose,own:true,fmt:'sect'};};
+  mod.doseReady=function(){const s=mod.snapshot({print:true});return !!(s&&s.dose);};
+ }
  const index=SKM.list.findIndex(m=>m.id===meta.id);if(index<0){if(meta.id==='cap')SKM.list.splice(SKM.list.findIndex(m=>m.id==='sepsis')+1,0,mod);else SKM.list.push(mod);}else SKM.list[index]=mod;return mod;
 }
 const peSafety=()=>group('Bezpieczeństwo antykoagulacji',tri('bleed','Czynne istotne krwawienie')+tri('hit','HIT w wywiadzie / podejrzenie HIT')+tri('other','Inny antykoagulant nadal działa / czas dawki nieustalony'));
 function peSafe(g){return g('bleed')===false&&g('hit')===false&&g('other')===false;}
-const pe=install({id:'pe',icon:'🫁',name:'Zatorowość płucna'},[
+const pe=install({id:'pe',icon:'🫁',name:'Zatorowość płucna',print:o=>SK.pePrint.build(o)},[
 {id:'risk',name:'Ryzyko i wybór leczenia',form:()=>group('Potwierdzona lub podejrzewana ZP',select('state','Stan hemodynamiczny',[['','Nie ustalono'],['stable','Stabilny'],['unstable','Niestabilny / wstrząs / NZK']])+number('sbp','SBP','mmHg','',1,300)+number('hr','HR','/min','',1,300)+number('sat','SpO₂','%','',1,100)+tri('cancer','Nowotwór')+tri('cardio','Przewlekła choroba serca / płuc')+tri('rv','Dysfunkcja RV (echo / TK)')+tri('trop','Podwyższona troponina')),
  calc(g,P){const unstable=g('state')==='unstable'||g('sbp')<90,checks=[Number.isFinite(P.age)?P.age>80:undefined,g('cancer'),g('cardio'),Number.isFinite(g('hr'))?g('hr')>=110:undefined,Number.isFinite(g('sbp'))?g('sbp')<100:undefined,Number.isFinite(g('sat'))?g('sat')<90:undefined],score=checks.filter(x=>x===true).length,unknown=checks.filter(x=>x===undefined).length;
  let h=unstable?box('[HOSPITALIZACJA BEZWZGLĘDNA]','Niestabilność hemodynamiczna: pilna ocena reperfuzji, monitorowany obszar, PERT / kardiolog / OIT. Nie czekaj na wynik skali.','red'):box('sPESI', '<strong class="clinical-number">'+(unknown?'co najmniej ':'')+score+'</strong> / 6'+(unknown?'<p>Nie oceniono '+unknown+' kryteriów; wynik niepełny.</p>':'') ,'orange');

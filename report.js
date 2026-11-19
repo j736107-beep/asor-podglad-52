@@ -214,12 +214,16 @@
       if(host)rememberBaseline(mod, host);
       if(typeof mod.snapshot==='function'){
         var a0=assess(mod, rootEl);
-        var sn=mod.snapshot();
-        if(sn&&sn.text&&a0.ok){var all0=snaps();all0[mod.id]={name:mod.name,ts:Date.now(),text:String(sn.text).slice(0,12000)};jset(SNAP,all0);markUsed(mod.id,a0);return;}
-        if(!a0.ok){if(!wasUsed(mod.id)){var z=snaps();if(z[mod.id]){delete z[mod.id];jset(SNAP,z);}}return;}
+        var sn=mod.snapshot({print:PRINTING===mod.id});
+        // fix19: moduł z własnym wydrukiem (own) sam ocenia użycie – np. wyliczona dawka z masy pacjenta przy jawnym „Drukuj”
+        var ok0=a0.ok||!!(sn&&sn.used);if(sn&&sn.own)ok0=!!(sn.used||(sn.text&&(a0.ok||wasUsed(mod.id))));
+        if(sn&&sn.text&&ok0){var all0=snaps();all0[mod.id]={name:mod.name,ts:Date.now(),text:String(sn.text).slice(0,12000)};if(sn.fmt==='sect')all0[mod.id].fmt='sect';jset(SNAP,all0);markUsed(mod.id,a0.ok?a0:{n:a0.n,rich:a0.rich,action:PRINTING===mod.id?'print':'calc'});return;}
+        if(!ok0||(sn&&sn.own)){if(!wasUsed(mod.id)){var z=snaps();if(z[mod.id]){delete z[mod.id];jset(SNAP,z);}}return;}
       }
       if(mod.frame){var f=host&&host.querySelector('iframe');if(!f||!f.contentDocument||!f.contentDocument.body){if(!wasUsed(mod.id))return;return;}rootEl=f.contentDocument.body;rememberBaseline(mod,rootEl);}
       var a=assess(mod, rootEl);
+      // fix19: jawne „Drukuj” w module z wyliczoną dawką (np. heparyna z masy pacjenta) = użycie, nawet gdy pozostałe pola są domyślne
+      if(!a.ok&&PRINTING===mod.id&&typeof mod.doseReady==='function'){try{if(mod.doseReady()){a.ok=true;a.action='print';}}catch(e){}}
       // moduł w ramce może podać własny opis (tylko wypełnione pola) zamiast zrzutu całego ekranu
       var fsn=null;if(mod.frame){try{var fw=host.querySelector('iframe').contentWindow;if(fw&&typeof fw.SORSnapshot==='function')fsn=fw.SORSnapshot();}catch(e){fsn=null;}}
       var r=fsn&&typeof fsn.text==='string'?{text:fsn.text,filled:0}:(rootEl?snapText(rootEl):{text:'',filled:0}),all=snaps(),prev=all[mod.id],sub='',subName='';
@@ -270,7 +274,9 @@
       return wasUsed(k);
     });
     function cut(t,l){t=String(t||'');return l&&t.length>l?t.slice(0,l).replace(/\s+\S*$/,'')+' … [skrócono do wydruku A4 – pełna treść w module]':t;}
-    return keys.map(function(k){var s=all[k],L0=lim&&s.ai?Math.max(1500,lim-s.ai.length):lim,l1=L0&&s.sub?Math.round(L0*0.5):L0,t=cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3>'+(s.ai?'<div class="rp-text rp-ai">'+esc(s.ai)+'</div>':'')+'<div class="rp-text">'+esc(t)+'</div>'+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,L0?L0-l1:0))+'</div>':'');}).join('');}
+    // fix19: format „sect” (własny wydruk modułu): nagłówki sekcji WIELKIMI LITERAMI i etykiety „X:” pogrubione, jedna kolumna
+    function sect(x){return String(x).split('\n').map(function(l){if(/^[A-ZĄĆĘŁŃÓŚŹŻ0-9][A-ZĄĆĘŁŃÓŚŹŻ0-9 ()\/:,.–-]{3,}$/.test(l)&&l===l.toUpperCase())return '<b class="rp-h">'+esc(l)+'</b>';var m=l.match(/^([^:–]{2,60}):\s(.*)$/);return m?'<b>'+esc(m[1])+':</b> '+esc(m[2]):esc(l);}).join('\n');}
+    return keys.map(function(k){var s=all[k],L0=lim&&s.ai?Math.max(1500,lim-s.ai.length):lim,l1=L0&&s.sub?Math.round(L0*0.5):L0,t=s.fmt==='sect'?String(s.text||''):cut(s.text,l1);return '<h3>'+esc(s.name)+' <span class="sub">(stan z '+hm(s.ts)+')</span></h3>'+(s.ai?'<div class="rp-text rp-ai">'+esc(s.ai)+'</div>':'')+(s.fmt==='sect'?'<div class="rp-text rp-sect">'+sect(t)+'</div>':'<div class="rp-text">'+esc(t)+'</div>')+(s.sub?'<h3>'+esc(s.subName||'Moduł osadzony')+'</h3><div class="rp-text rp-sub">'+esc(cut(s.sub,L0?L0-l1:0))+'</div>':'');}).join('');}
   function pwHtml(){var m=root.SKS&&root.SKS.pwMem;if(!m||!m.report)return '';var R=m.report;function ul(t,a){return a&&a.length?'<h3>'+esc(t)+'</h3><ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}return ul('Nie przeocz',R.alerts)+ul('Co zrobić teraz',R.actions)+ul('Czego brakuje',R.missing)+(R.algo&&R.algo.length?ul('Algorytmy',R.algo):'')+ul('Wyniki – przebieg w czasie',R.trend);}
   var TITLES={pw:'Przegląd wyników – czujnik bezpieczeństwa',done:'Co rzeczywiście wykonano',pumps:'Pompy – zapisane nastawy',fluid:'Bilans płynów',modules:'Moduły użyte u pacjenta'};
   var EMPTY_NOTE='<p><b>Brak danych do raportu.</b> Żaden panel nie został użyty u tego pacjenta.</p>';
@@ -298,7 +304,10 @@
   function ptStrip(){var I=root.SKS&&root.SKS.PID?root.SKS.PID():{},p=root.SKS&&root.SKS.P?root.SKS.P():{},C=root.SK&&root.SK.core;function f(x,d){return isFinite(x)&&C?C.fmt(x,d):'—';}
     return '<div class="ptstrip" id="ptStrip">👤 <b>'+esc(I.name||'— (nie wpisano)')+'</b> · wiek '+f(p.age,0)+' · płeć '+({m:'M',f:'K'}[p.sex]||'—')+' · masa '+(isFinite(p.w)?f(p.w,0)+' kg':'—')+' · CrCl '+(isFinite(p.crcl)?f(p.crcl,0)+' ml/min':'—')+'</div>';}
   function printBtn(l){return '<button type="button" class="tabPrint primary-action" onclick="var b=document.getElementById(\'printMod\');if(b)b.click();">🖨 '+esc(l||'Drukuj tę zakładkę (A4)')+'</button>';}
-  function print(parts){var cur=root.SKS&&root.SKS.active?root.SKS.active():null;if(cur)capture(cur);fill(parts);if(typeof root.print==='function')root.print();}
+  var PRINTING=null;
+  // fix19: Pompy – bieżące poprawne wyliczenie (jeszcze niezapisane) trafia na wydruk nastaw
+  function pumpCurrent(cur){try{if(!cur||cur.id!=='pompy'||typeof document==='undefined')return;var f=document.querySelector('#main iframe');var fw=f&&f.contentWindow;if(!fw||typeof fw.SORPumpCurrent!=='function')return;var t=String(fw.SORPumpCurrent()||'').trim();if(!t)return;var l=pumpList();if(l.some(function(x){return x.text===t.slice(0,500);}))return;addPump(t);}catch(e){}}
+  function print(parts){var cur=root.SKS&&root.SKS.active?root.SKS.active():null;if(cur){PRINTING=cur.id;try{if(parts&&parts.indexOf&&parts.indexOf('pumps')>=0)pumpCurrent(cur);capture(cur);}finally{PRINTING=null;}}fill(parts);if(typeof root.print==='function')root.print();}
   return{brand:brand,brandHead:brandHead,brandFoot:brandFoot,FOOT:FOOT,esc:esc,pumpList:pumpList,addPump:addPump,clearPumps:clearPumps,snapText:snapText,capture:capture,snaps:snaps,clearSnaps:clearSnaps,build:build,fill:fill,print:print,ptStrip:ptStrip,printBtn:printBtn,SKIP:SKIP,
     fieldMap:fieldMap,storeFields:storeFields,diffFrom:diffFrom,isMeaningful:isMeaningful,assess:assess,rememberBaseline:rememberBaseline,forceBaseline:forceBaseline,noteAction:noteAction,markUsed:markUsed,wasUsed:wasUsed,usedIds:usedIds,clearUsed:clearUsed,setSnap:setSnap,usedMap:usedMap,baseMap:baseMap,RULE_TXT:RULE_TXT,RULE_FIELDS:RULE_FIELDS,RULE_RICH:RULE_RICH,EMPTY_NOTE:EMPTY_NOTE,patientHtml:patientHtml};
 });
