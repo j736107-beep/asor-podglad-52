@@ -34,6 +34,7 @@ button.on{background:#1565c0;color:#fff;border-color:#1565c0}button.no.on{backgr
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4px 6px;font-size:13px;text-align:left}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:800px){.grid2{grid-template-columns:1fr}}
 #pr{display:none}
+#ecgx{border:2px solid #1f3a5f;border-radius:10px;padding:8px 10px;margin:0 0 10px;background:#f7faff}#ecgx h3{margin:0 0 6px;color:#1f3a5f;font-size:15px}#ecgx .fx{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:4px 12px}#ecgx label{align-items:flex-start}#ecgx .neg{margin-top:6px;font-weight:700}
 @media print{body{background:#fff}header,main,#flash{display:none!important}#pr{display:block;font:11.5px/1.35 Arial,sans-serif;color:#000}
 #pr h1{font-size:16px;margin:0 0 4px}#pr .box{border:1.5px solid #000;padding:6px;margin:6px 0}#pr td{font-size:11px}@page{size:A4;margin:13mm}}
 </style></head><body>
@@ -70,6 +71,12 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4p
 
 <div class="card ecg"><h2>EKG (elektrokardiogram) 12-odprowadzeniowe – analiza wzorców</h2><div class="ecg10">EKG 12-odprowadzeniowe ≤10 min od pierwszego kontaktu (ESC 2023 – Europejskie Towarzystwo Kardiologiczne)</div>
 <div class="ecgt"><label>Pierwszy kontakt <input id="ecgFmc" type="time"></label><label>EKG wykonane <input id="ecgT" type="time"></label><span id="ecgCnt">wpisz godzinę pierwszego kontaktu</span></div>
+<div id="ecgx"><h3>Opis EKG – rytm i zmiany inne niż niedokrwienie</h3>
+<div class="row"><label>Rytm <select id="rhy"><option value="">—</option><option value="sin">zatokowy</option><option value="af">migotanie przedsionków (AF)</option><option value="afl">trzepotanie przedsionków (AFL)</option><option value="pace">rytm stymulatora</option><option value="oth">inny</option></select></label><label>opis innego rytmu <input id="rhyTxt" size="18"></label></div>
+<div class="fx" id="fxList"></div>
+<div class="row" style="margin-top:4px"><label>QTc <input id="qtcMs" size="4" inputmode="numeric"> ms <span class="mut">(przy „wydłużony QTc”)</span></label><label>Inne zmiany (opis) <input id="ecgOther" size="34"></label></div>
+<label class="neg"><input type="checkbox" id="noisch"> bez cech świeżego niedokrwienia <span class="mut">(jawne stwierdzenie lekarza – wyklucza karty niedokrwienne)</span></label>
+<div class="mut" style="margin-top:4px">„EKG prawidłowe” (karta na dole) wyklucza się z powyższymi zmianami. HEART – składowa EKG: blok odnogi (LBBB, zupełny RBBB), LVH, rytm stymulatora, nieswoiste ujemne T = 1 pkt (Six/Backus 2008).</div></div>
 <div class="mut" style="margin-bottom:6px">Czerwona karta = STEMI (zawał z uniesieniem ST) lub równoważnik → natychmiast ŚWIATŁO CZERWONE; pomarańczowa = wysokie ryzyko. Schematy dydaktyczne (25 mm/s, 10 mm/mV; kratka 1 mm) – dotknij, aby powiększyć. Przy obniżeniu ST w V1–V3 lub wysokim R → V7–V9; zawał dolny → V3R–V4R.</div><div id="ecg"></div></div>
 
 <div class="card"><h2>Troponina hs-TnT (ng/l) i godziny pobrań</h2>
@@ -127,17 +134,26 @@ const ECG=[
 ['norm','EKG prawidłowe',0,'Rytm zatokowy, brak kryteriów z kart powyżej. Prawidłowe EKG NIE wyklucza OZW – powtórz przy nawrocie bólu i po 15–30 min przy trwającym bólu.',['norm']]];
 const SGAR_HTML='<table class="sgt"><tr><th colspan="2">Klasyczne kryteria Sgarbossy (1996) – zawał przy ≥3 pkt</th></tr><tr><td>① uniesienie ST ≥1 mm <b>zgodne</b> z kierunkiem QRS (dowolne odprowadzenie)</td><td>5 pkt</td></tr><tr><td>② obniżenie ST ≥1 mm w V1, V2 lub V3 (QRS ujemny – zgodne)</td><td>3 pkt</td></tr><tr><td>③ uniesienie ST ≥5 mm <b>niezgodne</b> z QRS</td><td>2 pkt</td></tr><tr><th colspan="2">Zmodyfikowane (Smith 2012): ③ zastąpione stosunkiem ST/S ≤ −0,25 (uniesienie ST ≥25% głębokości poprzedzającego S); dodatni wynik = ≥1 kryterium</th></tr></table>';
 // 5.2 etap 3: nowe karty mapowane na dotychczasowe klucze silnika (calc/trop.js) – bez zmiany logiki decyzji
-function ecgEff(){const e=Object.assign({},S.e);if(e.inf)e.stemi=true;if(e.wellA||e.wellB)e.well=true;if(e.pace)e.lbbb=true;if(e.lvh)e.nonsp=true;return e;}
+function X(){const f={};T.FIND.forEach(([k])=>{const el=$('fx_'+k);if(el&&el.checked)f[k]=true});return{rhythm:$('rhy').value,rhythmTxt:$('rhyTxt').value,f,qtcMs:$('qtcMs').value,other:$('ecgOther').value,noisch:$('noisch').checked}}
+function ecgEff(){return T.ecgMap(S.e,X())}
 function ecgCard([k,t,c,cr,dr]){const svgs=dr.map(d=>ECGSVG.svg(ECGSVG.P[d],{title:t}));const tag=c===1?'STEMI / równoważnik':c===2?'wysokie ryzyko':'';
  return `<div class="ek c${c}${k==='sgar'||k==='inf'?' wide':''}" data-card="${k}"><h3>${tag?`<span class="tag">${tag}</span>`:''}${t}</h3>${cr?`<div class="cr">${cr}</div>`:''}${k==='sgar'?SGAR_HTML:''}${svgs.length>1?`<div class="mini">${svgs.map(x=>`<figure>${x}</figure>`).join('')}</div>`:`<figure>${svgs[0]}</figure>`}<button class="mk" data-k="${k}" type="button">☐ Zaznacz</button></div>`;}
 function yn(box,list,st){$(box).innerHTML=list.map(([k,t])=>`<div class="yn"><span>${t}</span><div class="b"><button data-k="${k}" data-v="1">TAK</button><button class="no" data-k="${k}" data-v="0">NIE</button></div></div>`).join('');
  $(box).onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,v=+b.dataset.v;st[k]=st[k]===v?undefined:v;draw()}}
 yn('hist',HIST,S.h);yn('rf',RF,S.r);yn('vhr',VHR,S.v);
 $('ecg').innerHTML=ECG.map(ecgCard).join('');
+$('fxList').innerHTML=T.FIND.map(([k,t])=>`<label><input type="checkbox" id="fx_${k}"> ${t}</label>`).join('');
+function clearNorm(){S.e.norm=false}
+$('ecgx').addEventListener('change',e=>{const el=e.target;if(!el||!el.id)return;
+ if(el.id.indexOf('fx_')===0&&el.checked){const k=el.id.slice(3);T.EXCL.forEach(g=>{if(g.indexOf(k)>=0)g.forEach(o=>{if(o!==k&&$('fx_'+o))$('fx_'+o).checked=false})});clearNorm();}
+ if(el.id==='noisch'&&el.checked){T.ISCH.forEach(k=>{S.e[k]=false});clearNorm();}
+ if(el.id==='rhy'&&el.value&&el.value!=='sin')clearNorm();
+ draw()});
+$('ecgOther').addEventListener('input',()=>{if($('ecgOther').value.trim())clearNorm()});
 document.getElementById('ecg').addEventListener('click',e=>{const f=e.target.closest('figure');if(f&&!e.target.closest('button')){f.classList.toggle('big');e.stopPropagation();}},true);
 function ecgClock(){const f=tmin('ecgFmc'),t=tmin('ecgT'),el=$('ecgCnt');if(f==null){el.textContent='wpisz godzinę pierwszego kontaktu';el.className='';return;}const nowM=(()=>{const d=new Date();return d.getHours()*60+d.getMinutes()})();const d=t!=null?((t-f+1440)%1440):((nowM-f+1440)%1440);el.textContent=t!=null?`EKG po ${d} min od pierwszego kontaktu`+(d>10?' – PRZEKROCZONO 10 min':' ✔'):`od pierwszego kontaktu: ${d} min`+(d>10?' – brak EKG >10 min!':'');el.className=d>10?'late':'';}
 ['ecgFmc','ecgT'].forEach(id=>$(id).addEventListener('input',ecgClock));setInterval(ecgClock,20000);
-$('ecg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;S.e[k]=!S.e[k];if(k==='norm'&&S.e.norm)for(const x in S.e)if(x!=='norm')S.e[x]=false;if(k!=='norm'&&S.e[k])S.e.norm=false;draw()};
+$('ecg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;S.e[k]=!S.e[k];if(k==='norm'&&S.e.norm){for(const x in S.e)if(x!=='norm')S.e[x]=false;T.FIND.forEach(([q])=>{$('fx_'+q).checked=false});$('noisch').checked=false;$('ecgOther').value='';$('qtcMs').value='';if($('rhy').value&&$('rhy').value!=='sin'){$('rhy').value='';$('rhyTxt').value=''}}if(k!=='norm'&&S.e[k])S.e.norm=false;if(S.e[k]&&T.ISCH.indexOf(k)>=0)$('noisch').checked=false;draw()};
 const num=id=>{const v=$(id).value.replace(',','.').trim();return v===''?null:+v};
 const tmin=id=>{const v=$(id).value;if(!v)return null;const[h,m]=v.split(':');return +h*60+ +m};
 document.querySelectorAll('input,select').forEach(i=>{i.addEventListener('input',draw)});document.querySelectorAll('input[name=tref]').forEach(r=>r.addEventListener('change',draw));
@@ -170,6 +186,25 @@ function trefInfo(){const k=tref();if(!k)return {html:'<b style="color:#b36b00">
  if(k!=='sample'&&t0!=null){const lag=((t0-A+1440)%1440)/60;h+=`<br>Pierwsza próbka pobrana ${lag.toFixed(1)} h ${k==='adm'?'po przyjęciu na SOR':'po początku objawów'}; termin 3 h wg tej definicji przypada ${(((A+180-t0)%1440+1440)%1440/60).toFixed(1)} h po pierwszej próbce.`}
  h+='<br><span class="mut">Algorytmy 0/1 h i 0/2 h liczą odstęp od pierwszego pobrania (z godzin w tabeli). Odstęp od początku objawów rozstrzyga wyłącznie o regule „>3 h od bólu”.</span>';
  return {html:h,t3:hm(A+180),k}}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const histAns=()=>HIST.some(([k])=>S.h[k]!=null),rfAns=()=>RF.some(([k])=>S.r[k]!=null);
+function hcheck(){const tv=[num('c0'),num('c1'),num('c3')].filter(v=>v!=null);return T.heartCheck({hist:histAns(),ecg:T.ecgAssessed(S.e,X()),age:num('age'),rf:rfAns(),tropN:tv.length})}
+// 5.2 fix18: wydruk/raport wyłącznie z pól wypełnionych przez lekarza (TAK, zaznaczone karty, wpisane wyniki); skale tylko z kompletu danych
+function collect(withPt){const p=LAST||{},x=X(),cardL={};ECG.forEach(c=>{cardL[c[0]]=c[1]});const yes=(L,st)=>L.filter(([k])=>st[k]===1).map(z=>T.strip(z[1]));
+ const c0=num('c0'),c1=num('c1'),c3=num('c3'),f=tmin('ecgFmc'),t=tmin('ecgT');
+ const d={age:withPt?num('age'):null,sex:withPt?$('sex').value:'',onset:$('onset').value||($('onseth').value?$('onseth').value.replace('.',',')+' h temu':''),
+  hist:yes(HIST,S.h),rf:yes(RF,S.r),vhr:yes(VHR,S.v),ecgLines:T.ecgLines(S.e,x,cardL),ecgTime:$('ecgT').value,ecgFmc:$('ecgT').value?$('ecgFmc').value:'',ecgDelay:(f!=null&&t!=null)?((t-f+1440)%1440):null,
+  trops:[{lab:'0 h',t:$('t0').value,v:c0},{lab:'1 h / 2 h',t:$('t1').value,v:c1,d:c0!=null&&c1!=null?c1-c0:null},{lab:'3 h',t:$('t3').value,v:c3,d:c0!=null&&c3!=null?c3-c0:null}],
+  url:urlv(),tref:p.tref||'',algoTxt:c0!=null&&p.a?p.a.txt:'',H:p.H,heartCheck:hcheck(),ed:p.ed,edOk:p.ed!=null&&histAns(),notes:T.ecgNotes(S.e,x)};
+ const R0=T.buildReport(d);if(!R0.blocks.length)return{blocks:[],concl:null,text:''};
+ d.concl=T.conclusion({L:p.L,why:p.why,hospReasons:p.hr,referral:p.ref});return T.buildReport(d)}
+window.SORSnapshot=function(){try{draw();return{text:collect(false).text}}catch(e){return{text:''}}};
+// stan modułu na czas pacjenta (czyści „Następny pacjent”); bez imienia i nazwiska, wiek/płeć z paska pacjenta
+const SKEY='trop_state',IKEY='trop_inputs',NOSAVE={pname:1,age:1,sex:1};
+function save(){try{const st={};[['h',S.h],['r',S.r],['v',S.v],['e',S.e]].forEach(([g,o])=>{for(const k in o)if(o[k]!=null&&o[k]!==false)st[g+'_'+k]=o[k]});localStorage.setItem(SKEY,JSON.stringify(st));
+ const iv={};document.querySelectorAll('main input[id],main select[id]').forEach(i=>{if(NOSAVE[i.id]||i.id==='url')return;if(i.type==='checkbox')iv[i.id]=i.checked;else if(i.value!=='')iv[i.id]=i.value});const r=tref();if(r)iv.__tref=r;localStorage.setItem(IKEY,JSON.stringify(iv))}catch(e){}}
+function restore(){try{const st=JSON.parse(localStorage.getItem(SKEY)||'null');if(st)for(const k in st){const g=k.slice(0,1),key=k.slice(2),o={h:S.h,r:S.r,v:S.v,e:S.e}[g];if(o)o[key]=st[k]}
+ const iv=JSON.parse(localStorage.getItem(IKEY)||'null');if(iv)for(const id in iv){if(id==='__tref'){const r=document.querySelector('input[name=tref][value="'+iv[id]+'"]');if(r)r.checked=true;continue}const el=$(id);if(!el)continue;if(el.type==='checkbox')el.checked=!!iv[id];else el.value=iv[id]}}catch(e){}}
 const HOSP='Hospitalizacja – bezwzględnie konsultacja kardiologa (nie kierować do poradni)';
 let LAST={};
 function draw(){document.querySelectorAll('[data-k][data-v]').forEach(b=>{const st=b.closest('#hist')?S.h:b.closest('#rf')?S.r:S.v;b.classList.toggle('on',st[b.dataset.k]===+b.dataset.v)});
@@ -182,7 +217,7 @@ function draw(){document.querySelectorAll('[data-k][data-v]').forEach(b=>{const 
  $('heart').innerHTML=`<table><tr><td>H – Historia (wywiad)</td><td>${H.H}</td></tr><tr><td>E – EKG</td><td>${H.E}</td></tr><tr><td>A – Wiek (Age)</td><td>${H.A??'—'}</td></tr><tr><td>R – Czynniki ryzyka (Risk factors)</td><td>${H.R}</td></tr><tr><td>T – Troponina (vs URL ${U})</td><td>${H.T??'—'}</td></tr><tr><th>Razem</th><th>${H.tot}/10</th></tr></table>
  <p><b>${H.tot<=3?'Niskie':H.tot<=6?'Pośrednie':'Wysokie'} ryzyko</b> – MACE (poważne zdarzenia sercowe: zgon, zawał, rewaskularyzacja) w 6 tyg. ${mace}${H.done?'':' <span class="mut">(niepełne dane)</span>'}</p><p class="mut">Historia liczona automatycznie z wywiadu (cechy typowe vs nietypowe) – lekarz może skorygować. <span class="wer">DO WERYFIKACJI</span></p>`;
  const ed=edacs();const edP=edacsPart();$('edacs').innerHTML=ed==null?edMissing(edP):`<p>EDACS = <b>${ed}</b> pkt → ${ed<16?'<b>niskie ryzyko</b> (&lt;16; z EKG bez nowego niedokrwienia i ujemną troponiną 0/2 h → EDACS-ADP: wypis)':'<b>nie niskie</b> (≥16)'}.</p><p class="mut">Punkty: wiek, płeć M +6, wiek ≤50 z ChW lub ≥3 czynn. ryzyka +4, poty +3, promieniowanie +5, ból przy wdechu −4, ból przy ucisku −6.</p>`;
- const hospReasons=[];if(H.tot>=4)hospReasons.push('HEART '+H.tot+'/10 (≥4)');const edv=ed!=null?ed:edP;if(edv!=null&&edv>=16)hospReasons.push('EDACS '+(ed==null?'co najmniej ':'')+edv+' (≥16)');
+ const HC=hcheck();const hospReasons=[];if(H.tot>=4)hospReasons.push(HC.ok?'HEART '+H.tot+'/10 (≥4)':'HEART co najmniej '+H.tot+' pkt (dane niepełne; ≥4)');const edv=ed!=null?ed:edP;if(edv!=null&&edv>=16)hospReasons.push('EDACS '+(ed==null?'co najmniej ':'')+edv+' (≥16)');
  const hb=$('hosp');hb.hidden=!hospReasons.length;hb.classList.toggle('on',!!hospReasons.length);hb.innerHTML=hospReasons.length?`<h2>🔴 ${HOSP}</h2><p>Przekroczony próg hospitalizacji: ${hospReasons.join('; ')}.</p>`:'';
  const LL=T.light(inputs(),a);let L=LL.L,why=LL.why;const stemi=LL.stemi,vhr=LL.vhr;
  const box=$('light');box.className='card L-'+L;let html='';
@@ -192,23 +227,21 @@ function draw(){document.querySelectorAll('[data-k][data-v]').forEach(b=>{const 
  <li>${hospReasons.length?`<b style="color:#c4001a">${HOSP}.</b> (${hospReasons.join('; ')})`:ref?`<b>SKIEROWANIE DO PORADNI KARDIOLOGICZNEJ – TAK</b> (znana ChW): ambulatoryjnie test nieinwazyjny – CCTA (tomografia tętnic wieńcowych) lub test obciążeniowy z obrazowaniem, w ciągu ok. 2 tyg. <span class="wer">DO WERYFIKACJI termin</span>`:`<b>Skierowanie do poradni kardiologicznej – NIE jest konieczne</b> (niskie ryzyko: HEART ≤3). Kontrola u lekarza POZ, modyfikacja czynników ryzyka; rutynowa próba wysiłkowa niepotrzebna.`}</li>
  <li>Pouczenie: natychmiastowy powrót / 112 przy nawrocie bólu, duszności, omdleniu, kołataniu serca.</li></ul>`}
  else html=`<h2>⚪ Brak danych do decyzji</h2><p>Uzupełnij EKG i troponinę 0 h.</p>`;
- box.innerHTML=html;$('flash').classList.toggle('on',L==='red');siren(L==='red');LAST={L,why,a,H,ed,html,hosp:hospReasons.length?HOSP+' ('+hospReasons.join('; ')+')':'',tref:TI.k?TREF[TI.k]:'nie wybrano'};
+ box.innerHTML=html;$('flash').classList.toggle('on',L==='red');siren(L==='red');LAST={L,why,a,H,ed,html,hr:hospReasons,ref:T.referral(H,ed,S.r),hosp:hospReasons.length?HOSP+' ('+hospReasons.join('; ')+')':'',tref:TI.k?TREF[TI.k]:''};save();
 }
 function hm(m){m=(m+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
-$('next').onclick=()=>{if(!confirm('Wyczyścić dane i zacząć następnego pacjenta?'))return;document.querySelectorAll('main input').forEach(i=>{if(i.id==='url')return;if(i.type==='checkbox'||i.type==='radio')i.checked=false;else i.value=''});$('sex').value='';[S.h,S.r,S.v,S.e].forEach(o=>{for(const k in o)delete o[k]});$('pinfo').textContent='';draw();scrollTo(0,0)};
-$('print').onclick=()=>{const p=LAST,lab={red:'CZERWONE – pilna konsultacja kardiologiczna',yel:'ŻÓŁTE – obserwacja w SOR',grn:'ZIELONE – rule-out algorytmiczny (wypis po weryfikacji lab NT / kardiolog)',gry:'brak decyzji'};const yes=(L,st)=>L.filter(([k])=>st[k]===1).map(x=>x[1]).join('; ')||'—';
- $('pr').innerHTML=`<h1>Protokół – podejrzenie OZW (ostry zespół wieńcowy) · SOR</h1><div>SOR Kalkulatory · wydruk ${new Date().toLocaleString('pl-PL')}</div>
- <div class="box"><b>Pacjent:</b> ${$('pname').value||'......................................'} · wiek ${$('age').value||'—'} · płeć ${{m:'M',f:'K'}[$('sex').value]||'—'} · początek bólu: ${$('onset').value||($('onseth').value?$('onseth').value+' h temu':'—')}</div>
- <div class="box"><b>Wywiad:</b> ${yes(HIST,S.h)}<br><b>Czynniki ryzyka:</b> ${yes(RF,S.r)}<br><b>Bardzo wysokie ryzyko:</b> ${yes(VHR,S.v)}<br><b>EKG:</b> ${ECG.filter(([k])=>S.e[k]).map(x=>x[1]).join('; ')||'—'}${ECG.filter(([k])=>S.e[k]).map(x=>x[4].map(d=>ECGSVG.svg(ECGSVG.P[d],{title:x[1]})).join(' ')).join(' ')}${$('ecgT').value?`<br>EKG wykonane: ${$('ecgT').value} (pierwszy kontakt ${$('ecgFmc').value||'—'})`:''}</div>
- <div class="box"><b>hs-TnT Roche Elecsys</b> (URL ${urlv()} ng/l): 0 h ${$('c0').value||'—'} (${$('t0').value||'—'}) · 2. ${$('c1').value||'—'} (${$('t1').value||'—'}) · 3 h ${$('c3').value||'—'} (${$('t3').value||'—'})<br>${p.a.txt.replace(/<[^>]+>/g,'')}<div>${$('chart').outerHTML.replace('max-width:700px','max-width:420px')}</div></div>
- <div class="box"><b>HEART:</b> ${p.H.tot}/10 (H${p.H.H} E${p.H.E} A${p.H.A??'—'} R${p.H.R} T${p.H.T??'—'}) · <b>EDACS:</b> ${p.ed??'—'}</div>
- <div class="box">Odniesienie dla 0/1/3 h: <b>${p.tref}</b></div>${p.hosp?`<div class="box" style="border-width:3px"><b>${p.hosp}</b></div>`:''}
- <div class="box" style="border-width:3px"><b>DECYZJA: ŚWIATŁO ${lab[p.L]}</b><br>${p.html.replace(/<h2>.*?<\/h2>/,'').replace(/<span class="wer">.*?<\/span>/g,'')}</div>
- <p>Uwagi: ..................................................................................................................................................</p>
- <table style="margin-top:28px;border:0"><tr><td style="border:0;width:50%">Data i godzina: ...........................</td><td style="border:0;text-align:center">..................................................<br>podpis i pieczątka lekarza</td></tr></table>
- <p style="font-size:9px">Narzędzie pomocnicze, niecertyfikowane. ESC 2023 OZW, ACC/AHA 2025 OZW, 5. Uniwersalna Definicja Zawału 2026, karta lokalna SOR Nowy Targ.</p>`;siren(false);print();draw()};
+$('next').onclick=()=>{if(!confirm('Wyczyścić dane i zacząć następnego pacjenta?'))return;document.querySelectorAll('main input').forEach(i=>{if(i.id==='url')return;if(i.type==='checkbox'||i.type==='radio')i.checked=false;else i.value=''});$('sex').value='';$('rhy').value='';[S.h,S.r,S.v,S.e].forEach(o=>{for(const k in o)delete o[k]});try{localStorage.removeItem(SKEY);localStorage.removeItem(IKEY)}catch(e){}$('pinfo').textContent='';draw();scrollTo(0,0)};
+$('print').onclick=()=>{draw();const R=collect(true),c=R.concl,nm=$('pname').value.trim(),lv={red:'#c4001a',yel:'#b36b00',grn:'#1d8a3a',gry:'#555'};
+ const tv=[num('c0'),num('c1'),num('c3')].filter(v=>v!=null).length;
+ $('pr').innerHTML=`<h1>Protokół – podejrzenie OZW (ostry zespół wieńcowy) · SOR</h1><div>Wydruk ${esc(new Date().toLocaleString('pl-PL'))}</div>`+
+ (nm?`<div class="box"><b>Pacjent:</b> ${esc(nm)}</div>`:'')+
+ (R.blocks.length?R.blocks.map(([t,v])=>`<div class="box"><b>${esc(t)}:</b> ${esc(v)}</div>`).join(''):'<div class="box">W module nie wypełniono danych.</div>')+
+ (tv>=2?`<div class="box">${$('chart').outerHTML.replace('max-width:700px','max-width:420px')}</div>`:'')+
+ (c?`<div class="box" style="border-width:3px"><b>WNIOSKI: <span style="color:${lv[c.level]||'#000'}">${esc(c.title)}</span></b>${c.lines.length?'<ul>'+c.lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':''}</div>`:'')+
+ `<table style="margin-top:28px;border:0"><tr><td style="border:0;width:50%">Data i godzina: ...........................</td><td style="border:0;text-align:center">..................................................<br>podpis i pieczątka lekarza</td></tr></table>
+ <p style="font-size:9px">Narzędzie pomocnicze, niecertyfikowane. Na wydruku wyłącznie dane wpisane/zaznaczone przez lekarza; skale tylko z kompletu danych. ESC 2023 OZW, ACC/AHA 2025 OZW, HEART (Six/Backus 2008), karta lokalna SOR Nowy Targ.</p>`;siren(false);print();draw()};
 function pushP(){try{if(parent!==window&&parent.SKS&&parent.SKS.setP){const a=num('age'),sx=$('sex').value;parent.SKS.setP({age:a!=null&&a>=0&&a<=120?a:null,sex:sx||null})}}catch(e){}}
 $('age').addEventListener('change',pushP);$('sex').addEventListener('change',pushP);
-draw();
+restore();ecgClock();draw();
 </script><script src="../../sexguard.js"></script>
 </body></html>

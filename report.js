@@ -220,7 +220,9 @@
       }
       if(mod.frame){var f=host&&host.querySelector('iframe');if(!f||!f.contentDocument||!f.contentDocument.body){if(!wasUsed(mod.id))return;return;}rootEl=f.contentDocument.body;rememberBaseline(mod,rootEl);}
       var a=assess(mod, rootEl);
-      var r=rootEl?snapText(rootEl):{text:'',filled:0},all=snaps(),prev=all[mod.id],sub='',subName='';
+      // moduł w ramce może podać własny opis (tylko wypełnione pola) zamiast zrzutu całego ekranu
+      var fsn=null;if(mod.frame){try{var fw=host.querySelector('iframe').contentWindow;if(fw&&typeof fw.SORSnapshot==='function')fsn=fw.SORSnapshot();}catch(e){fsn=null;}}
+      var r=fsn&&typeof fsn.text==='string'?{text:fsn.text,filled:0}:(rootEl?snapText(rootEl):{text:'',filled:0}),all=snaps(),prev=all[mod.id],sub='',subName='';
       if(!mod.frame&&rootEl){var fr=[].slice.call(rootEl.querySelectorAll('iframe'));fr.forEach(function(f){try{var b=f.contentDocument&&f.contentDocument.body;if(!b)return;var rr=snapText(b);if(rr.text){sub+=(sub?'\n\n':'')+rr.text;subName=f.title||subName;}}catch(e){}});
         if(!fr.length&&prev&&prev.sub&&!prev.subAuto){sub=prev.sub;subName=prev.subName||'';}}
       var subAuto=false;if(mod.id==='cap'&&!sub&&a.ok&&root.SORZpPrint){try{sub=root.SORZpPrint.text({full:true});}catch(e){sub='';}if(sub){subAuto=true;subName='Zapalenie płuc – antybiotykoterapia (wyliczone z silnika)';}}

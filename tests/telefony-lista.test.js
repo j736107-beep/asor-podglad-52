@@ -12,11 +12,11 @@ const nrs=new Set(N.map(x=>x.n.nr));
 const blob=JSON.stringify(D);
 const szp=N.filter(x=>x.m==='szpital');
 
-t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-13',()=>{
+t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-19',()=>{
   const m=js.match(/window\.SORTelefony=([\s\S]*)/);
   if(!m)return 'brak window.SORTelefony';
   const J=JSON.parse(m[1].trim().replace(/;+\s*$/,''));
-  return J.wersja===D.wersja&&D.wersja==='2026-11-13'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
+  return J.wersja===D.wersja&&D.wersja==='2026-11-19'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
 });
 t('TL-2 wszystkie numery przechodzą valid(), wew. 2-cyfrowe tylko z centralą 9-cyfrową',()=>{
   const bad=N.filter(x=>!valid(x.n));
@@ -107,6 +107,12 @@ t('TL-17 Limanowa OIOM: dopisana dyżurka lekarska 18 330 17 36 (st=lok), dotych
   const d=o&&o.numery.find(n=>n.nr==='183301736');
   return o&&nrs.includes('183301736')&&nrs.includes('183301737')&&o.numery.length===2
     &&d.typ==='tel'&&d.st==='lok'&&/dyżurka lekarska/.test(d.opis||'')?true:JSON.stringify(o);
+});
+t('TL-18 Zakopane Torakochirurgia: dyżurka lekarska (dr Czajkowski) wew. 160 i oddziałowa wew. 186 przez centralę 18 201 50 45; dotychczasowe numery zostają',()=>{
+  const o=D.grupy.find(g=>g.id==='torak').pozycje.find(p=>/Zakopane/.test(p.nazwa));
+  const a=o.numery.find(n=>n.nr==='160'),b=o.numery.find(n=>n.nr==='186');
+  const keep=['789206344','191','110','131','176','150','334'].every(x=>o.numery.some(n=>n.nr===x));
+  return a&&b&&a.typ==='wew'&&b.typ==='wew'&&a.centrala==='182015045'&&b.centrala==='182015045'&&a.st==='lok'&&b.st==='lok'&&/dyżurka lekarska/.test(a.opis)&&/Czajkowski/.test(a.opis)&&/oddziałowa/.test(b.opis)&&keep?true:JSON.stringify(o.numery);
 });
 console.log(pass+'/'+(pass+fail)+(fail?' FAIL':' PASS'));
 process.exit(fail?1:0);
