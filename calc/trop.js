@@ -39,8 +39,8 @@ var RHY={sin:'rytm zatokowy',af:'migotanie przedsionków (AF)',afl:'trzepotanie 
 var FIND=[
  ['rbbbC','RBBB – blok prawej odnogi pęczka Hisa, zupełny',1],
  ['rbbbI','RBBB – blok prawej odnogi pęczka Hisa, niezupełny',0],
- ['lbbbN','LBBB – blok lewej odnogi pęczka Hisa, nowy / przypuszczalnie nowy',1],
- ['lbbbK','LBBB – blok lewej odnogi pęczka Hisa, znany (stary)',1],
+ ['lbbbN','LBBB (blok lewej odnogi pęczka Hisa), nowy / przypuszczalnie nowy',1],
+ ['lbbbK','LBBB (blok lewej odnogi pęczka Hisa), znany (stary)',1],
  ['lafb','LAFB – blok przedniej wiązki lewej odnogi (hemiblok przedni)',0],
  ['lpfb','LPFB – blok tylnej wiązki lewej odnogi (hemiblok tylny)',0],
  ['avb1','blok przedsionkowo-komorowy (AV) I stopnia',0],
