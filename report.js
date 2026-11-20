@@ -216,8 +216,9 @@
         var a0=assess(mod, rootEl);
         var sn=mod.snapshot({print:PRINTING===mod.id});
         // fix19: moduł z własnym wydrukiem (own) sam ocenia użycie – np. wyliczona dawka z masy pacjenta przy jawnym „Drukuj”
-        var ok0=a0.ok||!!(sn&&sn.used);if(sn&&sn.own)ok0=!!(sn.used||(sn.text&&(a0.ok||wasUsed(mod.id))));
-        if(sn&&sn.text&&ok0){var all0=snaps();all0[mod.id]={name:mod.name,ts:Date.now(),text:String(sn.text).slice(0,12000)};if(sn.fmt==='sect')all0[mod.id].fmt='sect';jset(SNAP,all0);markUsed(mod.id,a0.ok?a0:{n:a0.n,rich:a0.rich,action:PRINTING===mod.id?'print':'calc'});return;}
+        var ok0=a0.ok||!!(sn&&sn.used);if(sn&&sn.own)ok0=!!(sn.used||((sn.text||sn.sub)&&(a0.ok||wasUsed(mod.id))));
+        if(sn&&(sn.text||sn.sub)&&ok0){var all0=snaps();all0[mod.id]={name:mod.name,ts:Date.now(),text:String(sn.text||'').slice(0,12000)};if(sn.fmt==='sect')all0[mod.id].fmt='sect';
+          if(sn.sub){all0[mod.id].sub=String(sn.sub).slice(0,12000);all0[mod.id].subName=sn.subName||'Moduł osadzony';if(sn.subAuto)all0[mod.id].subAuto=true;}if(sn.ai)all0[mod.id].ai=String(sn.ai).slice(0,8000);jset(SNAP,all0);markUsed(mod.id,a0.ok?a0:{n:a0.n,rich:a0.rich,action:PRINTING===mod.id?'print':'calc'});return;}
         if(!ok0||(sn&&sn.own)){if(!wasUsed(mod.id)){var z=snaps();if(z[mod.id]){delete z[mod.id];jset(SNAP,z);}}return;}
       }
       if(mod.frame){var f=host&&host.querySelector('iframe');if(!f||!f.contentDocument||!f.contentDocument.body){if(!wasUsed(mod.id))return;return;}rootEl=f.contentDocument.body;rememberBaseline(mod,rootEl);}
