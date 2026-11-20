@@ -148,4 +148,47 @@ function transf(o){var T=o.tabs||{},P=o.P||{},TR=o.T,TB=o.TB,A=o.A,d=Doc(),dose=
     if(re.lvl!=='ok'){d.line('Ocena',re.red.concat(re.or).map(strip).join(', '));d.line('Postępowanie',strip(re.act));d.C.push(re.lvl==='red'?'Ciężka reakcja poprzetoczeniowa: przerwij przetoczenie, postępowanie jak wyżej, zgłoszenie do banku krwi; hospitalizacja – decyzja lekarza.':'Reakcja poprzetoczeniowa: postępowanie jak wyżej – decyzja lekarza.');if(g6('ana')===true)d.C.push('Anafilaksja → moduł Anafilaksja (adrenalina i.m.).');}}
   t=tab(T,'n');if(t.touched>0&&A){d.head('ODWRACANIE NOAC');if(noacLines(d,A,t.g,w,d.C))dose=true;}
   return{text:d.done(),dose:dose};}
-return{dka:dka,acoag:acoag,ana:ana,transf:transf,fields:fields,tab:tab,inc:inc,strip:strip};});
+// ================= NEUROLOGIA =================
+function nlab(s){return String(s||'').replace(/\s*\([^)]*\)/g,'').replace(/\s+/g,' ').trim();}
+function nfields(t,excl){excl=(excl||[]).concat(['pname','adm']);return (t.fields||[]).filter(function(x){return excl.indexOf(x.id)<0;}).map(function(x){var l=nlab(x.label);return x.type==='chk'?l:l+' '+nlab(x.val)+(x.unit?' '+x.unit:'');}).join(', ');}
+function neuro(o){var T=o.tabs||{},P=o.P||{},N=o.N,DM=o.DM,d=Doc(),dose=false,w=P.w,gl=o.gl||function(x){return D(x,0)+' mmol/l';};if(!N)return{text:'',dose:false};
+  var tn=tab(T,'n'),nv={},nFill=false;if(tn.touched>0){N.NIH.forEach(function(it){var v=tn.g('n'+it[0]);if(v!=null&&v!=='')nv[it[0]]=String(v);});nFill=Object.keys(nv).some(function(k){return nv[k]!=='0'&&nv[k]!=='';});}
+  var nihT=nFill?N.nihss(nv):null;
+  var t=tab(T,'a');if(t.touched>0){var g=t.g,gm=fin(g('glu'))?g('glu')*18.016:NaN,nih=fin(g('nih'))?g('nih'):nihT?nihT.score:NaN;
+    var sy={foc:g('foc'),aph:g('aph'),neg:g('neg'),gaze:g('gaze')},auto=nFill?N.raceFromNihss(nv):N.raceFromSym(sy),rv={};Object.keys(N.RACE_MAX).forEach(function(k){var e=g('rc_'+k);rv[k]=(e!==''&&e!=null&&!(typeof e==='number'&&!fin(e)))?e:auto[k];});var rc=N.race(rv),hv=g('hints')||'';
+    var inp={h:g('h'),wake:g('wake'),unk:g('unk'),s:{foc:g('foc'),aph:g('aph'),neg:g('neg'),gaze:g('gaze'),vf:g('vf'),post:g('post'),loc:g('loc'),head:g('head'),hdp:g('hdp'),seiz:g('seiz'),neck:g('neck')},o:{ex:g('ex'),inst:g('inst'),flex:g('flex')},
+      cvt:{young:g('cy'),oc:g('coc'),thr:g('cthr'),pap:g('cpap'),inf:g('cinf')},tu:{prog:g('tprog'),ca:g('tca'),morn:g('tmorn'),hern:g('thern')},ac:g('ac'),acH:g('ach'),gluMg:gm,sbp:g('sbp'),dbp:g('dbp'),nihss:nih,race:rc.n?rc.score:NaN,hints:hv,mimic:g('mim'),sex:P.sex,age:P.age};
+    var r=N.stroke(inp);d.head('PODEJRZENIE UDARU – ALGORYTM');d.line('Dane',nfields(t,['glu','nih']));if(fin(g('glu')))d.line('Glukoza',gl(g('glu')));
+    if(fin(nih))d.line('NIHSS',D(nih,0)+(fin(g('nih'))?'':' (z zakładki NIHSS)'));if(rc.n)d.line('RACE',rc.score+'/9'+(rc.lvo?' – ≥5 → podejrzenie LVO':''));if(hv)d.line('HINTS',hv==='central'?'centralny':'obwodowy');
+    var ok=[];(r.list||[]).forEach(function(x){if(x.lvl==='red'||x.lvl==='orange')d.C.push(strip(x.t)+': '+strip(x.d));else ok.push(strip(x.t));});if(ok.length)d.C.push('Ponadto wg protokołu: '+ok.join(', ')+'.');}
+  if(nihT){d.head('NIHSS');var it=N.NIH.filter(function(x){return nv[x[0]]&&nv[x[0]]!=='0';}).map(function(x){var k=nv[x[0]];return nlab(x[1])+': '+(k==='UN'?'UN – nie do oceny':k+' – '+(x[2][+k]||''));});d.line('Wynik',nihT.score+' / 42 – '+strip(nihT.sev));if(it.length)d.line('Pozycje',it.join('; '));}
+  t=tab(T,'t');if(inc(t)){var g1=t.g,wi=N.window(g1('h'),g1('wake'),g1('mm')),cv={};N.CI_ABS.concat(N.CI_REL).forEach(function(c){cv[c[0]]=g1((N.CI_ABS.indexOf(c)>=0?'a_':'r_')+c[0]);});var ci=N.ci(cv),cg=N.coag(g1('inr'),g1('plt'));ci.abs=ci.abs.concat(cg.abs);
+    var ciIds=N.CI_ABS.map(function(c){return 'a_'+c[0];}).concat(N.CI_REL.map(function(c){return 'r_'+c[0];}));d.head('TROMBOLIZA');var df=nfields(t,ciIds.concat(['glu']));if(df)d.line('Dane',df);if(fin(g1('glu')))d.line('Glukoza',gl(g1('glu')));
+    if(wi.lvl)d.line('Okno czasowe',strip(wi.txt));if(ci.abs.length)d.line('PRZECIWWSKAZANIA',ci.abs.map(strip).join('; '));if(ci.rel.length)d.line('Ostrożnie (względne)',ci.rel.map(strip).join('; '));(cg.warn||[]).forEach(function(x){d.line('INR',strip(x));});
+    var b=N.bp(g1('sbp'),g1('dbp'),g1('ph'));if(b.lvl)d.line('RR '+(g1('ph')==='post'?'po':'przed')+' trombolizą',D(g1('sbp'),0)+'/'+D(g1('dbp'),0)+' mmHg; cel ≤'+b.lim[0]+'/'+b.lim[1]+(b.hi?(g1('ph')==='post'?' – obniż RR (urapidil/labetalol), kontrola co 15 min':' – obniż RR przed podaniem; bez obniżenia NIE podawaj'):''));
+    var gm1=g1('glu')*18.016,gq=N.glu(gm1);if(gq.lvl&&gq.lvl!=='ok')d.line('Glikemia',strip(gq.txt));
+    var bad=wi.lvl==='red'||ci.abs.length||!wi.lvl,pend=(b.hi&&g1('ph')!=='post')||gq.lvl==='red';
+    if(bad){d.line('Leki trombolityczne',wi.lvl?'brak wskazań wg wprowadzonych danych':'nie wyliczono – brak czasu zachorowania');d.C.push(wi.lvl?'Tromboliza: brak wskazań wg wprowadzonych danych – decyzja neurologa.':'Tromboliza: uzupełnij czas zachorowania.');}
+    else if(!(w>0))d.line('Leki trombolityczne','nie wyliczono – brak masy ciała');
+    else{var a=N.alteplase(w),k=N.tenecteplase(w);dose=true;
+      d.line('Alteplaza (Actilyse 1 mg/ml) 0,9 mg/kg','łącznie '+D(a.tot,1)+' mg = '+D(a.tot,1)+' ml'+(a.capped?' (masa >100 kg → dawka maks. 90 mg)':'')+'; bolus 10%: '+D(a.bol,1)+' ml i.v. w 1 min; reszta '+D(a.inf,1)+' ml w 60 min = '+D(a.mlh,1)+' ml/h (pompa)');
+      d.line('Przygotowanie alteplazy','50 mg proszku + 50 ml wody do wstrzykiwań = 1 mg/ml (fiolki wg dawki łącznej); pobrać łącznie '+D(a.tot,1)+' ml');
+      d.line('Tenekteplaza (Metalyse 5 mg/ml) – alternatywa',D(k.mg,1)+' mg = '+D(k.ml,1)+' ml jednorazowy bolus 5–10 s (przedział masy '+strip(k.band)+')'+(k.capped?'; masa ≥90 kg → dawka maks. 25 mg':''));
+      if(pend)d.line('Uwaga','podać dopiero po wyrównaniu RR / glikemii');
+      d.C.push('Tromboliza wg wyliczenia powyżej'+(pend?' po wyrównaniu RR / glikemii':'')+' – decyzja neurologa; RR i stan neurologiczny co 15 min.');}}
+  t=tab(T,'i');if(t.touched>0){var g2=t.g,vol=fin(g2('vol'))?g2('vol'):N.abc2(g2('ca'),g2('cb'),g2('cc'));d.head('KRWOTOK ŚRÓDMÓZGOWY (ICH)');d.line('Dane',nfields(t));
+    if(fin(vol))d.line('Objętość krwiaka',D(vol,0)+' ml'+(fin(g2('vol'))?'':' (ABC/2)'));var gcs=g2('gcs');
+    if(fin(gcs)&&gcs>=3&&fin(vol)&&fin(P.age)){var s=N.ichScore({gcs:gcs,vol:vol,ivh:g2('ivh'),infra:g2('inf'),age:P.age});d.line('ICH score',s.score+' / 6 – śmiertelność 30 dni ~'+s.mort+'% (nie służy do ograniczania leczenia)');}
+    var bp=N.ichBP(g2('sbp'));if(bp.lvl)d.line('RR – cel SBP ~140',strip(bp.txt));
+    if(g2('ac')===true){d.line('Antykoagulacja','odwróć natychmiast: VKA → PCC + wit. K; dabigatran → idarucyzumab; anty-Xa → andeksanet / PCC (dawki: moduł Antykoagulacja)');d.C.push('ICH na leczeniu przeciwkrzepliwym: natychmiastowe odwrócenie antykoagulacji.');}
+    d.C.push('Krwotok śródmózgowy: pilna konsultacja neurochirurgiczna / neurologiczna, HOSPITALIZACJA – decyzja lekarza.');}
+  t=tab(T,'p');if(t.touched>0){var g3=t.g;d.head('ROKOWANIE / TIA / GCS');var m=g3('mrs');if(m!=null&&m!==''&&fin(+m)&&t.fields.some(function(x){return x.id==='mrs';}))d.line('mRS',strip(N.MRS[+m]));
+    if(fin(P.age)&&fin(g3('sbp'))&&fin(g3('dbp'))&&fin(g3('dur'))){var a2=N.abcd2({age:P.age,sbp:g3('sbp'),dbp:g3('dbp'),clin:g3('clin'),dur:g3('dur'),dm:g3('dm')});d.line('ABCD²',a2.score+' / 7 – ryzyko '+strip(a2.risk));d.C.push('TIA (ABCD² '+a2.score+'): pilna diagnostyka niezależnie od wyniku – decyzja lekarza.');}
+    else{var pf=nfields(t,['mrs','ge','gv','gm']);if(pf)d.line('Dane',pf);}
+    var gc=N.gcs(+g3('ge')||NaN,+g3('gv')||NaN,+g3('gm')||NaN);if(gc)d.line('GCS',gc.score+' – '+strip(gc.txt));}
+  t=tab(T,'d');if(t.touched>0){var g4=t.g;d.head('MAJACZENIE / FUNKCJE POZNAWCZE');var r4=N.fourAT({alert:g4('fa'),amt4:+g4('fm'),att:+g4('ft'),acute:g4('fc')});d.line('Dane',nfields(t));d.line('4AT',r4.score+' / 12 – '+strip(r4.txt));
+    var r1=fin(g4('amts'))?N.amts(g4('amts')):null;if(r1)d.line('AMTS',r1.score+' / 10 – '+(r1.abn?'nieprawidłowy (≤6)':'prawidłowy'));var mc=g4('mcr');if(mc!==''&&mc!=null&&fin(+mc)){var r2=N.minicog(+mc,g4('mcc'));d.line('Mini-Cog',r2.score+' / 5 – '+(r2.pos?'dodatni (<3)':'ujemny'));}
+    if(r4.score>=4)d.C.push('4AT ≥4 – możliwe majaczenie: szukaj przyczyny (infekcja, leki, metaboliczne) – decyzja lekarza.');}
+  t=tab(T,'d2');if(t.touched>0&&DM){var g5=t.g,v={};DM.AMTS.forEach(function(x){v[x[0]]=g5(x[0])===true;});var ra=DM.amts(v);d.head('AMTS (ROZSZERZONE)');var okI=DM.AMTS.filter(function(x){return v[x[0]];}).map(function(x){return x[1];});if(okI.length)d.line('Poprawnie',okI.join('; '));if(ra)d.line('Wynik',ra.score+' / 10 – '+strip(ra.txt));}
+  return{text:d.done(),dose:dose};}
+return{dka:dka,acoag:acoag,ana:ana,transf:transf,neuro:neuro,fields:fields,tab:tab,inc:inc,strip:strip};});

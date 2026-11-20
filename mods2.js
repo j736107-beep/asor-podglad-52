@@ -10,11 +10,11 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
  snapshot:mod.print?function(ctx){ctx=ctx||{};var cur=store(mod.id+'_tab').get().t||tabs[0][0],T={},tot=0;
   /* fix22: zakładki wydrukowane przyciskiem Drukuj zostają w raporcie zbiorczym do „Następny pacjent” (sk_m_<id>_pr) */
   var PS=store(mod.id+'_pr'),pr=(PS.get().t||[]).slice();if(ctx.print&&pr.indexOf(cur)<0){pr.push(cur);PS.set({t:pr});}var pp=pr.length>0;
-  tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form);c.name=t[1];c.current=t[0]===cur;c.print=(!!ctx.print&&c.current)||pr.indexOf(t[0])>=0;tot+=c.touched;T[t[0]]=c;});
+  tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form,mod.skip);c.name=t[1];c.current=t[0]===cur;c.print=(!!ctx.print&&c.current)||pr.indexOf(t[0])>=0;tot+=c.touched;T[t[0]]=c;});
   var P=window.SKS&&SKS.P?SKS.P():{},r=null;try{r=mod.print({tabs:T,P:P,current:cur,print:!!ctx.print,S:window.SKS&&SKS.S})||{};}catch(e){r={text:''};if(window.console)console.error(e);}
   return{text:r.text||'',used:!!r.text&&(tot>=2||(!!r.dose&&(!!ctx.print||pp||!!r.reviewed))),dose:!!r.dose,own:true,fmt:'sect'};}:undefined};}
 // fix21: kontekst zakładki bez DOM ekranu – formularz odtworzony z zapisu; lista pól zmienionych względem wartości domyślnych (etykieta, wartość, jednostka)
-function tabCtx(id,t,form){var d=document.createElement('div');d.innerHTML='<div class="row">'+form(t)+'</div>';var q=function(){return [].slice.call(d.querySelectorAll('input[id],select[id],textarea[id]'));},def={};
+function tabCtx(id,t,form,skip){var d=document.createElement('div');d.innerHTML='<div class="row">'+form(t)+'</div>';skip=skip||[];var q=function(){return [].slice.call(d.querySelectorAll('input[id],select[id],textarea[id]')).filter(function(i){return skip.indexOf(i.id)<0;});},def={};
  q().forEach(function(i){def[i.id]=i.type==='checkbox'?false:i.value;});var g=bind(d,id+'_'+t,function(){}),F=[],n=0;
  q().forEach(function(i){var on=i.type==='checkbox'?i.checked:(String(i.value).trim()!==''&&i.value!==def[i.id]);if(!on||i.type==='hidden'&&i.id!=='gcs')return;n++;
   var lab=i.closest('label'),L=lab?lab.cloneNode(true):null,u='';if(L){var us=L.querySelector('span.mut');u=us?us.textContent.trim():'';[].slice.call(L.querySelectorAll('input,select,textarea,span')).forEach(function(x){x.remove();});}

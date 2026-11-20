@@ -22,7 +22,7 @@ window.SKN={print:function(){if(!LAST){alert('Otwórz zakładkę „Algorytm: po
   '<h2>Uwagi lekarza</h2><div class="lines"></div><div class="sig"><div>Godzina: ..............</div><div>Podpis i pieczątka lekarza<br><br>.......................................</div></div><div class="foot">Asystent lekarza SOR – narzędzie pomocnicze, niecertyfikowane. Decyzję podejmuje lekarz.</div>';
  var a=document.getElementById('printArea');if(!a){a=document.createElement('div');a.id='printArea';document.body.appendChild(a);}a.innerHTML=h;if(window.SKG)SKG.run(a);window.print();}};
 var MOT={'5a':1,'5b':1,'6a':1,'6b':1,'7':1};
-var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia'},'Neurologia – udar',[['a','Algorytm: podejrzenie udaru'],['n','NIHSS'],['t','Tromboliza'],['i','Krwotok (ICH)'],['p','Rokowanie / TIA / GCS'],['d','Majaczenie / 4AT (SOR)'],['d2','▸ AMTS (rozszerzone)']],
+var NEU=tabbed({id:'neuro',icon:'🧠',name:'Neurologia',skip:['pname','adm'],print:function(o){o.N=N;o.DM=SK.dementiaB2;o.gl=function(x){return SK.units.round('glu',SK.units.fromSI('glu',x,SKS.S.units),SKS.S.units)+' '+SK.units.label('glu',SKS.S.units);};return SK.tabPrint.neuro(o);}},'Neurologia – udar',[['a','Algorytm: podejrzenie udaru'],['n','NIHSS'],['t','Tromboliza'],['i','Krwotok (ICH)'],['p','Rokowanie / TIA / GCS'],['d','Majaczenie / 4AT (SOR)'],['d2','▸ AMTS (rozszerzone)']],
  function(t){
   // 11.11.2026 (audyt, faza 3): MoCA / MMSE / CDR (skale otępienia spoza SOR) usunięte; zostają 4AT, AMTS, Mini-Cog.
   if(t==='d2'){return '<div class="notice"><b>AMTS</b> – skala rozszerzona; w SOR preferuj 4AT (zakładka „Majaczenie / 4AT”).</div>'+(window.SORB2?SORB2.dementiaForm(t):'');}

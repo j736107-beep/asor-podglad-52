@@ -114,4 +114,6 @@ $('btnSrc').onclick=function(){$('sources').innerHTML='<div class="box"><h4>Źr�
 '<button class="primary" style="margin-top:10px;width:100%" onclick="document.getElementById(\'btnSrcBack\').click()">Wróć</button><button id="btnSrcBack" hidden></button></div>';show('sources');$('btnSrcBack').onclick=function(){show('form');renderStep()}};
 
 fresh();show('form');renderStep();
+// fix23: własny wydruk do „Drukuj” i raportu zbiorczego (mod/omdlenie/print.js) – tylko odpowiedzi TAK, CSRS z kompletu, decyzja, WNIOSKI
+window.SORSnapshot=function(o){o=o||{};try{return window.OMDLPrint.build(R,E,state,{settings:settings,ov:ov,current:current,LAB:LAB,RULEDESC:RULEDESC,print:!!o.print});}catch(e){return{text:'',own:true,used:false};}};
 })();

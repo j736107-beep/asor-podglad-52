@@ -198,7 +198,8 @@ function collect(withPt){const p=LAST||{},x=X(),cardL={};ECG.forEach(c=>{cardL[c
   url:urlv(),tref:p.tref||'',algoTxt:c0!=null&&p.a?p.a.txt:'',H:p.H,heartCheck:hcheck(),ed:p.ed,edOk:p.ed!=null&&histAns(),notes:T.ecgNotes(S.e,x)};
  const R0=T.buildReport(d);if(!R0.blocks.length)return{blocks:[],concl:null,text:''};
  d.concl=T.conclusion({L:p.L,why:p.why,hospReasons:p.hr,referral:p.ref});return T.buildReport(d)}
-window.SORSnapshot=function(){try{draw();return{text:collect(false).text}}catch(e){return{text:''}}};
+// fix23: ujednolicone z wydrukami fix18–fix22 – własny wydruk (own, sekcje); użycie: ≥2 wpisane / zaznaczone pozycje albo jawne „Drukuj” z ≥1 pozycją
+window.SORSnapshot=function(o){o=o||{};try{draw();const r=collect(false);let n=0;[S.h,S.r,S.v].forEach(st=>{for(const k in st)if(st[k]!=null&&st[k]!==false)n++});for(const k in S.e)if(S.e[k])n++;['c0','c1','c3'].forEach(id=>{if(num(id)!=null)n++});if($('onset').value||$('onseth').value)n++;return{text:r.text||'',own:true,fmt:'sect',n:n,used:!!r.text&&(n>=2||(!!o.print&&n>=1))}}catch(e){return{text:'',own:true,used:false}}};
 // stan modułu na czas pacjenta (czyści „Następny pacjent”); bez imienia i nazwiska, wiek/płeć z paska pacjenta
 const SKEY='trop_state',IKEY='trop_inputs',NOSAVE={pname:1,age:1,sex:1};
 function save(){try{const st={};[['h',S.h],['r',S.r],['v',S.v],['e',S.e]].forEach(([g,o])=>{for(const k in o)if(o[k]!=null&&o[k]!==false)st[g+'_'+k]=o[k]});localStorage.setItem(SKEY,JSON.stringify(st));
