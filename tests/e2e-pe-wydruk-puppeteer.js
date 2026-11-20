@@ -22,7 +22,7 @@ const DIDACT=/Źródła, wersje|Rozbieżność schematów|Nie zwiększaj stęże
   await fresh();await setP({pw:'80',pa:'60'});
   await page.evaluate(()=>SKS.goTab('pe','ufh'));await sleep(900);
   let t=await printMod();
-  rec('Wydruk ZP: bolus 6 400 j.m. (1,28 ml) i wlew 1 450 j.m./h = 2,9 ml/h z masy 80 kg',/Bolus: 80 j\.m\.\/kg × 80 kg = 6 400 j\.m\. → 6 400 j\.m\. i\.v\. w 3 min = 1,28 ml/.test(t)&&/1 450 j\.m\.\/h \(18,13 j\.m\.\/kg\/h/.test(t)&&/Prędkość pompy: 2,9 ml\/h/.test(t),t);
+  rec('Wydruk ZP: bolus 6 400 j.m. (1,28 ml) i wlew 1 450 j.m./h = 2,9 ml/h z masy 80 kg',/Bolus: 80 j\.m\.\/kg × 80 kg = 6 400 j\.m\. → 6 400 j\.m\. i\.v\. w 3 min = 1,28 ml/.test(t)&&/zlecono 18 j\.\/kg\/h = 1 440 j\.\/h; nastawa pompy 2,9 ml\/h = 1 450 j\.\/h \(faktycznie podawane\)/.test(t)&&/Prędkość pompy: 2,9 ml\/h/.test(t),t);
   rec('Wydruk ZP: przygotowanie pompy, limity, kontrola APTT, WNIOSKI',/5 ml leku \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.m\.\/ml/.test(t)&&/maks\. 10 000 j\.m\./.test(t)&&/APTT po 6 h/.test(t)&&/WNIOSKI:/.test(t),t);
   rec('Wydruk ZP: bez treści dydaktycznych, niewypełnionych pól i „Brak danych”',!DIDACT.test(t)&&!/OCENA RYZYKA|TROMBOLIZA|sPESI/.test(t),t.match(DIDACT));
   if(SHOTS){await page.evaluate(()=>{const a=document.getElementById('printArea');a.style.cssText='position:fixed;inset:0;overflow:auto;z-index:99999;background:#fff;padding:12px;display:block;visibility:visible';});await page.screenshot({path:SHOTS+'/pe-1280.png'});}

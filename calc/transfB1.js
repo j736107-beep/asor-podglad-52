@@ -30,6 +30,15 @@ function compatTable(){var rows=[];['O','A','B','AB'].forEach(function(g){['+','
 // ---------- wskazania do KKCz ----------
 // i: kind ('acute'|'chronic'), hb (g/dl), w (kg), burdened (choroba sercowo-naczyniowa/niewydolność serca/ACS), symptomatic, maxShift (konfig.), unstable
 var HB={normal:7,burdened:8,cardiacSurg:7.5};
+// fix24 (decyzja lekarza 20.11.2026): JEDEN przelicznik KKCz dla zakładek „Dawki i progi” i „KKCz – wskazania”:
+// z masy – ≈4 ml/kg KKCz podnosi Hb o ≈1 g/dl; objętość jednostki = dotychczasowy przelicznik modułu (70/masa g/dl na j. ⇔ ≈280 ml przy 4 ml/kg),
+// rzeczywista objętość zależy od preparatu RCKiK. „1 j. ≈ +1 g/dl” wyłącznie jako adnotacja (dorosły ok. 70 kg).
+var RBC_ML_PER_KG_G=4,RBC_UNIT_ML=280;
+function fx(x,d){return String(rd(x,d)).replace('.',',');}
+function rbcConv(wt){if(!nz(wt)||!(wt>0))return null;var mlG=RBC_ML_PER_KG_G*wt,inc=RBC_UNIT_ML/mlG;
+ return{mlPerG:mlG,incPerUnit:inc,unitMl:RBC_UNIT_ML,txt:'≈4 ml/kg KKCz podnosi Hb o ≈1 g/dl: '+fx(mlG,0)+' ml na 1 g/dl; przy objętości jednostki przyjętej w module (≈'+RBC_UNIT_ML+' ml – zależy od preparatu RCKiK) ≈ '+fx(inc,2)+' g/dl na jednostkę',note:'„1 j. ≈ +1 g/dl” – orientacyjnie u dorosłego ok. 70 kg'};}
+function rbcUnitsW(hb,target,wt){var c=rbcConv(wt);if(!c||!nz(hb)||!nz(target)||target<=hb)return null;return{units:Math.max(1,Math.ceil((target-hb)/c.incPerUnit-1e-9)),conv:c};}
+var RBC_STRATEGY='Przetaczaj po 1 jednostce, kontrola Hb przed kolejną (strategia restrykcyjna).';
 function rbc(i){if(!nz(i.hb)||i.hb<2||i.hb>20)return null;var o={warn:[],lvl:'ok'};
  var t=i.burdened?HB.burdened:HB.normal;o.threshold=t;o.src='AABB';
  if(i.kind==='acute'){
@@ -42,13 +51,13 @@ function rbc(i){if(!nz(i.hb)||i.hb<2||i.hb>20)return null;var o={warn:[],lvl:'ok
  o.kind='chronic';o.need=i.hb<t;
  o.target=i.burdened?'8–9 g/dl lub ustąpienie objawów':'7–8 g/dl lub ustąpienie objawów';
  o.lvl=o.need?'orange':'ok';
- if(o.need&&w(i)){var inc=70/i.w; // przyrost Hb na 1 j. ≈ 1 g/dl × 70/masa
+ if(o.need&&w(i)){var cv=rbcConv(i.w),inc=cv.incPerUnit;o.conv=cv; // fix24: wspólny przelicznik (≈4 ml/kg → +1 g/dl; = 70/masa g/dl na j.)
   var goal=i.burdened?9:8,units=Math.max(1,Math.ceil((goal-i.hb)/inc-1e-9));o.incPerUnit=rd(inc,2);o.unitsTotal=units;
   var mx=nz(i.maxShift)&&i.maxShift>0?i.maxShift:null;o.maxShift=mx;o.unitsNow=mx?Math.min(units,mx):units;o.capped=mx&&units>mx;}
  o.txt=o.need?'Niedokrwistość przewlekła, Hb <'+t+' g/dl'+(i.burdened?' (obciążony)':'')+': przetaczaj po 1 j., po każdej ocena kliniczna i Hb; cel '+o.target+'.':'Hb ≥'+t+' g/dl – przetoczenie zwykle niewskazane (poza objawami: ból w klatce, duszność, hipotensja nieodpowiadająca na wypełnienie).';
  if(o.need&&i.symptomatic===false)o.warn.push('Brak objawów: rozważ leczenie przyczynowe (żelazo, B12, EPO) zamiast przetoczenia.');
  if(i.burdened)o.warn.push('Ryzyko TACO: jedna jednostka na raz, wlew 3–4 h (max 4 h od wyjęcia z lodówki wg zasad IHiT), rozważ furosemid; monitoruj SpO₂/obrzęk.');
- o.warn.push('Przyrost Hb ≈1 g/dl na 1 j. u dorosłego ~70 kg (≈ 70/masa); liczba jednostek orientacyjna.');
+ o.strategy=RBC_STRATEGY;o.warn.push('Przelicznik z masy: ≈4 ml/kg KKCz → +1 g/dl Hb; „1 j. ≈ +1 g/dl” – orientacyjnie u dorosłego ok. 70 kg; liczba jednostek orientacyjna.');
  o.warn.push('Maksymalna liczba jednostek na dyżur / jednorazowo – ustalana lokalnie (DO DECYZJI LEKARZA); pole konfigurowalne.');
  return o;}
 function w(i){return nz(i.w)&&i.w>0;}
@@ -154,4 +163,4 @@ function gcsf(i){var o={warn:[],lvl:'ok'};
  o.contra='Przeciwwskazania/ostrożność: nadwrażliwość; nie podawać w ciągu 24 h od chemioterapii; ostrożnie przy białaczkach szpikowych/MDS, niedokrwistości sierpowatokrwinkowej, ryzyku pęknięcia śledziony (ból w lewym nadbrzuszu), ARDS.';
  o.isolation='Izolacja ochronna (pokój pojedynczy, higiena rąk, bez kwiatów/owoców nieumytych) przy ANC <0,5×10⁹/l – zakres zależny od lokalnych procedur (DO DECYZJI); HEPA – głównie alloHSCT (IDSA).';
  return o;}
-return{SRC:SRC,G:G,RBC:RBC,PLA:PLA,HB:HB,PLT_CTX:PLT_CTX,IRR:IRR,CSF_HIGH:CSF_HIGH,compatTable:compatTable,rbc:rbc,platelets:platelets,irradiated:irradiated,mtp:mtp,abc:abc,fn:fn,mascc:mascc,cisne:cisne,disposition:disposition,gcsf:gcsf};});
+return{SRC:SRC,G:G,RBC:RBC,PLA:PLA,HB:HB,PLT_CTX:PLT_CTX,IRR:IRR,CSF_HIGH:CSF_HIGH,compatTable:compatTable,rbc:rbc,rbcConv:rbcConv,rbcUnitsW:rbcUnitsW,RBC_STRATEGY:RBC_STRATEGY,platelets:platelets,irradiated:irradiated,mtp:mtp,abc:abc,fn:fn,mascc:mascc,cisne:cisne,disposition:disposition,gcsf:gcsf};});

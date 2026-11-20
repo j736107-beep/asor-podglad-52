@@ -58,7 +58,8 @@ function stemiAdjunct(i){var w=i.w,age=i.age,o={};
  if(w>0&&nz(age)){
   if(age<75){var bolus=30,sc=Math.min(w,100);o.enox={bolus:bolus,sc:sc,interval:renal?24:12,txt:'Enoksaparyna: 30 mg i.v. bolus, po 15 min '+rd(sc,0)+' mg s.c. (1 mg/kg; maks. 100 mg w pierwszych 2 dawkach) co '+(renal?'24':'12')+' h'+(renal?' (CrCl <30: 1×/dobę)':'')+'.'};}
   else{var sc2=Math.min(0.75*w,75);o.enox={bolus:0,sc:sc2,interval:renal?24:12,txt:'Enoksaparyna (≥75 lat): bez bolusa i.v.; '+rd(sc2,1)+' mg s.c. (0,75 mg/kg; maks. 75 mg w pierwszych 2 dawkach) co '+(renal?'24':'12')+' h.'};}}
- if(w>0){var b=Math.min(60*w,4000),rt=Math.min(12*w,1000);o.ufh={bolus:b,rate:rt,mlh:rt/500,txt:'Alternatywa – UFH: bolus 60 j./kg (maks. 4000 j.) = '+rd(b,0)+' j. + wlew 12 j./kg/h (maks. 1000 j./h) = '+rd(rt,0)+' j./h ('+String(rd(rt/500,1)).replace('.',',')+' ml/h przy 500 j./ml); aPTT 50–70 s, 24–48 h.'};}
+ if(w>0){var b=Math.min(60*w,4000),rt=Math.min(12*w,1000);var UR=(typeof module==='object'&&module.exports)?require('./ufh-rate.js'):(typeof window!=='undefined'&&window.SK&&window.SK.ufhRate);/* fix24: konwencja zlecono / nastawa / faktycznie */
+  o.ufh={bolus:b,rate:rt,mlh:rt/500,txt:'Alternatywa – UFH: bolus 60 j./kg (maks. 4000 j.) = '+rd(b,0)+' j. + wlew 12 j./kg/h (maks. 1000 j./h): '+(UR?UR.text({perKg:12,raw:12*w,ordered:rt,conc:500}):rd(rt,0)+' j./h')+' przy 500 j./ml; aPTT 50–70 s, 24–48 h.'};}
  return o;}
 // 11.11.2026: alteplaza w udarze → wyłącznie calc/neuro.js (moduł Neurologia), w ZP → calc/clinical.js tpa() (moduł Zatorowość płucna).
 // ---------- PROTAMINA ----------

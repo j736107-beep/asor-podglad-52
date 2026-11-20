@@ -8,14 +8,14 @@ const P80={w:80,age:60,crcl:90,co:{}};
 // 1. sama masa + zakładka UFH otwarta → bolus i wlew z liczbami
 let r=B.build({E,P:P80,tabs:{ufh:T(ufhDef,0,true)}});
 ok('PE-1 bolus 6 400 j.m. i 1,28 ml',/Bolus: 80 j\.m\.\/kg × 80 kg = 6 400 j\.m\. → 6 400 j\.m\. i\.v\. w 3 min = 1,28 ml/.test(r.text),r.text);
-ok('PE-2 wlew 1 450 j.m./h = 2,9 ml/h, 18,13 j.m./kg/h',/1 450 j\.m\.\/h \(18,13 j\.m\.\/kg\/h/.test(r.text)&&/Prędkość pompy: 2,9 ml\/h/.test(r.text),r.text);
+ok('PE-2 (fix24) wlew: zlecono 18 j./kg/h = 1 440 j./h; nastawa 2,9 ml/h = 1 450 j./h (faktycznie)',/Wlew: zlecono 18 j\.\/kg\/h = 1 440 j\.\/h; nastawa pompy 2,9 ml\/h = 1 450 j\.\/h \(faktycznie podawane\)/.test(r.text)&&/Prędkość pompy: 2,9 ml\/h/.test(r.text),r.text);
 ok('PE-3 przygotowanie pompy: 5 ml leku + 45 ml NaCl do 50 ml, 500 j.m./ml',/25 000 j\.m\. = 5 ml leku \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.m\.\/ml/.test(r.text),r.text);
 ok('PE-4 kontrola APTT po 6 h i limity',/APTT po 6 h/.test(r.text)&&/maks\. 10 000 j\.m\./.test(r.text),r.text);
 ok('PE-5 dose=true, WNIOSKI obecne',r.dose&&/WNIOSKI:\n– /.test(r.text),r.text);
 ok('PE-6 brak treści dydaktycznych / niewypełnionych',!/OCENA RYZYKA|TROMBOLIZA|HDCz|sPESI|Nie wpisano|ChPL \(Charakterystyka|Źródła|Rozbieżność|—/.test(r.text),r.text);
 // 2. limity: 140 kg → bolus 10 000, wlew 2000
 r=B.build({E,P:{w:140,co:{}},tabs:{ufh:T(ufhDef,0,true)}});
-ok('PE-7 maksima zastosowane i opisane',/10 000 j\.m\. i\.v\./.test(r.text)&&/zastosowano maksimum 10 000/.test(r.text)&&/2 000 j\.m\.\/h/.test(r.text)&&/maksimum początkowe 2 000/.test(r.text),r.text);
+ok('PE-7 maksima zastosowane i opisane',/10 000 j\.m\. i\.v\./.test(r.text)&&/zastosowano maksimum 10 000/.test(r.text)&&/= 2 520 j\.\/h → limit 2 000 j\.\/h; nastawa pompy 4,0 ml\/h = 2 000 j\.\/h/.test(r.text)&&/wlew początkowy maks\. 2 000/.test(r.text),r.text);
 // 3. pominięty bolus
 r=B.build({E,P:P80,tabs:{ufh:T({...ufhDef,omit:true},1,true)}});
 ok('PE-8 bolus pominięty',/Bolus: pominięty – decyzja lekarza/.test(r.text)&&/\(bez bolusa\)/.test(r.text),r.text);
@@ -44,7 +44,7 @@ r=B.build({E,P:{co:{}},tabs:{ufh:T(ufhDef,0,true)}});
 ok('PE-18 brak masy i brak zmian → pusty wydruk',r.text==='',r.text);
 // 10. kontrola APTT
 r=B.build({E,P:P80,tabs:{aptt:T({current:1450,aptt:50,conc:500,local:true,baseNormal:true,bleed:false,post:false,other:false})}});
-ok('PE-19 APTT 50 s → +160 j.m./h = 1 610 j.m./h, 3,22 ml/h',/zwiększyć o 160 j\.m\.\/h → 1 610 j\.m\.\/h = 3,22 ml\/h/.test(r.text)&&/Następny APTT: za 6 h/.test(r.text),r.text);
+ok('PE-19 (fix24) APTT 50 s → +160: zlecono 1 450 + 160 = 1 610 j./h; nastawa 3,2 ml/h = 1 600 j./h (faktycznie)',/zwiększyć o 160 j\.m\.\/h: zlecono 1 450 \+ 160 = 1 610 j\.\/h; nastawa pompy 3,2 ml\/h = 1 600 j\.\/h \(faktycznie podawane\)/.test(r.text)&&/Następny APTT: za 6 h/.test(r.text),r.text);
 // 11. zgodność z silnikiem (bez zmian algorytmu)
 const u=E.ufhStart(80,25000,50,false);ok('PE-20 silnik niezmieniony (6400/1450/2,9)',u.bolus===6400&&u.rate===1450&&Math.abs(u.mlh-2.9)<1e-9,JSON.stringify(u));
 console.log(f?`${n-f}/${n} PASS, ${f} FAIL`:`${n}/${n} PASS`);process.exit(f?1:0);

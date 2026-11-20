@@ -6,6 +6,8 @@ var fin=Number.isFinite;
 function I(x){return fin(x)?String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,' '):'—';}
 function D(x,d){if(!fin(x))return '—';var s=(+x.toFixed(d==null?2:d)).toString();return s.replace('.',',');}
 function noop(){return undefined;}
+// fix24: wspólna konwencja UFH (zlecono / nastawa 0,1 ml/h / faktycznie podawane)
+function UR(){return (typeof module==='object'&&module.exports)?require('./ufh-rate.js'):(typeof window!=='undefined'&&window.SK&&window.SK.ufhRate);}
 // t = {g:function(id), touched:liczba pól zmienionych przez lekarza, seen:czy zakładkę otwarto}
 function tab(T,id){var t=T&&T[id];return t&&typeof t.g==='function'?t:{g:noop,touched:0,seen:false};}
 function riskInfo(g,P){
@@ -40,9 +42,10 @@ function build(o){
       line('Masa ciała',D(w,1)+' kg');
       if(g2('omit'))line('Bolus','pominięty – decyzja lekarza');
       else line('Bolus','80 j.m./kg × '+D(w,1)+' kg = '+I(u.rawBolus)+' j.m. → '+I(u.bolus)+' j.m. i.v. w 3 min = '+D(u.bolus/5000,2)+' ml preparatu 5000 j.m./ml'+(u.capBolus?' (zastosowano maksimum 10 000 j.m.)':''));
-      line('Wlew','18 j.m./kg/h × '+D(w,1)+' kg = '+I(u.rawRate)+' j.m./h → '+I(u.rate)+' j.m./h ('+D(u.perKg,2)+' j.m./kg/h po zaokrągleniu do 50 j.m./h'+(u.capRate?'; zastosowano maksimum początkowe 2 000 j.m./h':'')+')');
+      var ord=Math.min(u.rawRate,2000),us=UR().set(ord,u.concentration);
+      line('Wlew',UR().text({perKg:18,raw:u.rawRate,ordered:ord,conc:u.concentration}));
       line('Pompa','Heparinum WZF 5000 j.m./ml: '+I(g2('amount'))+' j.m. = '+D(u.drugMl,2)+' ml leku + '+D(u.diluentMl,2)+' ml NaCl 0,9% → objętość końcowa '+D(g2('volume'),1)+' ml; stężenie '+D(u.concentration,1)+' j.m./ml');
-      line('Prędkość pompy',D(u.mlh,2)+' ml/h (= '+I(u.rate)+' j.m./h); strzykawka wystarczy na '+D(u.hours,1)+' h; zapotrzebowanie 24 h: '+I(u.units24)+' j.m. ('+D(u.ml24,1)+' ml)');
+      line('Prędkość pompy',UR().fmt(us.mlh,1)+' ml/h (= '+I(us.actual)+' j.m./h faktycznie); strzykawka wystarczy na '+D(g2('amount')/us.actual,1)+' h; zapotrzebowanie 24 h: '+I(us.actual*24)+' j.m. ('+D(us.mlh*24,1)+' ml)');
       line('Limity schematu','bolus maks. 10 000 j.m.; wlew początkowy maks. 2 000 j.m./h');
       if(!(u.concentration>=1&&u.concentration<=1000))line('UWAGA','stężenie poza ChPL Heparinum WZF (1–1000 j.m./ml)');
       var mon='APTT po 6 h od startu i po każdej zmianie dawki; po 2 kolejnych wynikach w zakresie – co najmniej raz/dobę; PLT, Hb, krwawienie';
@@ -62,8 +65,9 @@ function build(o){
     var inp=[fin(g3('current'))?'obecny wlew '+I(g3('current'))+' j.m./h':'',fin(g3('aptt'))?'APTT '+D(g3('aptt'),1)+' s':'',fin(g3('conc'))?'stężenie '+D(g3('conc'),1)+' j.m./ml':''].filter(Boolean).join(', ');
     line('Dane',inp);
     if(a.ok){dose=true;if(g3('review')===true)reviewed=true;
-      if(a.hold)line('Propozycja','WSTRZYMAĆ wlew na 2 h, ocena krwawienia; przy wznowieniu '+I(a.rate)+' j.m./h = '+D(a.mlh,2)+' ml/h ('+D(a.perKg,2)+' j.m./kg/h)');
-      else line('Propozycja',(a.delta?(a.delta>0?'zwiększyć':'zmniejszyć')+' o '+I(Math.abs(a.delta))+' j.m./h → ':'bez zmiany: ')+I(a.rate)+' j.m./h = '+D(a.mlh,2)+' ml/h ('+D(a.perKg,2)+' j.m./kg/h)');
+      var ut=UR().text({lead:'zlecono '+I(g3('current'))+' '+(a.delta>=0?'+':'−')+' '+I(Math.abs(a.delta))+' = '+I(a.rate)+' j./h',ordered:a.rate,conc:g3('conc')});
+      if(a.hold)line('Propozycja','WSTRZYMAĆ wlew na 2 h, ocena krwawienia; przy wznowieniu: '+ut+' ('+D(a.perKg,2)+' j.m./kg/h zlecone)');
+      else line('Propozycja',(a.delta?(a.delta>0?'zwiększyć':'zmniejszyć')+' o '+I(Math.abs(a.delta))+' j.m./h: ':'bez zmiany: ')+ut+' ('+D(a.perKg,2)+' j.m./kg/h zlecone)');
       if(a.bolusTable)line('Dodatkowy bolus (tabela źródłowa)',I(a.bolusTable)+' j.m. – po ocenie poprzednich podań');
       line('Następny APTT','za '+a.next+' h'+(a.hold?' od wznowienia':' od zmiany / kontynuacji'));
     }else line('Nomogram','nie wyliczono – '+a.message);

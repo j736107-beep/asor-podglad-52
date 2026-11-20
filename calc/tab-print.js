@@ -5,6 +5,8 @@
 'use strict';
 var fin=Number.isFinite,I=CP.I,D=CP.D,Doc=CP.Doc;
 function noop(){return undefined;}
+// fix24: wspólna konwencja UFH (zlecono / nastawa 0,1 ml/h / faktycznie podawane)
+function UR(){return (typeof module==='object'&&module.exports)?require('./ufh-rate.js'):(typeof window!=='undefined'&&window.SK&&window.SK.ufhRate);}
 function tab(T,id){var t=T&&T[id];return t&&typeof t.g==='function'?t:{g:noop,touched:0,current:false,print:false,fields:[]};}
 function inc(t){return !!(t.touched>0||t.print);}
 function strip(s){return String(s==null?'':s).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();}
@@ -60,7 +62,7 @@ function acoag(o){var T=o.tabs||{},P=o.P||{},A=o.A,AB=o.AB,d=Doc(),dose=false,w=
   var t=tab(T,'ufh');if(inc(t)&&w>0){var g=t.g,u=A.ufh(w,g('acs')===true?'acs':'vte');dose=true;
     d.head('HEPARYNA NIEFRAKCJONOWANA (UFH)'+(g('acs')===true?' – ACS':' – ŻChZZ / ZP'));d.line('Masa ciała',D(w,1)+' kg');d.line('Schemat',strip(u.txt));
     d.line('Bolus',I(u.bolus)+' j. i.v. = '+D(u.bolus/5000,2)+' ml (5000 j./ml)'+(u.bolusCap?' – zastosowano maksimum':''));
-    d.line('Wlew',I(u.rate)+' j./h = '+D(u.mlh,1)+' ml/h'+(u.rateCap?' – zastosowano maksimum':''));
+    var pk=g('acs')===true?12:18;d.line('Wlew',UR().text({perKg:pk,raw:pk*w,ordered:u.rate,conc:u.conc}));
     d.line('Przygotowanie pompy','25 000 j. (5 ml) + 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j./ml');
     d.line('Kontrola','aPTT po 6 h, dalej wg protokołu');
     d.C.push('Heparyna niefrakcjonowana wg wyliczenia powyżej – decyzja lekarza; kontrola aPTT po 6 h.');}
@@ -120,13 +122,15 @@ function transf(o){var T=o.tabs||{},P=o.P||{},TR=o.T,TB=o.TB,A=o.A,d=Doc(),dose=
     else{var c=TR.compat(abo,rh,P.sex,P.age);d.line('KKCz',n0(c.rbc)+' · '+c.rbcRh.join(' / ')+(rh==='-'&&c.childbearing?' (kobieta <50 lat: wyłącznie RhD−)':''));d.line('Osocze (FFP)',n0(c.plasma)+' · RhD bez znaczenia');d.line('KKP',n0(c.plt)+' (preferowana grupa identyczna) · '+strip(c.pltRh));}
     d.line('','Próba zgodności i kontrola przyłóżkowa AB0 – wg rozporządzenia MZ.');}
   t=tab(T,'d');if(t.touched>0&&TR){var g1=t.g,hb=g1('hb');d.head('DAWKI I PROGI');d.line('Dane',fields(t));
-    if(fin(hb)){var th=TR.threshold(g1('ctx')),need=hb<th.t||(g1('ctx')==='acs'&&hb<=8),u=TR.rbcUnits(hb,g1('hbt'));d.line('KKCz – próg '+th.t+' g/dl',need?(u>0?u+' j. KKCz (1 j. ≈ +1 g/dl u ~70 kg; przetaczaj po 1 j. i oceniaj)':'wskazane – podaj Hb docelowe'):'powyżej progu – brak wskazań przy stabilnym pacjencie');if(need&&u>0)dose=true;if(need)d.C.push('KKCz wg wyliczenia (próg '+th.t+' g/dl) – decyzja lekarza; kontrola Hb po każdej jednostce.');}
+    if(fin(hb)){var th=TR.threshold(g1('ctx')),need=hb<th.t||(g1('ctx')==='acs'&&hb<=8),ru=TB?TB.rbcUnitsW(hb,g1('hbt'),w):null,u=ru?ru.units:0;d.line('KKCz – próg '+th.t+' g/dl',need?(u>0?u+' j. KKCz':!(w>0)?'wskazane – nie wyliczono liczby jednostek (brak masy ciała)':'wskazane – podaj Hb docelowe'):'powyżej progu – brak wskazań przy stabilnym pacjencie');
+      if(need&&u>0)d.line('Przelicznik',ru.conv.txt+'; '+ru.conv.note);if(need&&TB)d.line('Strategia',TB.RBC_STRATEGY);if(need&&u>0)dose=true;if(need)d.C.push('KKCz wg wyliczenia (próg '+th.t+' g/dl) – decyzja lekarza; kontrola Hb po każdej jednostce.');}
     if(g1('coag')===true){var f=TR.ffp(w);if(f){dose=true;d.line('Osocze (FFP)',I(f.ml)+' ml (15 ml/kg × '+D(w,0)+' kg) – krwawienie z koagulopatią');}else d.line('Osocze (FFP)','nie wyliczono – brak masy ciała');}
     if(fin(g1('fib'))){var fb=TR.fib(w,g1('fib'));d.line('Fibrynogen '+D(g1('fib'),1)+' g/l',fb.need?(w>0?'koncentrat fibrynogenu '+D(fb.concLo,1)+'–'+D(fb.concHi,1)+' g (25–50 mg/kg) lub krioprecypitat':'suplementacja wskazana – brak masy ciała'):'≥1,5 g/l – bez suplementacji');if(fb.need&&w>0)dose=true;}
     if(fin(g1('plt'))){var p=TR.plt(g1('plt'),g1('pctx'));d.line('KKP – próg '+p.t,p.need?strip(p.dose):'powyżej progu – brak wskazań');if(p.need)dose=true;}}
   t=tab(T,'rbc');if(t.touched>0&&TB){var g2=t.g,r=TB.rbc({kind:g2('kind'),hb:g2('hb'),w:w,burdened:g2('burd'),symptomatic:g2('symp'),unstable:g2('unst'),maxShift:g2('mx')});
     d.head('KKCZ – WSKAZANIA');d.line('Dane',fields(t));if(r){d.line('Wynik',(r.need?'WSKAZANE':'brak wskazań')+' – '+strip(r.txt)+' Próg '+r.threshold+' g/dl.');
-      if(r.kind==='chronic'&&r.need){if(r.unitsTotal){dose=true;d.line('Liczba jednostek',r.unitsNow+' j. KKCz teraz'+(r.capped?' (do celu orientacyjnie '+r.unitsTotal+' j.; limit lokalny '+r.maxShift+' j./dyżur)':' (do celu orientacyjnie '+r.unitsTotal+' j.; ≈ +'+D(r.incPerUnit,2)+' g/dl/j.)'));}else d.line('Liczba jednostek','nie wyliczono – brak masy ciała');}
+      if(r.kind==='chronic'&&r.need){if(r.unitsTotal){dose=true;d.line('Liczba jednostek',r.unitsNow+' j. KKCz teraz'+(r.capped?' (do celu orientacyjnie '+r.unitsTotal+' j.; limit lokalny '+r.maxShift+' j./dyżur)':' (do celu orientacyjnie '+r.unitsTotal+' j.)'));if(r.conv)d.line('Przelicznik',r.conv.txt+'; '+r.conv.note);}else d.line('Liczba jednostek','nie wyliczono – brak masy ciała');}
+      if(r.need&&g2('unst')!==true)d.line('Strategia',TB.RBC_STRATEGY);
       if(r.need&&!d.C.some(function(c){return /^KKCz/.test(c);}))d.C.push('KKCz wskazane – kontrola Hb po każdej jednostce; decyzja lekarza.');}}
   t=tab(T,'plt');if(t.touched>0&&TB){var g3=t.g,q=TB.platelets({ctx:g3('ctx'),plt:g3('plt'),thromboType:g3('tt'),bleeding:g3('bleed'),lifeThreat:g3('life')}),v={};(TB.IRR||[]).forEach(function(x){v[x[0]]=g3('ir_'+x[0])===true;});var ir=TB.irradiated(v,g3('urg'));
     d.head('TROMBOCYTOPENIA / KKP');d.line('Dane',fields(t,Object.keys(v).map(function(k){return 'ir_'+k;})));

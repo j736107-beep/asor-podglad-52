@@ -7,7 +7,7 @@ const X=(o,x)=>Object.assign({g:id=>o[id],touched:Object.keys(o).length,fields:O
 const C=(tabs,P,o)=>Object.assign({tabs,P:P||{w:80,age:60,sex:'m'}},o||{});
 // ---- Antykoagulacja ----
 let r=TP.acoag(C({ufh:X({},{print:true,current:true})},null,{A,AB,print:true}));
-ok('ACO-1 UFH z masy (Drukuj): bolus j. = ml, wlew j./h = ml/h, pompa 25 000 j. + 45 ml → 50 ml, 500 j./ml, aPTT',/Bolus: \d[\d ]* j\. i\.v\. = [\d,]+ ml \(5000 j\.\/ml\)/.test(r.text)&&/Wlew: 1 440 j\.\/h = 2,9 ml\/h/.test(r.text)&&/25 000 j\. \(5 ml\) \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.\/ml/.test(r.text)&&/aPTT po 6 h/.test(r.text)&&r.dose,r.text);
+ok('ACO-1 UFH z masy (Drukuj): bolus j. = ml, wlew j./h = ml/h, pompa 25 000 j. + 45 ml → 50 ml, 500 j./ml, aPTT',/Bolus: \d[\d ]* j\. i\.v\. = [\d,]+ ml \(5000 j\.\/ml\)/.test(r.text)&&/Wlew: zlecono 18 j\.\/kg\/h = 1 440 j\.\/h; nastawa pompy 2,9 ml\/h = 1 450 j\.\/h \(faktycznie podawane\)/.test(r.text)&&/25 000 j\. \(5 ml\) \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.\/ml/.test(r.text)&&/aPTT po 6 h/.test(r.text)&&r.dose,r.text);
 ok('ACO-2 bez nadmiaru, WNIOSKI',/WNIOSKI:/.test(r.text)&&!JUNK.test(r.text),r.text.match(JUNK)||r.text);
 r=TP.acoag(C({ufh:X({})},null,{A,AB}));ok('ACO-3 samo przeglądanie zakładki → pusty wydruk',r.text==='',r.text);
 r=TP.acoag(C({vka:X({inr:4.5,bleed:true})},null,{A,AB}));

@@ -25,7 +25,7 @@ const JUNK=/Źródła|Źródło|Wytyczne i ChPL|ChPL 4\.2|Efekt:|Wpisz wynik|Wpi
   // ===== Antykoagulacja: UFH z samej masy + Drukuj =====
   await fresh();await setP({pw:'80',pa:'60'});await tab('acoag','ufh');
   let t=await printMod();
-  rec('ACO: UFH 80 kg – wlew 1 440 j./h = 2,9 ml/h, pompa 25 000 j. + 45 ml → 50 ml, 500 j./ml, aPTT',/Wlew: 1 440 j\.\/h = 2,9 ml\/h/.test(t)&&/25 000 j\. \(5 ml\) \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.\/ml/.test(t)&&/Bolus: /.test(t)&&/aPTT po 6 h/.test(t),t);
+  rec('ACO: UFH 80 kg – wlew 1 440 j./h = 2,9 ml/h, pompa 25 000 j. + 45 ml → 50 ml, 500 j./ml, aPTT',/Wlew: zlecono 18 j\.\/kg\/h = 1 440 j\.\/h; nastawa pompy 2,9 ml\/h = 1 450 j\.\/h \(faktycznie podawane\)/.test(t)&&/25 000 j\. \(5 ml\) \+ 45 ml NaCl 0,9% → objętość końcowa 50 ml; stężenie 500 j\.\/ml/.test(t)&&/Bolus: /.test(t)&&/aPTT po 6 h/.test(t),t);
   rec('ACO: WNIOSKI, bez nadmiaru (inne zakładki, źródła)',/WNIOSKI:/.test(t)&&!JUNK.test(t)&&!/ENOKSAPARYNA|WARFARYNA|PROTAMINA|ALTEPLAZA/.test(t),t.match(JUNK)||t);
   await tab('acoag','vka');await setF({inr:'4.5',bleed:true});await sleep(300);
   t=await printMod();
