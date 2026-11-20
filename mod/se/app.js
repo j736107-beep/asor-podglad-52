@@ -73,4 +73,6 @@ $('#res').addEventListener('click',function(e){if(e.target.id==='rs'){delete st.
  if(e.target.id==='give'){var r=R(),k=st.sel,v=vals(k,r),o=E.edit(k,v,r.W,r);if(!o.lines.length)return;
   if(o.bad&&!confirm('Uwaga: '+o.warn.join('; ')+'. Zapisać mimo to?'))return;
   st.log.push({t:Date.now(),k:k,txt:E.logText(k,v,r.W,r),mg:(v.dose!=null?v.dose:v.bolus)});save();render();}});
+// fix21: własny wydruk (dziennik podań, wyliczenie wybranego leku, WNIOSKI) – mod/se/print.js
+window.SORSnapshot=function(ctx){try{var r=R(),o=window.SEPrint.build(E,st,r,ctx||{},{SH:SH,vals:vals,TH:window.SKThiamine});return{text:o.text,used:o.used,dose:o.dose,n:o.n,own:true};}catch(e){return{text:'',own:true};}};
 render();})();

@@ -166,5 +166,5 @@ function tox(o){var P=o.P||{},T=o.tabs||{},E=o.E,C=o.C,M=o.M,U=o.unit||function(
   var tx=d.done(touched||dose?'Miejsce leczenia: decyzja lekarza.':'');
   if(tx&&tel&&!/12 411 99 99/.test(tx))tx+='\n– '+TOX_TEL+'.';
   return{text:tx,dose:dose,touched:touched,reviewed:rev,hosp:hosp};}
-return{ahf:ahf,cap:cap,tox:tox,I:I,D:D};
+return{ahf:ahf,cap:cap,tox:tox,I:I,D:D,Doc:Doc,TOX_TEL:TOX_TEL};
 });

@@ -222,6 +222,10 @@
         if(!ok0||(sn&&sn.own)){if(!wasUsed(mod.id)){var z=snaps();if(z[mod.id]){delete z[mod.id];jset(SNAP,z);}}return;}
       }
       if(mod.frame){var f=host&&host.querySelector('iframe');if(!f||!f.contentDocument||!f.contentDocument.body){if(!wasUsed(mod.id))return;return;}rootEl=f.contentDocument.body;rememberBaseline(mod,rootEl);}
+      // fix21: moduł w ramce z własnym wydrukiem (own) – tylko wypełnione pozycje i wyliczenia; sam ocenia użycie (jawne „Drukuj” z dawką = użycie)
+      if(mod.frame){var fwo=null;try{var fw0=host.querySelector('iframe').contentWindow;if(fw0&&typeof fw0.SORSnapshot==='function')fwo=fw0.SORSnapshot({print:PRINTING===mod.id});}catch(e){fwo=null;}
+        if(fwo&&fwo.own){var allF=snaps();if(fwo.text&&(fwo.used||wasUsed(mod.id))){allF[mod.id]={name:mod.name,ts:Date.now(),text:String(fwo.text).slice(0,12000),fmt:'sect'};jset(SNAP,allF);markUsed(mod.id,{n:fwo.n||0,action:PRINTING===mod.id?'print':'calc'});}
+          else if(!wasUsed(mod.id)&&allF[mod.id]){delete allF[mod.id];jset(SNAP,allF);}return;}}
       var a=assess(mod, rootEl);
       // fix19: jawne „Drukuj” w module z wyliczoną dawką (np. heparyna z masy pacjenta) = użycie, nawet gdy pozostałe pola są domyślne
       if(!a.ok&&PRINTING===mod.id&&typeof mod.doseReady==='function'){try{if(mod.doseReady()){a.ok=true;a.action='print';}}catch(e){}}

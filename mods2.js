@@ -5,7 +5,21 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
   el.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){tab=b.dataset.t;store(mod.id+'_tab').set({t:tab});draw()}});
   infoToggle(el,info);var f=el.querySelector('#f');f.innerHTML='<div class="row">'+form(tab)+'</div>';var g=bind(f,mod.id+'_'+tab,upd);if(window.SKGCS)SKGCS.mount(f);self.update=upd;
   function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=(mod.printTab&&window.SORReport&&SORReport.ptStrip?SORReport.ptStrip()+SORReport.printBtn('Drukuj tę zakładkę: '+((tabs.filter(function(t){return t[0]===tab;})[0]||[])[1]||'')):'')+r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);self._lastDose=!!r.dose;}upd();}
- draw();},doseReady:function(){return !!this._lastDose;}};}
+ draw();},doseReady:function(){return !!this._lastDose;},
+ // fix21: własny wydruk modułu (mod.print) – zakładki odtwarzane z zapisu, tylko pola zmienione przez lekarza; użycie: ≥2 pola lub wyliczona dawka + jawne „Drukuj”
+ snapshot:mod.print?function(ctx){ctx=ctx||{};var cur=store(mod.id+'_tab').get().t||tabs[0][0],T={},tot=0;
+  tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form);c.name=t[1];c.current=t[0]===cur;c.print=!!ctx.print&&c.current;tot+=c.touched;T[t[0]]=c;});
+  var P=window.SKS&&SKS.P?SKS.P():{},r=null;try{r=mod.print({tabs:T,P:P,current:cur,print:!!ctx.print,S:window.SKS&&SKS.S})||{};}catch(e){r={text:''};if(window.console)console.error(e);}
+  return{text:r.text||'',used:!!r.text&&(tot>=2||(!!r.dose&&(!!ctx.print||!!r.reviewed))),dose:!!r.dose,own:true,fmt:'sect'};}:undefined};}
+// fix21: kontekst zakładki bez DOM ekranu – formularz odtworzony z zapisu; lista pól zmienionych względem wartości domyślnych (etykieta, wartość, jednostka)
+function tabCtx(id,t,form){var d=document.createElement('div');d.innerHTML='<div class="row">'+form(t)+'</div>';var q=function(){return [].slice.call(d.querySelectorAll('input[id],select[id],textarea[id]'));},def={};
+ q().forEach(function(i){def[i.id]=i.type==='checkbox'?false:i.value;});var g=bind(d,id+'_'+t,function(){}),F=[],n=0;
+ q().forEach(function(i){var on=i.type==='checkbox'?i.checked:(String(i.value).trim()!==''&&i.value!==def[i.id]);if(!on||i.type==='hidden'&&i.id!=='gcs')return;n++;
+  var lab=i.closest('label'),L=lab?lab.cloneNode(true):null,u='';if(L){var us=L.querySelector('span.mut');u=us?us.textContent.trim():'';[].slice.call(L.querySelectorAll('input,select,textarea,span')).forEach(function(x){x.remove();});}
+  var lt=L?L.textContent.replace(/\s+/g,' ').trim():(i.id==='gcs'?'GCS':i.id);
+  F.push({id:i.id,label:lt,type:i.type==='checkbox'?'chk':i.tagName==='SELECT'?'sel':'val',val:i.type==='checkbox'?true:i.tagName==='SELECT'?(i.options[i.selectedIndex]||{}).text:String(i.value).replace(/(\d)\.(\d)/g,'$1,$2'),unit:u});});
+ return{g:g,touched:n,fields:F};}
+SKM.util.tabCtx=tabCtx;
 SKM.util.tabbed=tabbed;SKM.util.chk=chk;
 // ============ ANTYKOAGULACJA ============
 var A=SK.acoag,AS=A.SRC;

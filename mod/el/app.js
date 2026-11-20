@@ -78,4 +78,6 @@ $('#res').addEventListener('click',function(e){var b=e.target.closest('button');
   save();out();return;}
  if(b.dataset.u){var uk=b.dataset.u,old=st.lab[uk],nv=b.dataset.v,ion={mgu:'mg',cau:'ca',pu:'p',albu:'alb'}[uk],x=st.lab[ion];if(old!==nv&&isFinite(x)){if(ion==='alb')x=nv==='gl'?x*10:x/10;else x=nv==='mgdl'?E.toMgdl(ion,x):E.toMmol(ion,x,'mgdl');st.lab[ion]=Math.round(x*100)/100;}st.lab[uk]=nv;save();result();return;}
  if(b.dataset.o){var p=b.dataset.o.split(':');if(p.length>1)st.opt[p[0]]=st.opt[p[0]]===p[1]?'':p[1];else st.opt[p[0]]=!st.opt[p[0]];if(p[0]==='ecg'||p[0]==='arrest'||p[0]==='cvc')delete st.ed.kcl;save();result();}});
+// fix21: własny wydruk (tylko wpisane wyniki, zaznaczone opcje, wyliczone dawki/pompy, WNIOSKI) – mod/el/print.js
+window.SORSnapshot=function(ctx){try{var o=window.ELPrint.build(E,st,ctx||{},window.SKThiamine);return{text:o.text,used:o.used,dose:o.dose,n:o.n,own:true};}catch(e){return{text:'',own:true};}};
 render();})();
