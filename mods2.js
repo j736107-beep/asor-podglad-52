@@ -8,9 +8,11 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
  draw();},doseReady:function(){return !!this._lastDose;},
  // fix21: własny wydruk modułu (mod.print) – zakładki odtwarzane z zapisu, tylko pola zmienione przez lekarza; użycie: ≥2 pola lub wyliczona dawka + jawne „Drukuj”
  snapshot:mod.print?function(ctx){ctx=ctx||{};var cur=store(mod.id+'_tab').get().t||tabs[0][0],T={},tot=0;
-  tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form);c.name=t[1];c.current=t[0]===cur;c.print=!!ctx.print&&c.current;tot+=c.touched;T[t[0]]=c;});
+  /* fix22: zakładki wydrukowane przyciskiem Drukuj zostają w raporcie zbiorczym do „Następny pacjent” (sk_m_<id>_pr) */
+  var PS=store(mod.id+'_pr'),pr=(PS.get().t||[]).slice();if(ctx.print&&pr.indexOf(cur)<0){pr.push(cur);PS.set({t:pr});}var pp=pr.length>0;
+  tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form);c.name=t[1];c.current=t[0]===cur;c.print=(!!ctx.print&&c.current)||pr.indexOf(t[0])>=0;tot+=c.touched;T[t[0]]=c;});
   var P=window.SKS&&SKS.P?SKS.P():{},r=null;try{r=mod.print({tabs:T,P:P,current:cur,print:!!ctx.print,S:window.SKS&&SKS.S})||{};}catch(e){r={text:''};if(window.console)console.error(e);}
-  return{text:r.text||'',used:!!r.text&&(tot>=2||(!!r.dose&&(!!ctx.print||!!r.reviewed))),dose:!!r.dose,own:true,fmt:'sect'};}:undefined};}
+  return{text:r.text||'',used:!!r.text&&(tot>=2||(!!r.dose&&(!!ctx.print||pp||!!r.reviewed))),dose:!!r.dose,own:true,fmt:'sect'};}:undefined};}
 // fix21: kontekst zakładki bez DOM ekranu – formularz odtworzony z zapisu; lista pól zmienionych względem wartości domyślnych (etykieta, wartość, jednostka)
 function tabCtx(id,t,form){var d=document.createElement('div');d.innerHTML='<div class="row">'+form(t)+'</div>';var q=function(){return [].slice.call(d.querySelectorAll('input[id],select[id],textarea[id]'));},def={};
  q().forEach(function(i){def[i.id]=i.type==='checkbox'?false:i.value;});var g=bind(d,id+'_'+t,function(){}),F=[],n=0;
@@ -32,7 +34,7 @@ function NOACC(g,w){var H='',lvl='ok';if(!g('nb'))return{H:bx('orange','','Brak 
  if(!H)H=bx('','','Zaznacz lek.');return{H:H,lvl:lvl};}
 SKM.util.NOACF=NOACF;SKM.util.NOACC=NOACC;
 
-var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar → Neurologia'],['alt3','Alteplaza: ZP → Zatorowość'],['prot','Protamina']],
+var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true,print:function(o){o.A=A;o.AB=SK.acoagB1;return SK.tabPrint.acoag(o);}},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar → Neurologia'],['alt3','Alteplaza: ZP → Zatorowość'],['prot','Protamina']],
  function(t){return t==='ufh'?chk('acs','ACS (zamiast ŻChZZ/ZP)'):t==='enox'?chk('proph','profilaktyka (zamiast leczenia)'):t==='vka'?inp('inr','INR','')+chk('bleed','krwawienie zagrażające życiu / pilny zabieg'):t==='noac'?NOACF():t==='alt1'?SKB1.altForm('stemi'):t==='alt2'?SKB1.altForm('stroke'):t==='alt3'?SKB1.altForm('pe'):
   SKB1.protForm();},
  function(t,g,P){var H='',lvl='ok',w=P.w;

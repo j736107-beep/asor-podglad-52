@@ -3,7 +3,7 @@ function dw(t){return ' <span class="dw">'+(t||'DO WERYFIKACJI')+'</span>';}
 function nw(){return {H:bx('orange','','Podaj masę ciała w pasku pacjenta.'),lvl:'ok'};}
 var info=function(k,extra){return '<h3>Źródła</h3>'+src(B.SRC[k])+(extra||'');};
 // ANAFILAKSJA
-var ANA=tabbed({id:'ana',icon:'🐝',name:'Anafilaksja'},'Anafilaksja',[['a','Leczenie'],['obs','Obserwacja / wypis']],
+var ANA=tabbed({id:'ana',icon:'🐝',name:'Anafilaksja',print:function(o){o.B=B;return SK.tabPrint.ana(o);}},'Anafilaksja',[['a','Leczenie'],['obs','Obserwacja / wypis']],
  function(t){if(t==='obs')return inp('doses','Dawki adrenaliny i.m.','')+'<label>Godzina ustąpienia objawów <input id="anaTres" type="time"></label>'+chk('biph','reakcja dwufazowa w wywiadzie')+chk('sev','ciężka reakcja (hipotensja / hipoksja)')+chk('asth','ciężka astma')+chk('absorb','możliwe dalsze wchłanianie alergenu (np. lek o przedł. uwalnianiu)')+chk('night','przyjęcie późnym wieczorem / w nocy')+chk('access','utrudniony dostęp do pomocy')+chk('pens','2 autowstrzykiwacze + instruktaż + pod opieką')+chk('inf','wlew adrenaliny / wazopresor');
   return chk('bb','beta-bloker')+chk('refr','oporna (2 dawki i.m. + płyny bez poprawy)')+chk('hypo','hipotensja mimo wlewu adrenaliny')+chk('bron','skurcz oskrzeli')+chk('upper','obrzęk górnych dróg oddechowych');},
  function(t,g,P){var w=P.w,H='';
