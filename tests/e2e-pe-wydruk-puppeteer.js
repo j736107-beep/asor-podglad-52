@@ -43,7 +43,7 @@ const DIDACT=/Źródła, wersje|Rozbieżność schematów|Nie zwiększaj stęże
   rec('Raport zbiorczy: sPESI 1/6 z kompletu, RV+troponina, UFH z dawkami, bezpieczeństwo, potwierdzenie',/Skala sPESI: 1\/6 \(HR ≥110\/min\)/.test(t)&&/Stwierdzono: dysfunkcja RV/.test(t)&&/6 400 j\.m\./.test(t)&&/bez czynnego krwawienia; bez HIT/.test(t)&&/☑ Lekarz potwierdził/.test(t),t);
   rec('Raport zbiorczy: wnioski hospitalizacja (RV+trop) + UFH; bez „nowotwór”/dydaktyki',/Hospitalizacja i monitorowanie/.test(t)&&/Leczenie przeciwkrzepliwe: UFH/.test(t)&&!/nowotwór/.test(t)&&!DIDACT.test(t),t);
   // 4. „Następny pacjent” czyści
-  await page.evaluate(()=>{window.confirm=()=>true;SKS.wipe();});await sleep(600);
+  await Promise.all([page.waitForNavigation({waitUntil:'networkidle2',timeout:60000}).catch(()=>{}),page.evaluate(()=>{window.confirm=()=>true;SKS.wipe();})]);await page.waitForFunction(()=>window.SKS&&window.SORReport,{timeout:30000});await sleep(300);
   t=await fullReport();
   rec('Po „Następny pacjent” brak ZP w raporcie',!/Zatorowość płucna/.test(t)&&!/6 400/.test(t),t);
   // 5. Antykoagulacja → Heparyna: sama masa + Drukuj

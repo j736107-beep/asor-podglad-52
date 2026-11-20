@@ -19,7 +19,7 @@ const JUNK=/Nie ustalonoNieTak|Źródła, wersje|Weryfikacja dostępu|Brak danyc
   const tab=async(m,t)=>{await page.evaluate((m,t)=>SKS.goTab(m,t),m,t);await sleep(900);};
   const printMod=async()=>{await page.evaluate(()=>document.getElementById('printMod').click());await sleep(500);return page.evaluate(()=>document.getElementById('printArea').innerText);};
   const full=()=>page.evaluate(()=>{SORReport.capture(SKS.active());return SORReport.fill(['done','pumps','fluid','modules']).innerText;});
-  const wipe=async()=>{await page.evaluate(()=>{window.confirm=()=>true;SKS.wipe();});await sleep(600);};
+  const wipe=async()=>{await Promise.all([page.waitForNavigation({waitUntil:'networkidle2',timeout:60000}).catch(()=>{}),page.evaluate(()=>{window.confirm=()=>true;SKS.wipe();})]);await page.waitForFunction(()=>window.SKS&&window.SORReport,{timeout:30000});await sleep(300);};
   // ===== ONS =====
   await fresh();await setP({pw:'80',pa:'70'});await tab('ahf','assessment');
   await setF({sbp:'150',sat:'95',rr:'22',congest:'yes',hypo:'no',naive:'yes',ntg:'20',pde:'no'});await sleep(300);
