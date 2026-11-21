@@ -1,5 +1,5 @@
 {
-  "wersja": "2026-11-19",
+  "wersja": "2026-11-21",
   "zrodlo": "Aktualna lista ze zdjęć lekarza (12.11.2026) – numery wewnętrzne PSZS Nowy Targ, komórkowe, służby i szpitale zewnętrzne. Wcześniejsze źródła (04.11.2026) zachowane dla pozycji spoza nowej listy.",
   "uwagi": "Numery 4-cyfrowe = wewnętrzne naszego szpitala (wew.). Numery 9-cyfrowe = pełne/komórkowe (link tel:). Numery wew. innych szpitali mają pole „centrala” (link dzwoni na centralę i dopisuje numer wew.). Oznaczenia: ✓ sprawdzony przez lekarza = standard lokalny (numer z aktualnej listy 12.11.2026); „do potwierdzenia” = odczyt niepewny lub rozbieżność na kartkach. ",
   "grupy": [
@@ -881,6 +881,25 @@
               "typ": "tel",
               "nr": "503736186",
               "opis": "kom.",
+              "st": "lok"
+            }
+          ]
+        },
+        {
+          "nazwa": "Pracownia endoskopowa – gastroskopia",
+          "godziny": "w godzinach pracy pracowni: pn–pt 8:00–15:00 (brak dyżuru endoskopowego; święta – potwierdź)",
+          "info": "Numery potwierdzone przez lekarza 21.11.2026 (t58u).",
+          "numery": [
+            {
+              "typ": "wew",
+              "nr": "3910",
+              "opis": "gastroskopia",
+              "st": "lok"
+            },
+            {
+              "typ": "wew",
+              "nr": "3911",
+              "opis": "gastroskopia",
               "st": "lok"
             }
           ]

@@ -155,7 +155,8 @@ function tox(o){var P=o.P||{},T=o.tabs||{},E=o.E,C=o.C,M=o.M,U=o.unit||function(
     var need=(un.ok&&un.now)||(nm.ok&&nm.usable&&nm.above),np=C.nacPlan({w:w,t1:Number(g5('t1'))});
     if(need&&np.ok){dose=true;
       d.line('NAC i.v. – schemat 3-workowy','masa '+D(np.w,0)+' kg'+(np.capped?' (obliczenia dla '+np.wc+' kg)':'')+'; łącznie '+I(np.total)+' mg (300 mg/kg); preparat 100 mg/ml (do potwierdzenia)');
-      np.bags.forEach(function(b){d.line(b.n,I(b.mg)+' mg ('+b.mgkg+' mg/kg) = '+D(b.conc,1)+' ml NAC 100 mg/ml; rozcieńczalnik (NaCl 0,9% lub G5%): '+(b.vol?b.vol+' ml':'DO DECYZJI LEKARZA')+'; czas '+(b.h<=1?D(b.h*60,0)+' min':D(b.h,b.h%1?2:0)+' h')+(b.mlh?'; '+D(b.mlh,1)+' ml/h':''));});
+      np.bags.forEach(function(b){d.line(b.n,I(b.mg)+' mg ('+b.mgkg+' mg/kg) = '+D(b.conc,1)+' ml NAC 100 mg/ml; rozcieńczalnik (NaCl 0,9% lub G5%): '+(b.vol?b.vol+' ml':'DO DECYZJI LEKARZA')+(b.tot?'; objętość końcowa '+D(b.tot,1)+' ml':'')+'; czas '+(b.h<=1?D(b.h*60,0)+' min':D(b.h,b.h%1?2:0)+' h')+(b.mlh?'; '+D(b.mlh,1)+' ml/h':''));});
+      if(np.rateRule)d.line('Zasada',np.rateRule.replace(/ \(decyzja.*\)\./,'.'));
       (np.warnings||[]).forEach(function(x){d.line('Uwaga',String(x).replace(/<[^>]*>/g,''));});
       d.line('Monitorowanie',(C.PARA_MONITOR||[]).map(function(x){return String(x).replace(/<[^>]*>/g,'').replace(/ poniżej\./,'.');}).join(' '));}
     if(g5('review')===true&&need){rev=true;d.line('','☑ Lekarz potwierdził sprawdzenie propozycji.');}

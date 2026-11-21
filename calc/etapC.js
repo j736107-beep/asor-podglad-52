@@ -293,7 +293,7 @@ function nacPlan(i){i=i||{};var w=num(i.w);if(!(w>=3&&w<=350))return{ok:false,ms
  var wc=Math.min(w,NAC_CAP);var capped=w>NAC_CAP;
  var vol=w>=40?[200,500,1000]:w>=20?[100,250,500]:null;
  var defs=[[150,t1/60,'1. worek (nasycenie)'],[50,4,'2. worek'],[100,16,'3. worek']];
- var bags=defs.map(function(d,k){var mg=d[0]*wc;var o={n:d[2],mgkg:d[0],mg:Math.round(mg),conc:r1(mg/100),h:d[1]};if(vol){o.vol=vol[k];o.mlh=r1(vol[k]/d[1]);}return o;});
+ var bags=defs.map(function(d,k){var mg=d[0]*wc;var o={n:d[2],mgkg:d[0],mg:Math.round(mg),conc:r1(mg/100),h:d[1]};if(vol){o.vol=vol[k];o.tot=r1(vol[k]+o.conc);o.mlh=r1(o.tot/d[1]);}return o;});
  var o={ok:true,w:w,wc:wc,capped:capped,bags:bags,total:Math.round(300*wc),t1:t1,
   warnings:[],decisions:[],src:[SRC.nacchpl,SRC.dart23,SRC.bpc26]};
  if(capped)o.warnings.push('Masa >'+NAC_CAP+' kg – dawki liczono dla '+NAC_CAP+' kg (BPC 2026; Dart 2023 podaje 100 kg – rozbieżność, '+DEC+').');
@@ -304,7 +304,9 @@ function nacPlan(i){i=i||{};var w=num(i.w);if(!(w>=3&&w<=350))return{ok:false,ms
  o.decisions.push('Preparat: roztwór 100 mg/ml (ChPL Acetylcysteine SANDOZ) – potwierdź preparat dostępny w szpitalu ('+DEC+').');
  o.duration='Łącznie 300 mg/kg w ok. 20 h (ChPL: 15 min + 4 h + 16 h). Dart 2023: NAC do spełnienia kryteriów zakończenia, nie na sztywno 20–21 h.';
  o.alt='Alternatywa (BPC 2026, protokół SNAP 12 h, UK): 100 mg/kg w 200 ml / 2 h, następnie 200 mg/kg w 1000 ml / 10 h; kontrola krwi 2 h przed końcem 2. wlewu; oryginał MHRA 2012 nie został w tej sesji otwarty – '+DEC+'.';
- if(wc){o.altBags=[{mg:Math.round(100*wc),vol:200,h:2,mlh:100},{mg:Math.round(200*wc),vol:1000,h:10,mlh:100}];}
+ if(wc){o.altBags=[[100,200,2],[200,1000,10]].map(function(a){var mg=Math.round(a[0]*wc),c=r1(mg/100),t=r1(a[1]+c);return{mg:mg,conc:c,vol:a[1],tot:t,h:a[2],mlh:r1(t/a[2])};});}
+ // fix28 (t58u, decyzja lekarza): ml/h = (rozcieńczalnik + objętość koncentratu NAC 100 mg/ml) ÷ czas – dla każdego worka
+ o.rateRule='Prędkość (ml/h) liczona z objętości końcowej worka = rozcieńczalnik + objętość koncentratu NAC 100 mg/ml (decyzja lekarza 21.11.2026).';
  return o;}
 var PARA_MONITOR=['Stężenie paracetamolu (≥4 h od spożycia), AST/ALT, INR, kreatynina, glukoza, równowaga kwasowo-zasadowa (pH), mleczany (BPC 2026).','NAC może wydłużać czas protrombinowy (ChPL) – interpretuj INR z tą uwagą.','OIT: objawy ostrej niewydolności wątroby – INR i ALT >10× górna granica normy (BPC 2026); transfer wg kryteriów King’s College poniżej.'];
 var PARA_STOP={dart:'Kryteria zakończenia NAC (Dart 2023, wg wyszukiwania; Fig. 3): paracetamol <10 µg/ml ORAZ INR <2,0 ORAZ ALT/AST prawidłowe lub spadek o 25–50% od szczytu ORAZ pacjent klinicznie dobry. Nie przerywaj automatycznie po 20–21 h.',bpc:'BPC 2026: STOP gdy paracetamol niewykrywalny, INR ≤1,3, ALT w normie i ALT ≤200% wartości początkowej; w przeciwnym razie kolejna infuzja 200 mg/kg / 10 h.',note:'Dart (INR <2,0) i BPC (INR ≤1,3) różnią się – '+DEC+'.'};

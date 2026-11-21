@@ -12,11 +12,11 @@ const nrs=new Set(N.map(x=>x.n.nr));
 const blob=JSON.stringify(D);
 const szp=N.filter(x=>x.m==='szpital');
 
-t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-19',()=>{
+t('TL-1 JSON i JS zsynchronizowane, wersja 2026-11-21',()=>{
   const m=js.match(/window\.SORTelefony=([\s\S]*)/);
   if(!m)return 'brak window.SORTelefony';
   const J=JSON.parse(m[1].trim().replace(/;+\s*$/,''));
-  return J.wersja===D.wersja&&D.wersja==='2026-11-19'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
+  return J.wersja===D.wersja&&D.wersja==='2026-11-21'&&JSON.stringify(J.grupy)===JSON.stringify(D.grupy)?true:[J.wersja,D.wersja].join(' ');
 });
 t('TL-2 wszystkie numery przechodzą valid(), wew. 2-cyfrowe tylko z centralą 9-cyfrową',()=>{
   const bad=N.filter(x=>!valid(x.n));

@@ -49,7 +49,7 @@ const JUNK=/Nie ustalonoNieTak|Źródła, wersje|Weryfikacja dostępu|Brak danyc
   // paracetamol
   await tab('tox','para');await setF({mg:'12000',hrs:'2'});await sleep(400);
   t=await printMod();
-  rec('Zatrucia: paracetamol 150 mg/kg → NAC 3 worki z mg, ml, ml/h',/1\. worek \(nasycenie\): 12 000 mg \(150 mg\/kg\) = 120 ml NAC 100 mg\/ml; rozcieńczalnik \(NaCl 0,9% lub G5%\): 200 ml; czas 60 min; 200 ml\/h/.test(t)&&/3\. worek: 8 000 mg/.test(t)&&/NAC i\.v\. wskazany/.test(t),t);
+  rec('Zatrucia: paracetamol 150 mg/kg → NAC 3 worki z mg, ml, ml/h',/1\. worek \(nasycenie\): 12 000 mg \(150 mg\/kg\) = 120 ml NAC 100 mg\/ml; rozcieńczalnik \(NaCl 0,9% lub G5%\): 200 ml; objętość końcowa 320 ml; czas 60 min; 320 ml\/h/.test(t)&&/3\. worek: 8 000 mg/.test(t)&&/NAC i\.v\. wskazany/.test(t),t);
   rec('Zatrucia: paracetamol bez nadmiaru (wykres/zasady/kryteria zakończenia)',!JUNK.test(t)&&!/<svg|Rumack–Matthew: POWYŻEJ/.test(t),t.match(JUNK));
   t=await full();rec('Zatrucia w raporcie zbiorczym (fomepizol + NAC)',/Zatrucia/.test(t)&&/1 200 mg/.test(t)&&/12 000 mg/.test(t),t);
   // etanol

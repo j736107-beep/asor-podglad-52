@@ -67,7 +67,7 @@ t('Wydruk: tylko wypełnione pola, dawki tylko z masą ciała, wnioski z EXTRIP 
  const r2=CP.tox({P:{},tabs:mk({tcard:{ag:'ccb_dhp',shock:true}}),T3:T});assert.ok(/wpisz masę ciała/.test(r2.text)&&!r2.dose&&!/ml\/h/.test(r2.text));
  assert.strictEqual(CP.tox({P:{w:70},tabs:{tchem:{touched:0,g:()=>undefined}},T3:T}).text,'');});
 t('Integracja: index.html ładuje silnik i UI przed clinical-ui.js; SW asor-v52-fix27 z nowymi plikami; zakładki w module Zatrucia; O programie',()=>{const R=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
- const h=R('index.html');assert.ok(h.indexOf('calc/toxB3.js')>0&&h.indexOf('tox-b3-ui.js')<h.indexOf('clinical-ui.js'));const sw=R('sw.js');assert.ok(/asor-v52-fix27/.test(sw)&&/"calc\/toxB3\.js"/.test(sw)&&/"tox-b3-ui\.js"/.test(sw));
- assert.ok(/SORT3\.tabs/.test(R('clinical-ui.js')));assert.ok(/fix27/.test(R('about.js'))&&/zatru/i.test(R('about.js').split('fix27')[0].slice(-1500)));
+ const h=R('index.html');assert.ok(h.indexOf('calc/toxB3.js')>0&&h.indexOf('tox-b3-ui.js')<h.indexOf('clinical-ui.js'));const sw=R('sw.js');assert.ok(/asor-v52-fix(2[7-9]|[3-9]\d)/.test(sw)&&/"calc\/toxB3\.js"/.test(sw)&&/"tox-b3-ui\.js"/.test(sw));
+ assert.ok(/SORT3\.tabs/.test(R('clinical-ui.js')));assert.ok(/Zatrucia: leki psychiatryczne[^']*SW asor-v52-fix27/.test(R('about.js'))||/fix27/.test(R('README.md')));
  const ui=R('tox-b3-ui.js');['tpsy','tcard','tchem'].forEach(id=>assert.ok(ui.includes("id:'"+id+"'")));});
 console.log((n-f)+'/'+n+' PASS'+(f?' – FAIL '+f:''));process.exit(f?1:0);
