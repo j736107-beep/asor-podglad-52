@@ -145,3 +145,7 @@ body.dark .kk-panel,html.dark .kk-panel{background:inherit}
 .kk-go-btn{font-size:1.1em;font-weight:700;padding:.55em 1.6em;background:#1565c0;color:#fff;border:0;border-radius:8px;cursor:pointer;min-height:44px}
 .kk-go-btn:hover{background:#0d47a1}
 .kk-wait{color:#555;font-style:italic}
+/* fix27: Zatrucia – karty leków (dawka, przygotowanie, pompa, źródło) */
+.t3-dose{background:#fff;border:1px solid #d8dee6;border-left:4px solid #b71c1c;border-radius:8px;padding:.55em .8em;margin:.5em 0;color:#1d2733;line-height:1.45;overflow-wrap:anywhere}
+.t3-dose>div{margin:.15em 0}
+.t3-dn{font-weight:700;font-size:1.05em}

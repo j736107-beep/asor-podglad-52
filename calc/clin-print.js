@@ -163,6 +163,24 @@ function tox(o){var P=o.P||{},T=o.tabs||{},E=o.E,C=o.C,M=o.M,U=o.unit||function(
     if(need)d.C.push('NAC i.v. wskazany (schemat jak wyżej, ok. 20 h) – leczenie w szpitalu; zakończenie NAC wg kryteriów modułu; przy rosnących ALT/AST z koagulopatią / encefalopatią – kryteria King’s College, ośrodek hepatologiczny / OIT.');
     else if(un.ok&&!un.now&&nm.ok&&nm.usable&&!nm.above)d.C.push('Nomogram poniżej linii przy jednorazowym spożyciu o wiarygodnym czasie – NAC z samego nomogramu niewskazany; decyzja lekarza (ALT/AST, powtórne oznaczenie przy wątpliwościach).');
     d.C.push('Zatrucie paracetamolem: '+TOX_TEL+' w razie wątpliwości.');}
+  // ---- fix27: leki psychiatryczne / kardiologiczne / substancje chemiczne (silnik SKT3) – tylko pola wypełnione ----
+  var T3=o.T3||(typeof SKT3!=='undefined'?SKT3:null);
+  if(T3)['tpsy','tcard','tchem'].forEach(function(tid){var t3=tab(T,tid);if(!(t3.touched>0))return;var g3=t3.g,id3=g3('ag'),A3=T3.AG[id3];if(!A3)return;
+    var i3={w:P.w};A3.f.forEach(function(k){var v=g3(k);if(v!==undefined)i3[k]=v;});var p3=T3.plan(id3,i3);
+    d.head('ZATRUCIE – '+p3.n.toUpperCase());
+    var nv=[],yv=[];A3.f.forEach(function(k){var f=T3.FIELDS[k],v=i3[k];if(!f)return;
+      if(f[0]==='n'&&fin(v))nv.push(f[1]+' '+D(v,2)+(f[2]?' '+f[2]:''));
+      else if((f[0]==='c'||f[0]==='t')&&v===true)yv.push(/^.[a-ząćęłńóśźż]/.test(f[1])?f[1].charAt(0).toLowerCase()+f[1].slice(1):f[1]);
+      else if(f[0]==='s'&&v){var op=f[2].filter(function(x){return x[0]===v;})[0];if(op)nv.push(f[1]+': '+op[1]);}});
+    d.line('Wprowadzono',nv.join(', '));d.line('Stwierdzono',yv.join(', '));
+    p3.warn.forEach(function(x){d.line('Uwaga',x);});
+    if(p3.doses.length&&fin(P.w)&&P.w>0){dose=true;p3.doses.forEach(function(x){d.line(x.d,x.dose+(x.prep?' '+x.prep:'')+(x.pump?' '+x.pump:'')+(x.flag?' ['+x.flag+']':''));});}
+    else if(p3.doses.length)d.line('Leki','do wyliczenia dawek wpisz masę ciała w panelu pacjenta');
+    if(p3.labs.length)d.line('Kontrole',p3.labs.map(function(l){return l[0]+' – '+l[1];}).join('; '));
+    if(p3.ex&&p3.ex.lvl)d.line('EXTRIP',p3.ex.txt.filter(function(x){return /ZALECANE|SUGEROWANE/.test(x);}).join(' '));
+    if(g3('review')===true&&p3.doses.length){rev=true;d.line('','☑ Lekarz potwierdził sprawdzenie propozycji.');}
+    tel=true;if(p3.ex&&p3.ex.lvl)d.C.push(p3.n+': spełnione kryteria EXTRIP – pilny kontakt z nefrologiem / OIT i '+TOX_TEL+'.');
+    d.C.push('Zatrucie ('+p3.n+'): '+TOX_TEL+' – kolejne dawki, czas obserwacji, miejsce leczenia.');});
   var tx=d.done(touched||dose?'Miejsce leczenia: decyzja lekarza.':'');
   if(tx&&tel&&!/12 411 99 99/.test(tx))tx+='\n– '+TOX_TEL+'.';
   return{text:tx,dose:dose,touched:touched,reviewed:rev,hosp:hosp};}
