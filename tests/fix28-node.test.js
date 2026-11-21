@@ -4,7 +4,7 @@ let n=0,f=0;function t(name,fn){n++;try{fn();console.log('PASS',name);}catch(e){
 const R=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-9,(m||'')+' '+a+' ≠ '+b);
 t('Telefony: grupa „diagnostyka” – Pracownia endoskopowa – gastroskopia, wew. 3910 i 3911, godziny pracy pracowni; JSON = JS; wersja 2026-11-21',()=>{
  const D=JSON.parse(R('data/telefony.json'));const g=D.grupy.find(x=>x.id==='diagnostyka');const p=g.pozycje.find(x=>/endoskop/i.test(x.nazwa));
- assert.ok(p&&/gastroskopia/.test(p.nazwa));assert.deepStrictEqual(p.numery.map(x=>x.typ+':'+x.nr+':'+x.opis),['wew:3910:gastroskopia','wew:3911:gastroskopia']);assert.ok(/godzinach pracy pracowni/.test(p.godziny)&&/8:00–15:00/.test(p.godziny));
+ assert.ok(p&&/gastroskopia/.test(p.nazwa));assert.deepStrictEqual(p.numery.map(x=>x.typ+':'+x.nr+':'+x.opis),['wew:3910:gastroskopia','wew:3911:gastroskopia']);assert.strictEqual(p.godziny,'w godzinach pracy pracowni');assert.ok(!p.info);
  assert.strictEqual(D.wersja,'2026-11-21');const J=JSON.parse(R('data/telefony.js').match(/window\.SORTelefony=([\s\S]*)/)[1].trim());assert.deepStrictEqual(J,D);
  const all=[];D.grupy.forEach(g=>g.pozycje.forEach(p=>p.numery.forEach(x=>all.push(x.nr))));assert.strictEqual(all.filter(x=>x==='3910'||x==='3911').length,2,'duplikaty');});
 t('Krwawienie z GI: baner pracowni pokazuje numery z Książki (SORTel.endoHtml), bez przepisywania numerów w module',()=>{const c=R('c-ui.js');assert.ok(/SORTel\.endoHtml\(\)/.test(c)&&/data-gi-endo-tel/.test(c));assert.ok(!/3910|3911/.test(c));

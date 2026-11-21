@@ -16,7 +16,7 @@ let n=0,fail=0;const rec=(name,ok,info)=>{n++;if(!ok)fail++;console.log((ok?'PAS
   // GI
   await page.evaluate(()=>SKS.show('gib'));await sleep(1200);
   const gi=await page.evaluate(()=>{const b=document.querySelector('#main [data-gi-endo-tel]');return b?{t:b.innerText,h:[...b.querySelectorAll('a[href^="tel:"]')].map(a=>a.getAttribute('href'))}:null;});
-  rec('Krwawienie z GI: baner – Pracownia endoskopowa – gastroskopia, 3910 i 3911 (linki tel:), godziny pracy pracowni',!!gi&&/Pracownia endoskopowa – gastroskopia/.test(gi.t)&&/3910/.test(gi.t)&&/3911/.test(gi.t)&&/8:00–15:00/.test(gi.t)&&gi.h.includes('tel:3910')&&gi.h.includes('tel:3911'),JSON.stringify(gi));
+  rec('Krwawienie z GI: baner – Pracownia endoskopowa – gastroskopia, 3910 i 3911 (linki tel:), „w godzinach pracy pracowni” bez wymyślonych godzin (fix28a)',!!gi&&/Pracownia endoskopowa – gastroskopia/.test(gi.t)&&/3910/.test(gi.t)&&/3911/.test(gi.t)&&/w godzinach pracy pracowni/.test(gi.t)&&!/8:00|15:00|pn–pt|święta/.test(gi.t)&&gi.h.includes('tel:3910')&&gi.h.includes('tel:3911'),JSON.stringify(gi));
   const tabs=await page.evaluate(()=>[...document.querySelectorAll('#main .tabs button')].map(b=>b.dataset.t));let allTabs=true;
   for(const tb of tabs){await page.evaluate(t=>document.querySelector('#main .tabs button[data-t="'+t+'"]').click(),tb);await sleep(500);if(!await page.evaluate(()=>/3910/.test((document.querySelector('#main [data-gi-endo-tel]')||{}).innerText||'')))allTabs=false;}
   rec('Numery widoczne we wszystkich zakładkach modułu GI ('+tabs.join(',')+')',allTabs&&tabs.length>=3,JSON.stringify(tabs));

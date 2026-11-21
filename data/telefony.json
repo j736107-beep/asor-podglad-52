@@ -887,8 +887,7 @@
         },
         {
           "nazwa": "Pracownia endoskopowa – gastroskopia",
-          "godziny": "w godzinach pracy pracowni: pn–pt 8:00–15:00 (brak dyżuru endoskopowego; święta – potwierdź)",
-          "info": "Numery potwierdzone przez lekarza 21.11.2026 (t58u).",
+          "godziny": "w godzinach pracy pracowni",
           "numery": [
             {
               "typ": "wew",
