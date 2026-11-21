@@ -43,4 +43,7 @@ t('Integracja: zakładka kr w Transfuzjologii, skrypty w index.html przed mods4.
  const h=R('index.html');assert.ok(h.indexOf('calc/transfKr.js')>h.indexOf('calc/transfB1.js')&&h.indexOf('transf-kr-ui.js')<h.indexOf('mods4.js'));
  const sw=R('sw.js');assert.ok(/asor-v52-fix(29|[3-9]\d)/.test(sw)&&/"calc\/transfKr\.js"/.test(sw)&&/"transf-kr-ui\.js"/.test(sw));assert.ok(/Kreator przetoczenia KKCz\/KKP[^']*SW asor-v52-fix29/.test(R('about.js')));});
 t('Konwencja KKCz w module GI bez zmian (próg 7 / 8 w ch. s-n)',()=>{assert.ok(/Cel „≥10 g\/dl” nie jest standardem/.test(R('calc/gi-endo.js'))||/≥10/.test(R('mods3.js')));});
+t('fix29a: bez dopisku o Berlinie w module Troponina; Książka telefoniczna bez linii „Źródło … · wersja …” (pole główne zrodlo usunięte, JSON = JS)',()=>{const tr=R('mod/troponina/index.html');assert.ok(/ESC Congress 2026 – Monachium, 28–31\.08\.2026:/.test(tr)&&!/nie Berlin/.test(tr));
+ const u=R('telefony-ui.js');assert.ok(!/id="tl-src"/.test(u)&&!/D\.zrodlo/.test(u)&&!/' · wersja '/.test(u));const D=JSON.parse(R('data/telefony.json'));assert.ok(!('zrodlo' in D)&&D.grupy.length>0);
+ const J=JSON.parse(R('data/telefony.js').match(/window\.SORTelefony=([\s\S]*)/)[1].trim());assert.deepStrictEqual(J,D);assert.ok(/asor-v52-fix29a|asor-v52-fix(29[b-z]|[3-9]\d)/.test(R('sw.js')));});
 console.log((n-f)+'/'+n+' PASS'+(f?' – FAIL '+f:''));process.exit(f?1:0);

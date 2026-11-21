@@ -44,6 +44,11 @@ let n=0,fail=0;const rec=(name,ok,info)=>{n++;if(!ok)fail++;console.log((ok?'PAS
   await tile('path','acute');await tile('actx','unstable');s=await st();rec('Niestabilność / MTP → PRZETOCZ natychmiast, szybko, ogrzewacz',/PRZETOCZ KKCz/.test(s.dec)&&/natychmiast/.test(s.units)&&/50 ml\/min/.test(s.rate),JSON.stringify(s));
   // Zapis po powrocie do modułu
   await page.evaluate(()=>SKS.show('gib'));await sleep(600);await page.evaluate(()=>SKS.show('transf'));await sleep(800);s=await st();rec('Wybory zachowane po powrocie do modułu',/PRZETOCZ KKCz/.test(s.dec)&&/natychmiast/.test(s.units),JSON.stringify(s).slice(0,300));
+  // fix29a (t75u): Książka telefoniczna i baner GI bez linii „Źródło … · wersja …”; Troponina bez dopisku o Berlinie
+  await page.evaluate(()=>SORTel.openBook('','szpital'));await sleep(1200);const bk=await page.evaluate(()=>document.getElementById('main').innerText+(document.getElementById('tl-src')?' #TLSRC':''));
+  rec('Książka telefoniczna: brak linii „Źródło: Aktualna lista ze zdjęć lekarza … · wersja …”, numery widoczne',!/zdjęć lekarza/.test(bk)&&!/· wersja 20/.test(bk)&&!/#TLSRC/.test(bk)&&/3910/.test(bk),bk.slice(-500));
+  await page.evaluate(()=>SKS.show('gib'));await sleep(1000);const gt=await page.evaluate(()=>document.getElementById('main').innerText);rec('Moduł GI: baner pracowni bez linii źródła/wersji listy',/3910/.test(gt)&&!/zdjęć lekarza/.test(gt)&&!/· wersja 20/.test(gt),gt.slice(0,300));
+  const trp=await page.evaluate(()=>fetch('mod/troponina/index.html?'+Date.now()).then(r=>r.text()));rec('Troponina: „ESC Congress 2026 – Monachium, 28–31.08.2026:” bez „nie Berlin”',/ESC Congress 2026 – Monachium, 28–31\.08\.2026:/.test(trp)&&!/nie Berlin/.test(trp));
   rec('Brak błędów JS',errs.length===0,errs.join(' | '));
   console.log(fail?('FAILS '+fail+'/'+n):('ALL PASS '+n+'/'+n));await br.close();process.exit(fail?1:0);
 })().catch(e=>{console.log('FAIL fatal',e.message);process.exit(1);});
