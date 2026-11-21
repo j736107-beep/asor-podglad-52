@@ -69,6 +69,6 @@ for(const [a,bo,nu,nm,stop] of RAS)test(`Nomogram Raschke: APTT ${a} s przy 18 j
 test('Nomogram: brak danych → null; wlew nie schodzi poniżej 0',()=>{assert.equal(E.raschke(NaN,18,80,500),null);assert.equal(E.raschke(100,2,80,500).newUkgh,0);});
 // ---------- statyczne: bramki w app.js ----------
 const APP=rd('mod/pompy/app.js');
-test('app.js: transfer/zapis tylko po vgate (zatwierdzenie lokalne, rozcieńczalnik, amiodaron bez NaCl, brak przekroczenia max)',()=>{assert.match(APP,/recordCalc'\)\.onclick=function\(\)\{try\{vgate\(\)/);assert.match(APP,/savePump'\)\.onclick=function\(\)\{try\{vgate\(\)/);assert.match(APP,/if\(!approved\(d\)\)throw/);assert.match(APP,/Amiodaron – wyłącznie glukoza 5%/);assert.match(APP,/Wybierz rozcieńczalnik/);});
+test('app.js: transfer/zapis tylko po vgate (zatwierdzenie lokalne, rozcieńczalnik, amiodaron bez NaCl, brak przekroczenia max)',()=>{assert.doesNotMatch(APP,/recordCalc/);/* fix25: rejestr leczenia usunięty */assert.match(APP,/savePump'\)\.onclick=function\(\)\{try\{vgate\(\)/);assert.match(APP,/if\(!approved\(d\)\)throw/);assert.match(APP,/Amiodaron – wyłącznie glukoza 5%/);assert.match(APP,/Wybierz rozcieńczalnik/);});
 test('app.js: brak domyślnego NaCl 0,9% w kodzie; zatwierdzenia w localStorage sor_pompy_zatw_v2',()=>{assert.ok(!/NaCl 0,9%/.test(APP));assert.match(APP,/sor_pompy_zatw_v2/);});
 console.log('\nPASS: '+n+' testów (port pompyV2).');

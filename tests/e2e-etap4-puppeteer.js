@@ -5,7 +5,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{const br=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],headless:'new'});
 const page=await br.newPage();await page.setViewport({width:1400,height:1000});const errs=[];page.on('pageerror',e=>errs.push(e.message));page.on('console',m=>{if(m.type()==='error')errs.push(m.text())});page.on('dialog',d=>d.accept());
 await page.goto(BASE,{waitUntil:'networkidle0'});await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await page.reload({waitUntil:'networkidle0'});
-const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: etap 4',/5\.2 \(testowa\) · etap 4 · 09\.11\.2026/.test(ver),ver);
+const ver=await page.$eval('#ver',e=>e.textContent);rec('Wersja: tylko opis wersji i data (fix25)',/^wersja 5\.2 \(testowa\) · \d{2}\.\d{2}\.2026$/.test(ver)&&!/etap|Narzędzie/.test(ver),ver);
 const go=async id=>{await page.evaluate(id=>document.querySelector('#side button[data-id="'+id+'"]').click(),id);await sleep(700);};
 const has=await page.evaluate(()=>!!document.querySelector('#side button[data-id="kalk"]'));rec('Moduł Kalkulatory w menu',has,'');
 // pasek pacjenta
@@ -90,6 +90,6 @@ await page.evaluate(()=>localStorage.setItem('zp1state',JSON.stringify({allergy:
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
 rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika z wyborów lekarza (alergia, miejsce)',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix24/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix25/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();

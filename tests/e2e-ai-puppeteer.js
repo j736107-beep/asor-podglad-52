@@ -24,9 +24,12 @@ const go=async id=>{await page.evaluate(id=>document.querySelector('#side button
 await page.type('#pbName','Jan Testowy');
 await page.evaluate(()=>{const s=(q,v)=>{const e=document.querySelector(q);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));};s('#pa','82');s('#pw','78');s('#pc','1.3');document.querySelector('#psex button[data-s="m"]').click();});await sleep(300);
 await go('cap');
-let b=await page.evaluate(()=>{const x=document.getElementById('aiBtn');return{has:!!x,dis:x&&x.disabled,why:(document.getElementById('aiWhy')||{}).textContent};});
-rec('Bez klucza: przycisk „Epikryza (AI)” wyszarzony z wyjaśnieniem',b.has&&b.dis&&/Brak klucza API/.test(b.why||''),JSON.stringify(b));
-// Ustawienia
+let b=await page.evaluate(()=>({has:!!document.getElementById('aiBtn')||!!document.getElementById('aiEpi'),txt:/Epikryza \(AI\)|PILOT|Brak klucza API/.test(document.getElementById('main').innerText)}));
+rec('fix25: domyślnie brak przycisku/banera „Epikryza (AI)”, „PILOT” i „Brak klucza API” w module',!b.has&&!b.txt,JSON.stringify(b));
+// Ustawienia – włączenie widoczności przycisku (domyślnie ukryty)
+await go('settings');await page.click('#aiShow');await sleep(200);await go('cap');
+b=await page.evaluate(()=>{const x=document.getElementById('aiBtn');return{has:!!x,dis:x&&x.disabled,why:(document.getElementById('aiWhy')||{}).textContent};});
+rec('Po włączeniu w Ustawieniach, bez klucza: przycisk wyszarzony z wyjaśnieniem',b.has&&b.dis&&/Brak klucza API/.test(b.why||''),JSON.stringify(b));
 await go('settings');
 const st=await page.evaluate(()=>{const s=document.getElementById('aiSet');return{has:!!s,h:s&&s.querySelector('h3').textContent,prov:[...document.querySelectorAll('#aiProv option')].map(o=>o.value),sel:document.getElementById('aiProv').value,ph:document.getElementById('aiKey').placeholder,hint:document.getElementById('aiKeyHint').textContent,models:[...document.querySelectorAll('#aiModel option')].map(o=>o.value),type:document.getElementById('aiKey').type,del:document.getElementById('aiKeyDel').disabled};});
 rec('Ustawienia: xAI (Grok) domyślny + OpenAI/Anthropic; modele Grok + inny; podpowiedź xai-; pole maskowane',st.has&&st.h==='Sztuczna inteligencja (pilot)'&&st.prov.join()==='xai,openai,anthropic'&&st.sel==='xai'&&st.models.join()==='grok-4.7,grok-4.20-0309-non-reasoning,grok-4.3,_custom'&&st.ph==='xai-…'&&/xai-/.test(st.hint)&&/console\.x\.ai/.test(st.hint)&&st.type==='password'&&st.del,JSON.stringify(st));
@@ -92,8 +95,8 @@ await go('settings');await page.click('#aiKeyDel');await sleep(200);
 const dk=await page.evaluate(()=>JSON.parse(localStorage.getItem('v52:ai_cfg')).keys.anthropic===undefined);await go('cap');
 b=await page.evaluate(()=>document.getElementById('aiBtn').disabled);rec('Usuń klucz → klucz skasowany, przycisk wyszarzony',dk&&b,'');
 // SW i CSP
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix24/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
-rec('SW asor-v52-fix24: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return{c:/asor-v52-fix25/.test(t),f:/"calc\/ai-epi\.js"/.test(t)&&/"ai-ui\.js"/.test(t),byp:/api\.x\.ai/.test(t)&&/api\.openai\.com/.test(t)&&/api\.anthropic\.com/.test(t),csp:(document.querySelector('meta[http-equiv="Content-Security-Policy"]')||{}).content};});
+rec('SW asor-v52-fix25: pliki AI w cache, api.x.ai/openai/anthropic omijają SW; CSP connect-src z api.x.ai',sw.c&&sw.f&&sw.byp&&/connect-src[^;]*https:\/\/api\.x\.ai/.test(sw.csp||''),JSON.stringify(sw));
 rec('Brak prawdziwych wywołań poza atrapą',real.length===0,real.slice(0,3).join(' '));
 rec('Brak błędów JS',errs.filter(e=>!/401|429|Failed to load resource/.test(e)).length===0,errs.join(' | ').slice(0,300));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})().catch(e=>{console.log('CRASH',e);process.exit(1);});

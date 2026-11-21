@@ -1,9 +1,9 @@
 (function(){var C=SK.core,F=C.fmt,N=C.num,U=SKM.util;var inp=U.inp,bx=U.bx,src=U.src,store=U.store,bind=U.bind,infoToggle=U.infoToggle,h=U.h;
 function chk(id,l){return '<label><input type="checkbox" id="'+id+'"> '+l+'</label>';}
 function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,name:mod.name,render:function(el,X){var tab=store(mod.id+'_tab').get().t||tabs[0][0];var self=this;
- function draw(){el.innerHTML='<button class="info">ℹ</button><h2>'+title+'</h2>'+(tabs.length>1?'<div class="tabs">'+tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===tab?'on':'')+'">'+t[1]+'</button>'}).join('')+'</div>':'')+'<div id="f"></div><div id="out"></div><div class="infobox" hidden></div><div class="disc">Narzędzie pomocnicze, niecertyfikowane. Każdą dawkę weryfikuje lekarz.</div>';
+ function draw(){el.innerHTML='<button class="info">ℹ</button>'+(mod.headChk?'<div class="h2row"><h2>'+title+'</h2><span class="h2side"></span></div>':'<h2>'+title+'</h2>')+(tabs.length>1?'<div class="tabs">'+tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===tab?'on':'')+'">'+t[1]+'</button>'}).join('')+'</div>':'')+'<div id="f"></div><div id="out"></div><div class="infobox" hidden></div><div class="disc">Narzędzie pomocnicze, niecertyfikowane. Każdą dawkę weryfikuje lekarz.</div>';
   el.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){tab=b.dataset.t;store(mod.id+'_tab').set({t:tab});draw()}});
-  infoToggle(el,info);var f=el.querySelector('#f');f.innerHTML='<div class="row">'+form(tab)+'</div>';var g=bind(f,mod.id+'_'+tab,upd);if(window.SKGCS)SKGCS.mount(f);self.update=upd;
+  infoToggle(el,info);var f=el.querySelector('#f');f.innerHTML='<div class="row">'+form(tab)+'</div>';var g=bind(f,mod.id+'_'+tab,upd);if(window.SKGCS)SKGCS.mount(f);self.update=upd;if(mod.headChk)headChk(el,f,mod.headChk[tab]);
   function upd(){var r=calc(tab,g,X.P(),X);el.querySelector('#out').innerHTML=(mod.printTab&&window.SORReport&&SORReport.ptStrip?SORReport.ptStrip()+SORReport.printBtn('Drukuj tę zakładkę: '+((tabs.filter(function(t){return t[0]===tab;})[0]||[])[1]||'')):'')+r.H;X.alarm(mod.id,r.lvl==='red'||r.H.indexOf('class="box red"')>=0);self._lastDose=!!r.dose;}upd();}
  draw();},doseReady:function(){return !!this._lastDose;},
  // fix21: własny wydruk modułu (mod.print) – zakładki odtwarzane z zapisu, tylko pola zmienione przez lekarza; użycie: ≥2 pola lub wyliczona dawka + jawne „Drukuj”
@@ -13,6 +13,10 @@ function tabbed(mod,title,tabs,form,calc,info){return {id:mod.id,icon:mod.icon,n
   tabs.forEach(function(t){var c=tabCtx(mod.id,t[0],form,mod.skip);c.name=t[1];c.current=t[0]===cur;c.print=(!!ctx.print&&c.current)||pr.indexOf(t[0])>=0;tot+=c.touched;T[t[0]]=c;});
   var P=window.SKS&&SKS.P?SKS.P():{},r=null;try{r=mod.print({tabs:T,P:P,current:cur,print:!!ctx.print,S:window.SKS&&SKS.S})||{};}catch(e){r={text:''};if(window.console)console.error(e);}
   return{text:r.text||'',used:!!r.text&&(tot>=2||(!!r.dose&&(!!ctx.print||pp||!!r.reviewed))),dose:!!r.dose,own:true,fmt:'sect'};}:undefined};}
+// fix25 (decyzja lekarza 21.11.2026): kratka z formularza zakładki pokazana w nagłówku modułu (po prawej, wielkość jak nagłówek); pole formularza zostaje (zapis, wydruk), ukryte i zsynchronizowane
+function headChk(el,f,fid){var side=el.querySelector('.h2side');if(!side)return;side.innerHTML='';var fe=fid&&f.querySelector('#'+fid);if(!fe)return;var fl=fe.closest('label');fl.style.display='none';
+ var h2=el.querySelector('.h2row h2'),L=document.createElement('label');L.className='h2chk';L.innerHTML='<input type="checkbox" id="hc_'+fid+'"> '+fl.textContent.trim();L.style.setProperty('font-size',getComputedStyle(h2).fontSize,'important');side.appendChild(L);
+ var hc=L.querySelector('input');hc.checked=fe.checked;hc.onchange=function(){fe.checked=hc.checked;fe.onchange&&fe.onchange();};}
 // fix21: kontekst zakładki bez DOM ekranu – formularz odtworzony z zapisu; lista pól zmienionych względem wartości domyślnych (etykieta, wartość, jednostka)
 function tabCtx(id,t,form,skip){var d=document.createElement('div');d.innerHTML='<div class="row">'+form(t)+'</div>';skip=skip||[];var q=function(){return [].slice.call(d.querySelectorAll('input[id],select[id],textarea[id]')).filter(function(i){return skip.indexOf(i.id)<0;});},def={};
  q().forEach(function(i){def[i.id]=i.type==='checkbox'?false:i.value;});var g=bind(d,id+'_'+t,function(){}),F=[],n=0;
@@ -34,7 +38,7 @@ function NOACC(g,w){var H='',lvl='ok';if(!g('nb'))return{H:bx('orange','','Brak 
  if(!H)H=bx('','','Zaznacz lek.');return{H:H,lvl:lvl};}
 SKM.util.NOACF=NOACF;SKM.util.NOACC=NOACC;
 
-var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true,print:function(o){o.A=A;o.AB=SK.acoagB1;return SK.tabPrint.acoag(o);}},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar → Neurologia'],['alt3','Alteplaza: ZP → Zatorowość'],['prot','Protamina']],
+var ACO=tabbed({id:'acoag',icon:'🩸',name:'Antykoagulacja',printTab:true,headChk:{vka:'bleed',noac:'nb'},print:function(o){o.A=A;o.AB=SK.acoagB1;return SK.tabPrint.acoag(o);}},'Antykoagulacja i odwracanie',[['ufh','Heparyna'],['enox','Enoksaparyna'],['vka','Warfaryna'],['noac','NOAC'],['alt1','Alteplaza: STEMI'],['alt2','Alteplaza: udar → Neurologia'],['alt3','Alteplaza: ZP → Zatorowość'],['prot','Protamina']],
  function(t){return t==='ufh'?chk('acs','ACS (zamiast ŻChZZ/ZP)'):t==='enox'?chk('proph','profilaktyka (zamiast leczenia)'):t==='vka'?inp('inr','INR','')+chk('bleed','krwawienie zagrażające życiu / pilny zabieg'):t==='noac'?NOACF():t==='alt1'?SKB1.altForm('stemi'):t==='alt2'?SKB1.altForm('stroke'):t==='alt3'?SKB1.altForm('pe'):
   SKB1.protForm();},
  function(t,g,P){var H='',lvl='ok',w=P.w;

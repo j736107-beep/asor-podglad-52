@@ -270,7 +270,7 @@
   }
   function section(title,html){return html?'<h2>'+esc(title)+'</h2>'+html:'';}
   function doneHtml(){var h=root.SORDone?root.SORDone.reportHtml():'';var conf=root.SORTreatment&&root.SORTreatment.confirmedText?root.SORTreatment.confirmedText():'';
-    if(conf)h+='<h3>Potwierdzone w rejestrze leczenia</h3><div class="rp-text">'+esc(conf)+'</div>';return h;}
+    return h;}
   function pumpsHtml(){var l=pumpList();if(!l.length)return '';return '<table><tr><th style="width:12%">Godz.</th><th>Zapisana nastawa (wyliczona przez kalkulator – do weryfikacji przez lekarza)</th></tr>'+l.map(function(x){return '<tr><td>'+hm(x.ts)+'</td><td>'+esc(x.text)+'</td></tr>';}).join('')+'</table>';}
   function fluidHtml(){var p=root.SKS&&root.SKS.P?root.SKS.P():null;return root.SORFluid?root.SORFluid.reportHtml(Date.now(),p&&p.w):'';}
   var LIM=4200;
@@ -295,7 +295,7 @@
     if(!any)out=EMPTY_NOTE;
     var title=parts.length>=4?'Raport zbiorczy – Asystent lekarza SOR':'Wydruk – Asystent lekarza SOR';
     var pat=patientHtml();
-    return '<h1>'+title+'</h1><div class="sub">Wydruk: '+esc(now())+' (Europe/Warsaw) · Narzędzie pomocnicze – niecertyfikowane</div>'+(pat?section('Dane pacjenta',pat):'')+out+(any&&root.SORSources?'<div class="rp-srcwrap">'+root.SORSources.footerHtml(mids)+'</div>':'')+
+    return '<h1>'+title+'</h1><div class="sub">Wydruk: '+esc(now())+' (Europe/Warsaw)</div>'+(pat?section('Dane pacjenta',pat):'')+out+(any&&root.SORSources?'<div class="rp-srcwrap">'+root.SORSources.footerHtml(mids)+'</div>':'')+
       '<div class="sig"><div>Lekarz: .......................................</div><div>Podpis i pieczątka<br><br>.......................................</div></div><div class="foot">Asystent lekarza SOR – narzędzie pomocnicze, niecertyfikowane. Wartości i dawki weryfikuje lekarz; wydruk nie zastępuje dokumentacji medycznej szpitala.</div>';}
   var FOOT='Dokument wygenerowany pomocniczo poza systemem szpitalnym – zatwierdzam: ............................................ (pieczątka i podpis lekarza)';
   function pidAge(){var p=root.SKS&&root.SKS.P?root.SKS.P():{};var a=isFinite(p.age)?' · wiek: <b>'+Math.round(p.age)+' lat</b>':'';var x={m:'M',f:'K'}[p.sex];return a+(x?' · płeć: <b>'+x+'</b>':'');}
