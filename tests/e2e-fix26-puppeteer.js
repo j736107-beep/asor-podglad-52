@@ -48,7 +48,8 @@ let n=0,fail=0;const rec=(name,ok,info)=>{n++;if(!ok)fail++;console.log((ok?'PAS
   await page.setViewport({width:390,height:844});await sleep(400);
   const ov2=await page.evaluate(()=>({sw:document.getElementById('main').scrollWidth,cw:document.getElementById('main').clientWidth,d:document.documentElement.scrollWidth}));rec('390 px: kalkulator mieści się w szerokości',ov2.sw<=ov2.cw+1&&ov2.d<=391,JSON.stringify(ov2));
   const ab=await page.evaluate(()=>{SKS.show('about');return new Promise(r=>setTimeout(()=>r(document.getElementById('main').innerText),900));});
-  rec('O programie: wpis o SCORE2 / SCORE2-OP (fix26)',/SCORE2 \/ SCORE2-OP/.test(ab)&&/fix26/.test(ab),ab.slice(0,400));
+  const rd=await page.evaluate(()=>fetch('README.md?'+Date.now()).then(r=>r.text()).catch(()=>''));/* fix29a: najstarszy wpis O programie przeniesiony do README */
+  rec('O programie: wpis o SCORE2 / SCORE2-OP (fix26) lub – po usunięciu najstarszego wpisu – odsyłacz do README z opisem fix26',(/SCORE2 \/ SCORE2-OP/.test(ab)&&/fix26/.test(ab))||(/README\.md/.test(ab)&&/SCORE2 \/ SCORE2-OP/.test(rd)&&/fix26/.test(rd)),ab.slice(0,400));
   const sw=await page.evaluate(()=>fetch('sw.js?'+Date.now()).then(r=>r.text()));rec('SW asor-v52-fix26 lub nowszy',/asor-v52-fix(2[6-9]|[3-9]\d)/.test(sw),sw.slice(0,40));
   rec('Brak błędów JS',errs.length===0,errs.join(' | '));
   await br.close();console.log(fail?`${n-fail}/${n} PASS, ${fail} FAIL`:`${n}/${n} PASS`);process.exit(fail?1:0);
