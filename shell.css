@@ -149,3 +149,6 @@ body.dark .kk-panel,html.dark .kk-panel{background:inherit}
 .t3-dose{background:#fff;border:1px solid #d8dee6;border-left:4px solid #b71c1c;border-radius:8px;padding:.55em .8em;margin:.5em 0;color:#1d2733;line-height:1.45;overflow-wrap:anywhere}
 .t3-dose>div{margin:.15em 0}
 .t3-dn{font-weight:700;font-size:1.05em}
+
+/* fix29: Kreator przetoczenia */
+.kr{margin:8px 0}.kr-step{border:1px solid #d5e0e5;border-radius:10px;padding:8px 10px;margin:6px 0;opacity:.55;background:#fafcfd}.kr-step.kr-done{opacity:1}.kr-step.kr-act{opacity:1;border:2px solid #e7ad44;background:#fffaf0;box-shadow:0 0 0 3px #e7ad4433}.kr-t{font-weight:700;margin-bottom:6px}.kr-opts{display:flex;flex-wrap:wrap;gap:6px}.kr-tile{border:2px solid var(--vi);background:#fff;color:var(--vi);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;text-align:left;max-width:340px}.kr-tile.on{background:var(--vi);color:#fff}.kr-src{font-size:.75rem;margin-top:8px}

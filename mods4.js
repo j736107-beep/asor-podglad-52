@@ -1,12 +1,13 @@
 (function(){var C=SK.core,F=C.fmt,U=SKM.util,inp=U.inp,bx=U.bx,src=U.src,chk=U.chk,tabbed=U.tabbed,T=SK.transf;
 function dw(t){return ' <span class="dw">'+(t||'DO WERYFIKACJI')+'</span>';}
 function sel(id,lab,opts){return '<label>'+lab+' <select id="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('')+'</select></label>';}
-var TR=tabbed({id:'transf',icon:'🅰️',name:'Transfuzjologia',print:function(o){o.T=T;o.TB=SK.transfB1;o.A=SK.acoag;return SK.tabPrint.transf(o);}},'Transfuzjologia',[['g','Zgodność ABO/RhD'],['d','Dawki i progi'],['rbc','KKCz – wskazania'],['plt','Trombocytopenia / KKP'],['gcsf','Neutropenia / G-CSF'],['m','Masywne przetoczenie'],['r','Reakcja'],['n','Odwracanie NOAC']],
+var TR=tabbed({id:'transf',icon:'🅰️',name:'Transfuzjologia',print:function(o){o.T=T;o.TB=SK.transfB1;o.A=SK.acoag;return SK.tabPrint.transf(o);}},'Transfuzjologia',[['g','Zgodność ABO/RhD'],['d','Dawki i progi'],['rbc','KKCz – wskazania'],['plt','Trombocytopenia / KKP'],['gcsf','Neutropenia / G-CSF'],['m','Masywne przetoczenie'],['r','Reakcja'],['n','Odwracanie NOAC'],['kr','🧭 Kreator przetoczenia']],
  function(t){return t==='g'?sel('abo','Grupa biorcy',[['','— nieznana —'],['O','0'],['A','A'],['B','B'],['AB','AB']])+sel('rh','RhD',[['','—'],['+','RhD+'],['-','RhD−']]):
   t==='d'?inp('hb','Hb','g/dl')+inp('hbt','Hb docelowe','g/dl')+sel('ctx','Kontekst',[['','stabilny'],['cardiac','ch. sercowo-naczyniowa'],['acs','ACS']])+chk('coag','krwawienie + koagulopatia (PT/APTT >1,5×)')+inp('fib','Fibrynogen','g/l')+inp('plt','PLT','×10⁹/l')+sel('pctx','PLT – sytuacja',[['','profilaktyka'],['bleed','krwawienie/zabieg'],['cns','OUN/uraz wielonarządowy']]):
-  t==='rbc'||t==='plt'||t==='gcsf'?SKB1.tfForm(t):t==='m'?inp('th','Czas od urazu','h')+chk('gi','krwawienie z przewodu pokarmowego')+SKB1.tfForm('mtp-add'):
+  t==='kr'?SKKR.form():t==='rbc'||t==='plt'||t==='gcsf'?SKB1.tfForm(t):t==='m'?inp('th','Czas od urazu','h')+chk('gi','krwawienie z przewodu pokarmowego')+SKB1.tfForm('mtp-add'):
   t==='r'?chk('fever','gorączka/dreszcze')+chk('fever2','≥39 °C lub wzrost ≥2 °C')+chk('urt','pokrzywka')+chk('hypo','hipotensja')+chk('dysp','duszność')+chk('back','ból lędźwi/hemoglobinuria')+chk('ana','anafilaksja'):U.NOACF();},
  function(t,g,P){var w=P.w,H='',lvl='ok';
+  if(t==='kr')return SKKR.calc(g,P);/* fix29: Kreator przetoczenia */
   if(t==='rbc'||t==='plt'||t==='gcsf')return SKB1.tfCalc(t,g,P);/* ETAP B1 */
   if(t==='g'){var e=T.emergency(P.sex,P.age);var abo=g('abo'),rh=g('rh');
    if(!abo||!rh)H+=bx('red','Grupa nieznana – tryb ratunkowy','KKCz <span class="big">'+e.rbc+'</span><br>Osocze <b>'+e.plasma+'</b>'+(e.cb?'<div class="o">Kobieta <50 lat / płeć nieznana → tylko RhD−</div>':''));

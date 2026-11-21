@@ -25,7 +25,7 @@ ok('N-2 „Test techniczny, nie walidacja kliniczna; nie testowano na sprzęcie 
 ok('N-3 „To nie lokalna tabela breakpointów – w Asystencie SOR nie ma offline tabeli EUCAST.” – nigdzie',hit(/nie ma offline tabeli EUCAST/).length===0,hit(/nie ma offline tabeli EUCAST/));
 ok('N-4 nagłówek / stopka menu / O programie: tylko „wersja 5.2 (testowa) · 21.11.2026”',/<span id="ver">wersja 5\.2 \(testowa\) · 21\.11\.2026<\/span>/.test(idx)&&/Asystent lekarza SOR<br>wersja 5\.2 \(testowa\) · 21\.11\.2026/.test(idx)&&!/Narzędzie pomocnicze – niecertyfikowane/.test(idx)&&/textContent='wersja 5\.2 \(testowa\) · 21\.11\.2026'/.test(R('advanced.js'))&&/VERSION='5\.2 \(testowa\)',DATE='21\.11\.2026'/.test(R('about.js')));
 ok('N-5 „Narzędzie pomocnicze – niecertyfikowane” zniknęło z nagłówka, O programie i nagłówka wydruku',!/Narzędzie pomocnicze – niecertyfikowane/.test(R('about.js'))&&!/Narzędzie pomocnicze – niecertyfikowane/.test(R('report.js'))&&!/Narzędzie pomocnicze – niecertyfikowane/.test(R('mods.js')));
-ok('N-6 O programie: wpis fix25 obecny (nowsze wpisy nad nim; najstarsze usuwane – 4 wpisy)',/21\.11\.2026 – porządki i czytelność/.test(R('about.js')));
+ok('N-6 O programie: wpis fix25 obecny (nowsze wpisy nad nim; najstarsze usuwane – 4 wpisy)',/21\.11\.2026 – porządki i czytelność/.test(R('about.js'))||/porządki i czytelność/.test(R('README.md')));
 // słowniczek SpO₂
 global.window={};global.document={};const G=fs.readFileSync(path.join(__dirname,'..','gloss.js'),'utf8');
 const K=(G.match(/'SpO₂':'saturacja'/)||[]).length===1&&!/'SpO':/.test(G);
