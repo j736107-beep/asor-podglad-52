@@ -37,18 +37,15 @@ if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollInto
 // wydruk – snapshot
 const sn=await page.evaluate(()=>{SORReport.capture(SKM.list.find(m=>m.id==='kalk'));const s=SORReport.snaps();return s.kalk&&s.kalk.text||'';});
 rec('Wydruk: snapshot kalkulatora z danymi i źródłem',/KALKULATOR: SCORE2/.test(sn)&&/Źródło \(2021\)/.test(sn)&&/Wiek: 50/.test(sn),sn.slice(0,120));
-// SCORE2-OP wstrzymany
-await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2op"]').click();});await sleep(200);
-const sp=await page.evaluate(()=>{const p=document.getElementById('kk-panel');const ins=[...p.querySelectorAll('input,select')];const t=document.getElementById('kk-susp');return {n:ins.length,dis:ins.every(x=>x.disabled),txt:t&&t.textContent,col:t&&getComputedStyle(t).color,out:document.getElementById('kk-out').textContent,vis:!!document.querySelector('.kk-chip[data-c="score2op"]').offsetParent};});
-rec('SCORE2-OP: widoczny, pola nieaktywne, czerwony napis, brak liczby, odesłanie do ESC 2021',sp.vis&&sp.n>0&&sp.dis&&sp.txt==='Kalkulator wstrzymany – wynik niezweryfikowany'&&/rgb\(198, 40, 40\)/.test(sp.col)&&/ESC 2021/.test(sp.out)&&!/\d+,\d %/.test(sp.out),JSON.stringify(sp).slice(0,200));
-if(SHOTS){await page.evaluate(()=>document.getElementById('kk-panel').scrollIntoView());await sleep(200);await page.screenshot({path:SHOTS+'/kalk-score2op-wstrzymany.png'});}
+// 21.11.2026 (fix26): chip „SCORE2-OP wstrzymany” usunięty – SCORE2-OP w kalkulatorze score2hs (test: e2e-fix26-puppeteer)
+rec('SCORE2-OP: brak chipu „wstrzymany”, jest „SCORE2 / SCORE2-OP”',await page.evaluate(()=>!document.querySelector('.kk-chip[data-c="score2op"]')&&!!document.querySelector('.kk-chip[data-c="score2hs"]')));
 await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2"]').click();});await sleep(150);
 await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='75';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(250);
-const s75=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('SCORE2 przy wieku 75 → brak liczby, komunikat WSTRZYMANY',/WSTRZYMANY/.test(s75)&&!/\d+,\d %/.test(s75),s75.slice(0,100));
+const s75=await page.evaluate(()=>document.getElementById('kk-out').textContent);rec('SCORE2 przy wieku 75 → brak liczby, odesłanie do „SCORE2 / SCORE2-OP”',/SCORE2 \/ SCORE2-OP/.test(s75)&&!/\d+,\d %/.test(s75),s75.slice(0,100));
 await page.evaluate(()=>{const e=document.querySelector('#pa');e.value='50';e.dispatchEvent(new Event('input',{bubbles:true}));});await sleep(200);
 // 09.11.2026: HeartScore, SCORE2 → SCORE2-Diabetes, SCORE2-Diabetes, PESI/sPESI
-const hs=await page.evaluate(()=>['score2','score2op','score2dm'].map(id=>{document.querySelector('.kk-chip[data-c="'+id+'"]').click();const a=document.querySelector('#kk-panel .kk-url a');return a&&a.href;}));
-rec('HeartScore: link w SCORE2 / SCORE2-OP / SCORE2-Diabetes',hs.every(h=>h==='https://www.heartscore.org/en_GB'),JSON.stringify(hs));
+const hs=await page.evaluate(()=>['score2hs','score2','score2dm'].map(id=>{document.querySelector('.kk-chip[data-c="'+id+'"]').click();const a=document.querySelector('#kk-panel .kk-url a');return a&&a.href;}));
+rec('HeartScore: link w SCORE2 / SCORE2-OP, SCORE2, SCORE2-Diabetes',hs.every(h=>h==='https://www.heartscore.org/en_GB'),JSON.stringify(hs));
 await page.evaluate(()=>{document.querySelector('.kk-chip[data-c="score2"]').click();});await sleep(150);await page.click('#kk-score2-dm');await sleep(200);
 const sdm=await page.evaluate(()=>({t:document.getElementById('kk-out').textContent,b:!!document.querySelector('#kk-out [data-kalk="score2dm"]')}));
 rec('SCORE2 + cukrzyca → odesłanie do SCORE2-Diabetes (przycisk)',/SCORE2-Diabetes/.test(sdm.t)&&sdm.b,sdm.t.slice(0,120));
@@ -90,6 +87,6 @@ await page.evaluate(()=>localStorage.setItem('zp1state',JSON.stringify({allergy:
 const capAuto=await page.evaluate(()=>{SORReport.clearSnaps();document.querySelectorAll('#main iframe').forEach(f=>f.remove());const m=SKM.list.find(x=>x.id==='cap');SORReport.capture(m);const s=SORReport.snaps().cap||{};return {sub:s.sub||'',name:s.subName||'',auto:!!s.subAuto};});
 rec('ZP: bez ramki – antybiotykoterapia wyliczona ze wspólnego silnika z wyborów lekarza (alergia, miejsce)',capAuto.auto&&/wyliczone z silnika/.test(capAuto.name)&&/Proponowane|Propozycja/.test(capAuto.sub)&&/DO DECYZJI LEKARZA/.test(capAuto.sub),capAuto.name+' | '+capAuto.sub.slice(0,160));
 // SW
-const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix25/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
+const sw=await page.evaluate(async()=>{const t=await (await fetch('sw.js',{cache:'no-store'})).text();return /asor-v52-fix(2[5-9]|[3-9]\d)/.test(t)&&/calc\/kalk\.js/.test(t)&&/kalk-ui\.js/.test(t);});rec('SW: etap4 + pliki kalkulatorów',sw,'');
 rec('Brak błędów JS',errs.length===0,errs.join(' | '));
 await br.close();console.log(fails?('FAILS: '+fails):'ALL PASS');process.exit(fails?1:0);})();

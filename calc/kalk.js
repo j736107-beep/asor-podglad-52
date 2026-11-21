@@ -38,9 +38,11 @@ function score2(age,sex,smk,sbp,tc,hdl,dm,region){var b=S2[sex],cal=S2.cal[regio
 // SCORE2-OP (≥70 lat) – model wg parametrów publikacji przekazanych przez lekarza 09.11.2026 (fakty; własny kod):
 // x = Σb·(a,p,d,s,c,h + interakcje z wiekiem), a=wiek−73, s=SBP−150, c=TC−6, h=HDL−1,4; R0=1−S0^exp(x−x̄); kalibracja regionu: R=1−exp(−exp(s1+s2·ln(−ln(1−R0)))).
 // Porównanie z tabelami ESC 2021 (rys. 3, region wysokiego ryzyka, 256 komórek ≥70 lat) – patrz tests/etap4-node.test.js: systematyczne niedoszacowanie
-// (HDL 1,4: 142/256 w ±1 pkt, średnio −1,45 pkt; mężczyźni −1,79) → kalkulator nadal WSTRZYMANY (C.score2op.suspended).
+// (HDL 1,4: 142/256 w ±1 pkt, średnio −1,45 pkt; mężczyźni −1,79). 21.11.2026 (fix26, decyzja lekarza t57u): model ODBLOKOWANY w kalkulatorze C.score2hs –
+// wynik zgodny z RiskScorescvd (pakiet R, niezależna implementacja SCORE2/SCORE2-OP; tests/data/score2_riskscorescvd_ref.json, 2880 przypadków, ≤0,05 pkt %);
+// odchylenie od tabel ESC 2021 raportowane lekarzowi (tests/fix26-node.test.js). Kalibracja 4 regionów: suplement SCORE2-OP, tab. regionów (jak RiskScorescvd).
 var OP={m:{b:[0.0634,0.3524,0.4245,0.0094,0.0850,-0.3564,-0.0247,-0.0174,-0.0005,0.0073,0.0091],s0:0.7576,xm:0.0929},
- f:{b:[0.0789,0.4921,0.6010,0.0102,0.0605,-0.3040,-0.0255,-0.0107,-0.0004,-0.0009,0.0154],s0:0.8082,xm:0.229},cal:{high:{m:[0.08,1.15],f:[0.38,1.09]}}};
+ f:{b:[0.0789,0.4921,0.6010,0.0102,0.0605,-0.3040,-0.0255,-0.0107,-0.0004,-0.0009,0.0154],s0:0.8082,xm:0.229},cal:{low:{m:[-0.34,1.19],f:[-0.52,1.01]},mod:{m:[0.01,1.25],f:[-0.10,1.10]},high:{m:[0.08,1.15],f:[0.38,1.09]},vhigh:{m:[0.05,0.70],f:[0.38,0.69]}}};
 function score2op(age,sex,smk,sbp,tc,hdl,dm,region){var o=OP[sex],b=o.b,k=OP.cal[region||'high'][sex],a=age-73,s=sbp-150,c=tc-6,h=hdl-1.4;
  var x=b[0]*a+b[1]*smk+b[2]*dm+b[3]*s+b[4]*c+b[5]*h+b[6]*a*smk+b[7]*a*dm+b[8]*a*s+b[9]*a*c+b[10]*a*h;
  var r0=1-Math.pow(o.s0,Math.exp(x-o.xm));return 1-Math.exp(-Math.exp(k[0]+k[1]*Math.log(-Math.log(1-r0))));}
@@ -50,7 +52,7 @@ C.score2={g:'kardr',url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC
   S('reg','Region ryzyka (ESC 2021)',[['high','Polska – region WYSOKIEGO ryzyka (ESC 2021)'],['vhigh','region bardzo wysokiego ryzyka'],['mod','region umiarkowanego ryzyka'],['low','region niskiego ryzyka']],{def:'high'})],
  calc:function(v){var m=need(v,['age','sbp','tc','hdl'],['wiek','SBP','cholesterol całkowity','HDL']);if(!v.sex)m.push('płeć');if(m.length)return{miss:m};
   var a=v.age,reg=v.reg||'high',dm=v.dm===true?1:0,smk=v.smk===true?1:0;
-  if(a>=70&&a<=89)return{err:'Wiek ≥70 lat: SCORE2-OP – KALKULATOR WSTRZYMANY (wynik niezweryfikowany). Odczytaj ryzyko z tabel SCORE2-OP w wytycznych ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227, rys. 3 – region wysokiego ryzyka: Polska) lub w HeartScore: https://www.heartscore.org/en_GB'};
+  if(a>=70&&a<=89)return{err:'Wiek ≥70 lat: użyj kalkulatora „SCORE2 / SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe” (SCORE2-OP wybierany automatycznie, Polska – region wysokiego ryzyka).',link:'score2hs'};
   if(a<40||a>69)return{err:'SCORE2 zwalidowany dla wieku 40–69 lat.'};
   if(dm)return{err:'SCORE2 nie dotyczy chorych na cukrzycę. W cukrzycy typu 2 (40–69 lat) użyj kalkulatora SCORE2-Diabetes (ta sama grupa: „Kardiologia – ryzyko SCORE2”; ESC 2023).',link:'score2dm'};
   var op=false,risk=score2(a,v.sex,smk,v.sbp,v.tc,v.hdl,dm,reg)*100;
@@ -62,10 +64,51 @@ C.score2={g:'kardr',url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC
   return{v:fx(risk,1)+' %',n:risk,lvl:['green','orange','red'][cat],interp:(op?'SCORE2-OP':'SCORE2')+': ryzyko '+L+' (progi dla wieku '+(a<50?'<50 lat: <2,5 / 2,5–<7,5 / ≥7,5 %':a<70?'50–69 lat: <5 / 5–<10 / ≥10 %':'≥70 lat: <7,5 / 7,5–<15 / ≥15 %')+').',
    cons:cons+' Nie stosuj przy rozpoznanej chorobie sercowo-naczyniowej, przewlekłej chorobie nerek, hipercholesterolemii rodzinnej (ryzyko z definicji wysokie/bardzo wysokie). W SOR wynik informacyjny – do przekazania lekarzowi POZ (podstawowej opieki zdrowotnej).',
    rows:[['Model','SCORE2 (40–69 lat)'],['Region',{high:'wysokiego ryzyka (Polska)',vhigh:'bardzo wysokiego ryzyka',mod:'umiarkowanego ryzyka',low:'niskiego ryzyka'}[reg]],['Cholesterol nie-HDL',fx(v.tc-v.hdl,1)+' mmol/l']]};}};
-C.score2op={g:'kardr',suspended:true,url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC) – kalkulator online',n:'SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe (≥70 lat) – WSTRZYMANY',d:'SCORE2-Older Persons (70–89 lat). Kalkulator wstrzymany: model z parametrami publikacji (sprawdzony 09.11.2026) systematycznie zaniża ryzyko względem tabel ESC 2021 (region wysokiego ryzyka: średnio −1,45 pkt, u mężczyzn −1,8 pkt; tylko 55% komórek w granicach ±1 pkt; maks. różnica 3 pkt) – do czasu weryfikacji odczytuj ryzyko z oficjalnych tabel lub HeartScore.',
- src:'SCORE2-OP working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2455 (parametry modelu: współczynniki, S0, średnia predyktora, kalibracja regionu wysokiego ryzyka); tabele: ESC 2021 – wytyczne dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227), rys. 3 – region wysokiego ryzyka (Polska); kalkulator online: HeartScore',yr:2021,
- f:[AGE,SEX,Y('smk','Aktualnie pali tytoń',0),Y('dm','Cukrzyca',0),N('sbp','Ciśnienie skurczowe (SBP)','mmHg'),N('tc','Cholesterol całkowity',CHOL_U),N('hdl','Cholesterol HDL',CHOL_U)],
- calc:function(){return{suspended:true,err:'Kalkulator wstrzymany – wynik niezweryfikowany (model zaniża ryzyko względem tabel ESC 2021). Odczytaj 10-letnie ryzyko z tabel SCORE2-OP: ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227), rysunek 3 – „populations at high CVD risk” (Polska = region wysokiego ryzyka), lub w HeartScore: https://www.heartscore.org/en_GB. Progi ESC 2021 dla ≥70 lat: <7,5% / 7,5–<15% / ≥15%.'};}};
+// 21.11.2026 (fix26, t57u): „SCORE2 / SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe” – układ pól jak HeartScore (ESC), od razu dla Polski (region wysokiego ryzyka).
+// Wiek z daty urodzenia (miesiąc/rok): 40–69 l. → SCORE2 (Eur Heart J 2021;42:2439), 70–89 l. → SCORE2-OP (Eur Heart J 2021;42:2455) – wybór automatyczny.
+// Progi kategorii i zalecenia: ESC 2021 (Visseren i wsp., Eur Heart J 2021;42:3227) – rys. 5 i 6 (osoby pozornie zdrowe), tabele zaleceń 3.2.3.1, 4.6 (≥70 lat).
+// Weryfikacja: tests/fix26-node.test.js – 2880 przypadków vs RiskScorescvd (≤0,5 pkt %) + przykład z publikacji SCORE2.
+var MONTHS=['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+function ageFromDob(bm,by,now){var d=now instanceof Date?now:(typeof now==='string'&&/^\d{4}-\d{2}/.test(now)?new Date(+now.slice(0,4),+now.slice(5,7)-1,15):new Date());
+ var y=d.getFullYear(),m=d.getMonth()+1;return y-by-(m<bm?1:0);}
+function s2cat(age,risk){var th=age<50?[2.5,7.5]:age<70?[5,10]:[7.5,15];return{th:th,cat:risk<th[0]?0:risk<th[1]?1:2};}
+C.score2hs={g:'kardr',btn:true,url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (ESC) – kalkulator online',
+ n:'SCORE2 / SCORE2-OP – 10-letnie ryzyko sercowo-naczyniowe',
+ d:'Oblicz 10-letnie ryzyko śmiertelnych i nieśmiertelnych chorób sercowo-naczyniowych (zawał serca, udar mózgu, zgon sercowo-naczyniowy). Polska – region wysokiego ryzyka (ESC 2021). Wiek 40–69 lat: SCORE2, wiek ≥70 lat: SCORE2-OP – wybór automatyczny na podstawie daty urodzenia.',
+ warn:'Dotyczy wyłącznie osób pozornie zdrowych. Nie stosuj u osób z rozpoznaną miażdżycową chorobą sercowo-naczyniową (ASCVD), cukrzycą, hipercholesterolemią rodzinną (FH) lub innymi genetycznymi / rzadkimi zaburzeniami lipidowymi albo ciśnienia tętniczego, przewlekłą chorobą nerek (CKD) ani w ciąży – u nich ryzyko ocenia się inaczej (zwykle wysokie lub bardzo wysokie z definicji).',
+ src:'SCORE2 working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2439 (40–69 lat); SCORE2-OP working group and ESC Cardiovascular Risk Collaboration, Eur Heart J 2021;42:2455 (≥70 lat) – współczynniki, przeżycie wyjściowe i rekalibracja regionu wysokiego ryzyka (Polska); ESC 2021 – wytyczne dot. prewencji chorób sercowo-naczyniowych (Visseren i wsp., Eur Heart J 2021;42:3227): progi ryzyka zależne od wieku (rys. 5), postępowanie krokowe i cele SBP / LDL-C (rys. 6, tabele zaleceń). Weryfikacja obliczeń: RiskScorescvd (pakiet R, 2880 przypadków, różnica ≤0,05 pkt %).',yr:2021,
+ f:[S('bm','Data urodzenia – miesiąc',MONTHS.map(function(x,i){return [String(i+1),x];}),{req:true}),N('by','Data urodzenia – rok','',{min:1900,max:2100,req:true}),
+  S('sex','Płeć',[['m','mężczyzna'],['f','kobieta']],{req:true}),N('sbp','Ciśnienie skurczowe (SBP)','mmHg',{min:60,max:260,req:true}),
+  N('tc','Cholesterol całkowity',CHOL_U,{min:1,max:20,req:true}),N('hdl','Cholesterol HDL',CHOL_U,{min:0.2,max:5,req:true}),
+  N('ldl','Cholesterol LDL (tylko do celu LDL-C w zaleceniu)',CHOL_U,{min:0.2,max:15,opt:true}),
+  S('smk','Palacz tytoniu',[['1','tak'],['0','nie']],{req:true})],
+ calc:function(v){var m=[];if(!v.bm)m.push('miesiąc urodzenia');if(!ok(v.by))m.push('rok urodzenia');if(!v.sex)m.push('płeć');if(!ok(v.sbp))m.push('SBP');if(!ok(v.tc))m.push('cholesterol całkowity');if(!ok(v.hdl))m.push('HDL');if(v.smk!=='1'&&v.smk!=='0'&&v.smk!==1&&v.smk!==0)m.push('palacz tak/nie');if(m.length)return{miss:m};
+  var a=ageFromDob(+v.bm,Math.round(v.by),v.now);
+  if(a<40)return{err:'Wiek '+a+' lat (z daty urodzenia): SCORE2 dotyczy osób w wieku 40–69 lat, SCORE2-OP – 70–89 lat. Poniżej 40 lat model nie jest zwalidowany.'};
+  if(a>89)return{err:'Wiek '+a+' lat (z daty urodzenia): SCORE2-OP zwalidowany do 89 lat.'};
+  if(v.sbp<60||v.sbp>260)return{err:'SBP poza zakresem 60–260 mmHg – sprawdź wartość.'};
+  if(v.tc<1||v.tc>20)return{err:'Cholesterol całkowity poza zakresem – sprawdź wartość i jednostkę (mmol/l / mg/dl).'};
+  if(v.hdl<0.2||v.hdl>5)return{err:'HDL poza zakresem – sprawdź wartość i jednostkę (mmol/l / mg/dl).'};
+  if(v.hdl>=v.tc)return{err:'HDL nie może być ≥ cholesterolu całkowitego – sprawdź wartości i jednostki.'};
+  var smk=(v.smk==='1'||v.smk===1)?1:0,op=a>=70,risk=(op?score2op(a,v.sex,smk,v.sbp,v.tc,v.hdl,0,'high'):score2(a,v.sex,smk,v.sbp,v.tc,v.hdl,0,'high'))*100;
+  var M=op?'SCORE2-OP':'SCORE2',k=s2cat(a,risk),cat=k.cat,L=['niskie do umiarkowanego','wysokie','bardzo wysokie'][cat];
+  var thTxt=a<50?'<50 lat: <2,5 / 2,5–<7,5 / ≥7,5 %':a<70?'50–69 lat: <5 / 5–<10 / ≥10 %':'≥70 lat: <7,5 / 7,5–<15 / ≥15 %';
+  var all='KROK 1 dla wszystkich: zaprzestanie palenia, zalecenia dotyczące stylu życia, SBP <160 mmHg (klasa I).';
+  var rec;
+  if(!op)rec=[all+' Dodatkowe cele prewencji (farmakoterapia) zwykle niepotrzebne; rozważ modyfikatory ryzyka, ryzyko całożyciowe, korzyść z leczenia i preferencje pacjenta.',
+   all+' Leczenie czynników ryzyka NALEŻY ROZWAŻYĆ (klasa IIa), z uwzględnieniem modyfikatorów ryzyka, ryzyka całożyciowego, korzyści z leczenia i preferencji pacjenta: SBP <140 do 130 mmHg, jeśli tolerowane (klasa I), oraz LDL-C <2,6 mmol/l (<100 mg/dl) (klasa IIa); KROK 2 (intensyfikacja): SBP <130 mmHg, jeśli tolerowane (klasa I), LDL-C <1,8 mmol/l (<70 mg/dl) (klasa IIa).',
+   all+' Leczenie czynników ryzyka ZALECANE (klasa I): SBP <140 do 130 mmHg, jeśli tolerowane (klasa I), oraz LDL-C <2,6 mmol/l (<100 mg/dl) (klasa IIa); KROK 2 (intensyfikacja): SBP <130 mmHg, jeśli tolerowane (klasa I), LDL-C <1,4 mmol/l (<55 mg/dl) (klasa IIa).'][cat];
+  else rec=[all+' Dodatkowe cele prewencji zwykle niepotrzebne.',
+   all+' Leczenie czynników ryzyka NALEŻY ROZWAŻYĆ (klasa IIa), uwzględniając modyfikatory ryzyka, korzyść z leczenia w ciągu życia, choroby współistniejące, kruchość, wielolekowość i preferencje pacjenta. Rozpoczęcie statyny w prewencji pierwotnej ≥70 lat można rozważyć przy ryzyku wysokim lub bardzo wysokim (klasa IIb).',
+   all+' Leczenie czynników ryzyka ZALECANE (klasa I), uwzględniając choroby współistniejące, kruchość, wielolekowość i preferencje: SBP <140 do 130 mmHg, jeśli tolerowane (klasa I), LDL-C <2,6 mmol/l (<100 mg/dl) – statyna w prewencji pierwotnej ≥70 lat: można rozważyć (klasa IIb).'][cat];
+  var rows=[['Model',op?'SCORE2-OP (≥70 lat)':'SCORE2 (40–69 lat)'],['Wiek (z daty urodzenia)',a+' lat'],['Region','wysokiego ryzyka (Polska, ESC 2021)'],['Cholesterol nie-HDL',fx(v.tc-v.hdl,1)+' mmol/l ('+Math.round((v.tc-v.hdl)*38.67)+' mg/dl)']];
+  if(ok(v.ldl)){var ldl=v.ldl,g=null;
+   if(cat===0)rows.push(['Cel LDL-C','brak dodatkowego celu LDL-C przy ryzyku niskim do umiarkowanego (ESC 2021); LDL-C '+fx(ldl,1)+' mmol/l']);
+   else{g=op?[2.6]:[2.6,cat===2?1.4:1.8];var gm={2.6:'<2,6 mmol/l (<100 mg/dl)',1.8:'<1,8 mmol/l (<70 mg/dl)',1.4:'<1,4 mmol/l (<55 mg/dl)'};
+    g.forEach(function(x,i){var red=ldl>=x?Math.ceil((ldl-x)/ldl*100):0;rows.push([(op?'Cel LDL-C':i===0?'Cel LDL-C – KROK 1':'Cel LDL-C – KROK 2'),gm[x]+(ldl<x?' – osiągnięty (LDL-C '+fx(ldl,1)+' mmol/l)':' – obecnie '+fx(ldl,1)+' mmol/l ('+Math.round(ldl*38.67)+' mg/dl); potrzebna redukcja o ≥'+red+' %')]);});}}
+  return{v:fx(risk,1)+' %',n:risk,model:M,age:a,cat:cat,lvl:['green','orange','red'][cat],
+   interp:M+': 10-letnie ryzyko chorób sercowo-naczyniowych (śmiertelnych i nieśmiertelnych) '+fx(risk,1)+' % – ryzyko '+L+' (progi ESC 2021 dla wieku '+thTxt+').',
+   cons:rec+' Wynik dotyczy wyłącznie osób pozornie zdrowych; w SOR – informacyjnie, do przekazania lekarzowi POZ (podstawowej opieki zdrowotnej).',rows:rows};}};
 // SCORE2-Diabetes (ESC 2023, cukrzyca typu 2, 40–69 lat) – współczynniki: SCORE2-Diabetes Working Group, Eur Heart J 2023;44:2544 (parametry przekazane przez lekarza);
 // kalibracja regionów = SCORE2. Weryfikacja: przykłady z publikacji (region umiarkowany) 11 / 17% (M) i 8 / 13% (K) odtworzone: 10,96 / 17,19 / 7,59 / 12,70%.
 var S2D={m:{b:[0.5368,0.4774,0.1322,0.6457,0.1102,-0.1087,-0.0672,-0.0268,-0.0983,-0.0181,0.0095,-0.0998,0.0955,-0.0591,0.0058,-0.0134,0.0115],s0:0.9605},
@@ -90,7 +133,7 @@ C.score2dm={g:'kardr',url:'https://www.heartscore.org/en_GB',urlL:'HeartScore (E
   if(ok(eg)&&eg<45)return VH('eGFR '+fmt(eg,0)+' <45 ml/min/1,73 m²');if(ok(eg)&&eg<60&&v.a2===true)return VH('eGFR '+fmt(eg,0)+' (45–59) z albuminurią A2');
   var hba=v.hba,hSrc='';if(!ok(hba)&&ok(v.hbap)){hba=hbaIfcc(v.hbap);hSrc=fx(v.hbap,1)+'% → '+fx(hba,1)+' mmol/mol';}
   var m=need(v,['age','sbp','tc','hdl','dx'],['wiek','SBP','cholesterol całkowity','HDL','wiek rozpoznania cukrzycy']);if(!v.sex)m.push('płeć');if(!ok(hba))m.push('HbA1c (mmol/mol lub %)');if(!ok(eg))m.push('eGFR lub kreatynina');if(m.length)return{miss:m};
-  if(v.age<40||v.age>69)return{err:'SCORE2-Diabetes zwalidowany dla wieku 40–69 lat. ≥70 lat: SCORE2-OP (wstrzymany) – tabele ESC 2021 lub HeartScore: https://www.heartscore.org/en_GB'};
+  if(v.age<40||v.age>69)return{err:'SCORE2-Diabetes zwalidowany dla wieku 40–69 lat. ≥70 lat: tabele ESC 2021 lub HeartScore: https://www.heartscore.org/en_GB (kalkulator „SCORE2 / SCORE2-OP” dotyczy osób bez cukrzycy)'};
   if(v.dx>v.age)return{err:'Wiek rozpoznania cukrzycy nie może być większy niż obecny wiek.'};
   var reg=v.reg||'high',smk=v.smk===true?1:0,risk=Math.round(score2dm(v.age,v.sex,smk,v.sbp,v.tc,v.hdl,v.dx,hba,eg,reg)*1000)/10,cat=risk<5?0:risk<10?1:risk<20?2:3;
   var L=['MAŁE','UMIARKOWANE','DUŻE','BARDZO DUŻE'][cat];
@@ -496,7 +539,7 @@ C.spesi={g:'vtep',n:'sPESI – uproszczony PESI (simplified Pulmonary Embolism S
   rows.push(['Tłumaczenie',PE_TR]);
   return s===0?{v:'0 pkt',n:0,lvl:'green',interp:'sPESI 0: 30-dniowa śmiertelność 1,0% (95% CI 0,0–2,1).',cons:PE_NOTE,rows:rows}:{v:s+' pkt',n:s,lvl:'red',interp:'sPESI ≥1: 30-dniowa śmiertelność 10,9% (95% CI 8,5–13,2) – co najmniej ryzyko pośrednie.',cons:PE_NOTE,rows:rows};}};
 // ================= GRUPY =================
-var G=[['kardr','Kardiologia – ryzyko sercowo-naczyniowe (SCORE2)',['score2','score2op','score2dm'],[['dka','Cukrzyca – stany ostre (DKA/HHS)']]],
+var G=[['kardr','Kardiologia – ryzyko sercowo-naczyniowe (SCORE2)',['score2hs','score2','score2dm'],[['dka','Cukrzyca – stany ostre (DKA/HHS)']]],
  ['kard','Kardiologia',['qtc','abi','duke','hasbled'],[['trop','Ból w klatce / troponina (HEART, EKG)'],['af','Migotanie przedsionków (CHA₂DS₂-VA)'],['ahf','Ostra niewydolność serca']]],
  ['pulm','Pulmonologia',['light','aa','rox'],[['cap','Zapalenie płuc (CURB-65, PSI, antybiotyk)']]],
  ['gast','Gastroenterologia / krwawienie z przewodu pokarmowego',['rockall','aims65','childpugh','meldna','bisap'],[['gib','Krwawienie z przewodu pokarmowego (Glasgow-Blatchford)']]],
