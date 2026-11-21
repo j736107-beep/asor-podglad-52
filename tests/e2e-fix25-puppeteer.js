@@ -61,7 +61,7 @@ const JUNK=/Źródła|Źródło|Wytyczne i ChPL|ChPL 4\.2|Efekt:|Wpisz wynik|Wpi
   // EUCAST
   await show('leki');t=await txt();rec('Leki: brak „To nie lokalna tabela breakpointów…”',!/breakpointów|offline tabeli EUCAST/.test(t)&&/EUCAST/.test(t),t.slice(0,200));
   // O programie
-  await show('about');t=await txt();rec('O programie: wersja i data 21.11.2026, wpis fix25, bez „Test techniczny, nie walidacja…”',/Wersja 5\.2 \(testowa\)/.test(t)&&/21\.11\.2026/.test(t)&&/porządki i czytelność/.test(t)&&!/nie testowano na sprzęcie szpitalnym/.test(t)&&!/Narzędzie pomocnicze – niecertyfikowane/.test(t),t.slice(0,300));
+  await show('about');t=await txt();rec('O programie: wersja i data 21.11.2026, wpis fix25 (lub – po usunięciu najstarszego wpisu – odsyłacz do README), bez „Test techniczny, nie walidacja…”',/Wersja 5\.2 \(testowa\)/.test(t)&&/21\.11\.2026/.test(t)&&(/porządki i czytelność/.test(t)||/README\.md/.test(t))&&!/nie testowano na sprzęcie szpitalnym/.test(t)&&!/Narzędzie pomocnicze – niecertyfikowane/.test(t),t.slice(0,300));
   // AF
   await fresh();await setP({pw:'80',pa:'60'});await tab('af','e');
   const af=await page.evaluate(()=>{const l=document.querySelector('#main #f #k_oac').closest('label'),s=document.querySelector('#main #f #o_stab');return{txt:l.innerText.replace(/\s+/g,' ').trim(),fs:getComputedStyle(l).fontSize,sel:getComputedStyle(s).fontSize,base:getComputedStyle(document.documentElement).fontSize,gl:!!l.querySelector('.pl')};});
